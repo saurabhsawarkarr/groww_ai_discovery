@@ -1,0 +1,852 @@
+[
+  {
+    "raw_id": "reddit_pilot_001",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/101_first_sip_negative_xirr",
+    "author_id_hash": "a1b2c3d4e5f67890",
+    "published_at": "2026-01-15T09:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Started my first SIP of Rs 2000 in Parag Parikh Flexi Cap 3 months ago. Current value shows -4.5% returns and negative XIRR. I thought SIP protects against loss from day one. Should I pause or stop the SIP?",
+    "thread_context": {
+      "parent_title": "Negative returns in first 3 months of SIP - should I stop?",
+      "subreddit": "IndiaInvestments",
+      "score": 45,
+      "num_comments": 38,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_002",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/102_groww_autopay_failed",
+    "author_id_hash": "b2c3d4e5f6789012",
+    "published_at": "2026-01-20T14:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "My second SIP instalment on Groww got cancelled because HDFC bank autopay mandate failed. Groww app gave no notification until 3 days later. Will AMC charge penalty or cancel my folio?",
+    "thread_context": {
+      "parent_title": "Groww autopay mandate failed with HDFC",
+      "subreddit": "mutualfunds",
+      "score": 28,
+      "num_comments": 19,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_003",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/103_nav_allocation_confusion",
+    "author_id_hash": "c3d4e5f678901234",
+    "published_at": "2026-02-02T11:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "My SIP instalment was deducted from bank account on 1st Feb, but Groww app allocated units on 4th Feb at a higher NAV. Why is there a 3 day delay in unit allotment?",
+    "thread_context": {
+      "parent_title": "3 days delay in SIP unit allocation and NAV calculation",
+      "subreddit": "IndiaInvestments",
+      "score": 33,
+      "num_comments": 22,
+      "search_query": "sip review"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_004",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/104_market_dip_double_sip",
+    "author_id_hash": "d4e5f67890123456",
+    "published_at": "2026-02-10T16:45:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Nifty dropped 3% today. Instead of stopping my SIP, I stepped up my monthly contribution by Rs 1000 to accumulate more units at lower NAV. Rupee cost averaging works best during red markets.",
+    "thread_context": {
+      "parent_title": "Stepping up SIP during market corrections",
+      "subreddit": "mutualfunds",
+      "score": 112,
+      "num_comments": 54,
+      "search_query": "step up"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_005",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/105_stop_sip_salary_delay",
+    "author_id_hash": "e5f6789012345678",
+    "published_at": "2026-02-18T08:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Company delayed salary by 10 days this month. Had to stop my monthly SIP in Quant Small Cap because I was worried about ECS bounce charge of Rs 450 from SBI bank.",
+    "thread_context": {
+      "parent_title": "Stopped SIP due to fear of bank ECS bounce fee",
+      "subreddit": "IndianStockMarket",
+      "score": 64,
+      "num_comments": 41,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_006",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/106_daily_vs_monthly_sip",
+    "author_id_hash": "f67890123456789a",
+    "published_at": "2026-02-24T18:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Started daily SIP of Rs 100 on Groww. But looking at bank statement with 30 small transactions is a nightmare for tax filing. Paused daily SIP and switched to monthly 3000 SIP on 5th of each month.",
+    "thread_context": {
+      "parent_title": "Switched from daily SIP to monthly SIP due to bank statement clutter",
+      "subreddit": "mutualfunds",
+      "score": 87,
+      "num_comments": 52,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_007",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/107_xirr_cagr_discrepancy",
+    "author_id_hash": "7890123456789ab1",
+    "published_at": "2026-03-01T12:05:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Can someone explain why Groww app shows Total Returns as +12% but XIRR as +4.8%? I have been running SIP for 6 months and this math makes zero sense to a beginner.",
+    "thread_context": {
+      "parent_title": "Confusion understanding difference between absolute returns and XIRR",
+      "subreddit": "IndiaInvestments",
+      "score": 95,
+      "num_comments": 63,
+      "search_query": "xirr confusion"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_008",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/108_direct_vs_regular_plan",
+    "author_id_hash": "890123456789abc2",
+    "published_at": "2026-03-05T15:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Realized my bank RM had put me in Regular mutual fund plan with 1.8% expense ratio. Stopped that SIP immediately and started Direct plan on Groww. The difference over 10 years is lakhs of rupees.",
+    "thread_context": {
+      "parent_title": "Stopped regular bank SIP, switched to direct plan on Groww",
+      "subreddit": "mutualfunds",
+      "score": 140,
+      "num_comments": 49,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_009",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/109_emergency_fund_first",
+    "author_id_hash": "90123456789abcd3",
+    "published_at": "2026-03-12T10:40:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "I had to redeem my 5 month old SIP in Nippon Small Cap because my laptop broke and I had no emergency fund. Now I realize starting SIP without 6 months emergency savings was a huge mistake.",
+    "thread_context": {
+      "parent_title": "Redeemed SIP early due to lack of emergency fund",
+      "subreddit": "IndianStockMarket",
+      "score": 78,
+      "num_comments": 36,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_010",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/110_first_year_sip_discipline",
+    "author_id_hash": "0123456789abcde4",
+    "published_at": "2026-03-20T19:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Completed exactly 12 months of my first Nifty 50 Index SIP today. There were months when portfolio was down 8%, but I never checked the balance and let autopay run. Currently sitting at +14% XIRR.",
+    "thread_context": {
+      "parent_title": "12 Month SIP milestone completed - lessons in discipline",
+      "subreddit": "IndiaInvestments",
+      "score": 210,
+      "num_comments": 85,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_011",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/111_mandate_limit_confusion",
+    "author_id_hash": "123456789abcdef5",
+    "published_at": "2026-03-25T11:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "When setting up autopay on Groww, it asked for mandate limit of Rs 1,00,000 even though my monthly SIP is only Rs 1,000. Got terrified that Groww would deduct 1 lakh from my account and cancelled the setup.",
+    "thread_context": {
+      "parent_title": "Groww autopay mandate limit of 1 Lakh scared me as a first timer",
+      "subreddit": "mutualfunds",
+      "score": 115,
+      "num_comments": 60,
+      "search_query": "stop sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_012",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/112_stopping_sip_in_bear_market",
+    "author_id_hash": "23456789abcdef01",
+    "published_at": "2026-03-28T14:40:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Most beginners stop SIP when markets fall because of psychological panic. When you see your hard earned money in red for 4 consecutive months, human brain tells you to preserve capital. Apps need better educational framing.",
+    "thread_context": {
+      "parent_title": "Why first time investors quit mutual funds within 6 months",
+      "subreddit": "IndiaInvestments",
+      "score": 175,
+      "num_comments": 72,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_013",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/113_sip_date_clash",
+    "author_id_hash": "3456789abcdef012",
+    "published_at": "2026-04-03T16:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Set my SIP deduction date on 1st of every month, but salary credit date changed to 7th. Attempted deduction failed and Groww kept notifying me to pay manually with UPI. Eventually paused SIP until I could change date.",
+    "thread_context": {
+      "parent_title": "SIP date mismatch with salary credit caused deduction failures",
+      "subreddit": "IndianStockMarket",
+      "score": 52,
+      "num_comments": 29,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_014",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/114_step_up_feature",
+    "author_id_hash": "456789abcdef0123",
+    "published_at": "2026-04-09T09:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Got a 10% appraisal and activated the annual step up feature on Groww. It automatically bumped my Rs 5000 SIP to Rs 5500 without requiring any new bank mandate. Seamless experience.",
+    "thread_context": {
+      "parent_title": "Annual SIP step-up feature is underrated",
+      "subreddit": "mutualfunds",
+      "score": 89,
+      "num_comments": 23,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_015",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/115_too_many_funds_overlap",
+    "author_id_hash": "56789abcdef01234",
+    "published_at": "2026-04-14T17:50:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "I started 6 different SIPs of Rs 500 each in various large and flexi cap funds. Checked portfolio overlap tool online and found 70% common holdings. Stopped 4 SIPs and consolidated into one Nifty 50 index fund.",
+    "thread_context": {
+      "parent_title": "Stopped multiple SIPs after finding huge portfolio overlap",
+      "subreddit": "IndiaInvestments",
+      "score": 134,
+      "num_comments": 61,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_016",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/116_first_sip_anxiety",
+    "author_id_hash": "6789abcdef012345",
+    "published_at": "2026-04-20T11:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "I am 22 and just started my career. Put my first Rs 1500 SIP in Mirae Asset Large Cap. Checking the Groww app every 2 hours to see if NAV updated. When does NAV usually update in evening?",
+    "thread_context": {
+      "parent_title": "Obsessive portfolio checking after first ever SIP",
+      "subreddit": "mutualfunds",
+      "score": 102,
+      "num_comments": 74,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_017",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/117_capital_gains_tax_fear",
+    "author_id_hash": "789abcdef0123456",
+    "published_at": "2026-04-25T13:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "With the new budget increasing LTCG to 12.5% and STCG to 20%, does it still make sense for a beginner earning 30k a month to continue mutual fund SIP? Considering shifting to PPF or recurring deposit.",
+    "thread_context": {
+      "parent_title": "Budget LTCG increase making me reconsider continuation of SIPs",
+      "subreddit": "IndianStockMarket",
+      "score": 67,
+      "num_comments": 58,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_018",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/118_peer_pressure_fno",
+    "author_id_hash": "89abcdef01234567",
+    "published_at": "2026-05-02T10:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "My office colleagues make fun of my Rs 3000 monthly SIP saying mutual funds only give 12% while options trading can 2x capital in 2 days. Feeling demotivated by slow growth but resisting urge to stop SIP.",
+    "thread_context": {
+      "parent_title": "Peer pressure to stop boring mutual funds and trade F&O",
+      "subreddit": "IndiaInvestments",
+      "score": 198,
+      "num_comments": 112,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_019",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/119_exit_load_surprise",
+    "author_id_hash": "9abcdef012345678",
+    "published_at": "2026-05-08T15:40:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Tried redeeming 2 instalments from my 4-month old SIP and was shocked to see a 1% exit load deduction. Groww should display exit load and tax implications clearly on the redemption screen before submitting.",
+    "thread_context": {
+      "parent_title": "1% exit load deduction was unexpected on redemption",
+      "subreddit": "mutualfunds",
+      "score": 73,
+      "num_comments": 31,
+      "search_query": "stop sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_020",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/120_stamp_duty_charge",
+    "author_id_hash": "abcdef0123456789",
+    "published_at": "2026-05-15T12:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Noticed 0.005% stamp duty deducted on every SIP purchase. For Rs 1000 SIP it is only 5 paise, but for absolute beginners wondering why invested amount is 999.95, it creates needless suspicion.",
+    "thread_context": {
+      "parent_title": "Minor deductions like stamp duty confuse first time investors",
+      "subreddit": "IndiaInvestments",
+      "score": 82,
+      "num_comments": 27,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_021",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/121_missed_sip_due_to_upi_server",
+    "author_id_hash": "bcdef0123456789a",
+    "published_at": "2026-05-22T08:50:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "NPCI server was down on 10th May and UPI autopay did not trigger. Received an SMS from AMC saying instalment missed. Groww app didn't offer a 1-click retry button, had to wait for next month.",
+    "thread_context": {
+      "parent_title": "UPI autopay failure left me with no clear way to retry instalment",
+      "subreddit": "mutualfunds",
+      "score": 59,
+      "num_comments": 24,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_022",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/122_small_cap_rollercoaster",
+    "author_id_hash": "cdef0123456789ab",
+    "published_at": "2026-05-28T16:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Watched a YouTube finfluencer video and put entire 5k monthly SIP into Nippon Small Cap. Now after 2 months of sideways/downward movement, I am sweating bullets. Paused SIP and moving to Nifty 50.",
+    "thread_context": {
+      "parent_title": "Finfluencer hype led me to high risk small cap SIP",
+      "subreddit": "IndianStockMarket",
+      "score": 110,
+      "num_comments": 68,
+      "search_query": "pause sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_023",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/123_stopped_sip_for_gold",
+    "author_id_hash": "def0123456789abc",
+    "published_at": "2026-06-03T11:45:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Stopped my equity mutual fund SIP to buy Sovereign Gold Bonds and physical gold because gold rally was giving 25% returns while equity felt stagnant. Now equity is breaking records. Chasing returns was a mistake.",
+    "thread_context": {
+      "parent_title": "Regret stopping equity SIP to chase gold rally",
+      "subreddit": "IndiaInvestments",
+      "score": 145,
+      "num_comments": 79,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_024",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/124_kyc_revalidation_nightmare",
+    "author_id_hash": "ef0123456789abcd",
+    "published_at": "2026-06-10T14:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "CVL-KRA flagged my KYC as 'On Hold' because of minor spelling mismatch in Aadhaar and PAN. My ongoing SIPs were paused automatically by the AMC. Took 3 weeks of visiting CAMS point of service to unblock.",
+    "thread_context": {
+      "parent_title": "KYC revalidation paused all my active SIPs for a month",
+      "subreddit": "mutualfunds",
+      "score": 91,
+      "num_comments": 44,
+      "search_query": "pause sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_025",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/125_wedding_expense_liquidation",
+    "author_id_hash": "f0123456789abcde",
+    "published_at": "2026-06-16T17:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Getting married in November. Had to stop my 8-month old SIP on Groww to pool cash for hall booking and jewellery. Will resume SIP next year once finances stabilize.",
+    "thread_context": {
+      "parent_title": "Pausing SIP temporarily due to major life event",
+      "subreddit": "IndianStockMarket",
+      "score": 42,
+      "num_comments": 15,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_026",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/126_sip_vs_lumpsum_nav",
+    "author_id_hash": "0123456789abcdef",
+    "published_at": "2026-06-22T09:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "I had 50k bonus and invested all as lumpsum instead of SIP. Market crashed next week by 4% and I panicked. Converted the remaining savings into monthly SIP. Rupee cost averaging gives peace of mind.",
+    "thread_context": {
+      "parent_title": "Why SIP is mentally superior to lumpsum for beginners",
+      "subreddit": "IndiaInvestments",
+      "score": 160,
+      "num_comments": 58,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_027",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/127_bank_debit_without_units",
+    "author_id_hash": "13579bdf02468ace",
+    "published_at": "2026-06-29T13:40:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Amount of Rs 2500 debited from my ICICI account on Friday for Groww SIP, but units still not showing on Monday 2 PM. Customer support chat is automated bot saying 'wait 24-48 hours'. Very anxious.",
+    "thread_context": {
+      "parent_title": "Weekend bank debit delay in unit allotment causes anxiety",
+      "subreddit": "mutualfunds",
+      "score": 38,
+      "num_comments": 21,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_028",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/128_dividend_reinvestment_vs_growth",
+    "author_id_hash": "2468ace013579bdf",
+    "published_at": "2026-07-04T15:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Accidentally selected IDCW (Dividend) option instead of Growth option when starting SIP on Groww. Stopped the SIP and started fresh with Growth option so compounding can happen.",
+    "thread_context": {
+      "parent_title": "Stopped SIP to fix IDCW vs Growth mistake",
+      "subreddit": "IndianStockMarket",
+      "score": 71,
+      "num_comments": 33,
+      "search_query": "stop sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_029",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/129_nifty_next_50_volatility",
+    "author_id_hash": "3579bdf02468ace1",
+    "published_at": "2026-07-10T10:05:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Nifty Next 50 fund has been underperforming Nifty 50 for past 10 months. Thinking of pausing this SIP. Is it patience or dead weight? Advice from senior investors appreciated.",
+    "thread_context": {
+      "parent_title": "Underperformance in Nifty Next 50 test my patience",
+      "subreddit": "IndiaInvestments",
+      "score": 83,
+      "num_comments": 64,
+      "search_query": "pause sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_030",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/130_sip_calculator_false_hopes",
+    "author_id_hash": "468ace13579bdf02",
+    "published_at": "2026-07-16T18:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Online SIP calculators project smooth 15% CAGR every year making users think 5k a month will make them crorepatis in 15 years. Reality is -5% in year 1, +35% in year 2, +2% in year 3. Calculators need volatility warnings.",
+    "thread_context": {
+      "parent_title": "SIP calculators set unrealistic linear expectations for beginners",
+      "subreddit": "mutualfunds",
+      "score": 240,
+      "num_comments": 95,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_031",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/131_groww_customer_support_praise",
+    "author_id_hash": "579bdf02468ace13",
+    "published_at": "2026-07-21T11:50:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Had an issue where SIP failed due to bank OTP error. Groww support agent called me back within 2 hours and helped me link another savings account. Continued my SIP without missing a cycle.",
+    "thread_context": {
+      "parent_title": "Good resolution from Groww support kept my SIP active",
+      "subreddit": "IndianStockMarket",
+      "score": 45,
+      "num_comments": 12,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_032",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/132_stopping_sip_home_loan_downpayment",
+    "author_id_hash": "68ace13579bdf024",
+    "published_at": "2026-07-27T16:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Liquidating my 11-month mutual fund portfolio on Groww to pay home loan down payment. Will stop all 3 SIPs for now and resume once EMI starts and cash flow stabilizes.",
+    "thread_context": {
+      "parent_title": "Liquidating portfolio for home downpayment",
+      "subreddit": "IndiaInvestments",
+      "score": 62,
+      "num_comments": 28,
+      "search_query": "stop sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_033",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/133_first_year_red_then_green",
+    "author_id_hash": "79bdf02468ace135",
+    "published_at": "2026-08-02T09:40:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "For my first 7 months of SIP, my portfolio was strictly in red between -2% and -8%. I was tempted to cancel autopay every single month. In month 8 market rallied and now I am at +16%. Glad I stayed invested.",
+    "thread_context": {
+      "parent_title": "Stayed through 7 months of red returns - now in green",
+      "subreddit": "mutualfunds",
+      "score": 184,
+      "num_comments": 47,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_034",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/134_bank_mandate_cancellation_delay",
+    "author_id_hash": "8ace13579bdf0246",
+    "published_at": "2026-08-08T14:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Cancelled my SIP on Groww 2 days before the scheduled date, but bank still deducted the Rs 3000 instalment. Turns out cancellation requires at least 7 working days notice to bank. Needs clearer disclaimer.",
+    "thread_context": {
+      "parent_title": "Cancelled SIP still got deducted due to 7-day bank notice requirement",
+      "subreddit": "IndianStockMarket",
+      "score": 53,
+      "num_comments": 22,
+      "search_query": "stop sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_035",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/135_switching_fund_managers",
+    "author_id_hash": "9bdf02468ace1357",
+    "published_at": "2026-08-14T12:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Fund manager of Axis Bluechip left and performance declined significantly. Stopped my ongoing monthly SIP and redirected the money into UTI Nifty 50 Index fund. Passive investing avoids fund manager risk.",
+    "thread_context": {
+      "parent_title": "Stopped active fund SIP after fund manager departure",
+      "subreddit": "IndiaInvestments",
+      "score": 97,
+      "num_comments": 43,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_036",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/136_sip_for_kids_education",
+    "author_id_hash": "ace13579bdf02468",
+    "published_at": "2026-08-20T17:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Started Rs 5000 SIP when my daughter was born 8 months ago. Having a concrete long-term goal makes it so much easier to ignore short term market drops. Mentally committed for 15 years.",
+    "thread_context": {
+      "parent_title": "Goal-based SIP makes staying invested effortless",
+      "subreddit": "mutualfunds",
+      "score": 128,
+      "num_comments": 35,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_037",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/137_fractional_units_nav",
+    "author_id_hash": "bdf02468ace13579",
+    "published_at": "2026-08-26T10:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "First time mutual fund buyer question: when my Rs 1000 SIP executes and NAV is 78.43, I get 12.75 units. Can you sell fractional units later on Groww? Answer was yes, but app should explain unit math.",
+    "thread_context": {
+      "parent_title": "Novice question about fractional mutual fund units",
+      "subreddit": "IndianStockMarket",
+      "score": 41,
+      "num_comments": 18,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_038",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/138_stopping_sip_for_crypto",
+    "author_id_hash": "df02468ace13579b",
+    "published_at": "2026-09-01T15:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Friend stopped his mutual fund SIP in 2021 to buy altcoins. Lost 80% of money in crypto crash. Meanwhile my simple boring Nifty SIP is up 45%. Slow and steady wins the race in India.",
+    "thread_context": {
+      "parent_title": "Boring mutual fund SIP vs speculative trading",
+      "subreddit": "IndiaInvestments",
+      "score": 265,
+      "num_comments": 104,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_039",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/139_groww_ui_simplicity",
+    "author_id_hash": "f02468ace13579bd",
+    "published_at": "2026-09-07T11:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Switched from Zerodha Coin to Groww because Groww holds mutual fund units in SOA (Statement of Account) form instead of Demat form. Much easier to pledge or manage without demat maintenance charges.",
+    "thread_context": {
+      "parent_title": "SOA vs Demat mutual fund holding on Groww",
+      "subreddit": "mutualfunds",
+      "score": 112,
+      "num_comments": 48,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_040",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/140_rebalancing_annual",
+    "author_id_hash": "02468ace13579bdf",
+    "published_at": "2026-09-12T14:45:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Completed 1 year of SIP. Rebalancing portfolio by trimming mid caps that ran up too fast and increasing allocation to debt funds. Asset allocation matters more than stock picking.",
+    "thread_context": {
+      "parent_title": "One year milestone: rebalancing debt and equity ratio",
+      "subreddit": "IndianStockMarket",
+      "score": 85,
+      "num_comments": 36,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_041",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/141_sip_instalment_frequency",
+    "author_id_hash": "1357924680acebdf",
+    "published_at": "2026-09-17T09:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Is there any real empirical benefit to bi-weekly or weekly SIP over monthly SIP? Tested backtests on Nifty over 10 years and return difference is less than 0.2%. Monthly SIP on salary day remains the cleanest method.",
+    "thread_context": {
+      "parent_title": "Debunking weekly vs monthly SIP myths",
+      "subreddit": "IndiaInvestments",
+      "score": 150,
+      "num_comments": 62,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_042",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/142_pause_feature_missing_in_amc",
+    "author_id_hash": "2468013579bdface",
+    "published_at": "2026-09-22T16:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Wanted to pause my SBI mutual fund SIP for 2 months while changing jobs, but SBI app only has 'Cancel' button, no 'Pause' option. Groww lets you pause for up to 3 cycles without cancelling the mandate.",
+    "thread_context": {
+      "parent_title": "Groww pause feature vs AMC cancel requirement",
+      "subreddit": "mutualfunds",
+      "score": 93,
+      "num_comments": 31,
+      "search_query": "pause sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_043",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/143_fno_loss_recovery_sip",
+    "author_id_hash": "3579124680acebdf",
+    "published_at": "2026-09-28T11:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Lost 2 lakhs in Bank Nifty options over 6 months. Uninstalled trading apps and started a disciplined Rs 10k monthly SIP in index funds. It takes humility to accept that slow wealth creation is the only sustainable way.",
+    "thread_context": {
+      "parent_title": "From F&O disaster to SIP disciple",
+      "subreddit": "IndianStockMarket",
+      "score": 310,
+      "num_comments": 140,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_044",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/144_cagr_calculation_confusion",
+    "author_id_hash": "4680235791bdface",
+    "published_at": "2026-10-02T13:15:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Invested 12 instalments of 5000 = 60,000 total. Current value is 66,000. That is a 10% gain on total cost, but XIRR shows 18.2%. Had to read 3 articles to understand that first instalment was invested for 12 months but 12th only for 1 month.",
+    "thread_context": {
+      "parent_title": "Why XIRR is higher than absolute percentage return in year 1",
+      "subreddit": "IndiaInvestments",
+      "score": 120,
+      "num_comments": 42,
+      "search_query": "xirr confusion"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_045",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/145_groww_pay_now_button",
+    "author_id_hash": "5791346802acebdf",
+    "published_at": "2026-10-06T15:45:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "On Groww SIP dashboard, there is a 'Pay Now' button next to scheduled SIP. Clicked it by mistake and it created an extra instalment. Needs a confirmation modal asking 'Are you sure you want to make an additional payment?'.",
+    "thread_context": {
+      "parent_title": "Accidental double instalment due to prominent Pay Now button",
+      "subreddit": "mutualfunds",
+      "score": 64,
+      "num_comments": 26,
+      "search_query": "first sip"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_046",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/146_cancellation_regret",
+    "author_id_hash": "6802457913bdface",
+    "published_at": "2026-10-10T10:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Cancelled my SIP in HDFC Top 100 during Covid crash because of panic. Missed the greatest bull run in Indian market history. Lesson: never stop your SIP in a market downturn unless your job is lost.",
+    "thread_context": {
+      "parent_title": "My biggest financial regret was stopping SIP during crash",
+      "subreddit": "IndianStockMarket",
+      "score": 280,
+      "num_comments": 89,
+      "search_query": "stop sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_047",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/147_tracking_via_mfcentral",
+    "author_id_hash": "7913568024acebdf",
+    "published_at": "2026-10-14T12:00:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "For anyone using Groww, you can also track your CAS statement directly on MFCentral or CAMSRepository without giving passwords. Gives peace of mind knowing that units are safely held at RTA level.",
+    "thread_context": {
+      "parent_title": "Cross verifying Groww mutual fund holdings on MFCentral",
+      "subreddit": "IndiaInvestments",
+      "score": 115,
+      "num_comments": 38,
+      "search_query": "sip review"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "reddit_pilot_048",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/148_small_savings_to_sip",
+    "author_id_hash": "8024679135bdface",
+    "published_at": "2026-10-17T17:10:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Started with just Rs 500 SIP cut down from weekend food deliveries. 9 months in, I have accumulated 5,500 without feeling any pinch. Starting small is the secret to building the investing habit.",
+    "thread_context": {
+      "parent_title": "Starting with 500 Rs SIP built my investing habit",
+      "subreddit": "mutualfunds",
+      "score": 165,
+      "num_comments": 40,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_049",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/149_sip_portfolio_review",
+    "author_id_hash": "9135780246acebdf",
+    "published_at": "2026-10-19T14:20:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "Rate my 1st year SIP portfolio: Rs 3000 UTI Nifty 50, Rs 2000 Parag Parikh Flexi Cap, Rs 1000 Motilal Oswal Midcap. 12 months completed, overall XIRR is 15.4%. Any adjustments recommended?",
+    "thread_context": {
+      "parent_title": "1 Year SIP portfolio review for 25yo engineer",
+      "subreddit": "IndianStockMarket",
+      "score": 75,
+      "num_comments": 44,
+      "search_query": "sip review"
+    },
+    "product_context": "category_level"
+  },
+  {
+    "raw_id": "reddit_pilot_050",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/150_twelve_month_continuation_secret",
+    "author_id_hash": "0246891357bdface",
+    "published_at": "2026-10-22T08:30:00+00:00",
+    "collected_at": "2026-10-23T12:00:00+00:00",
+    "raw_text": "The reason people fail to maintain SIP for 12 months is setting the deduction date wrong, panic checking daily NAV, and lacking an emergency buffer. Fix those three friction points and continuation rate will double.",
+    "thread_context": {
+      "parent_title": "Why first time investors drop off before month 12",
+      "subreddit": "IndiaInvestments",
+      "score": 340,
+      "num_comments": 125,
+      "search_query": "first sip"
+    },
+    "product_context": "category_level"
+  }
+]

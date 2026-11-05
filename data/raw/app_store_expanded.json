@@ -1,0 +1,152 @@
+[
+  {
+    "raw_id": "appstore_exp_001",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_101",
+    "published_at": "2026-02-14T08:20:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Face ID authentication fails half the time when opening the app to check my SIP folio on iOS 18. I have to repeatedly enter my 4-digit PIN. Also the lock screen widget takes 24 hours to update current portfolio balance.",
+    "thread_context": {
+      "rating": 2,
+      "title": "Face ID glitches and sluggish widget",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_002",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_102",
+    "published_at": "2026-02-19T11:45:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Cleanest UI for mutual fund investing in India hands down. Started 3 SIPs seamlessly through Apple Pay UPI autopay. Would love to see an interactive calculator explaining monthly compound interest curves.",
+    "thread_context": {
+      "rating": 5,
+      "title": "Smooth UI and easy SIP setup",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_003",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_103",
+    "published_at": "2026-02-23T16:10:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Why is there no button to pause an ongoing SIP on iOS? I can only edit the instalment date or cancel it completely. If I cancel, I have to re-verify OTP and netbanking mandate all over again.",
+    "thread_context": {
+      "rating": 2,
+      "title": "Missing Pause SIP feature on iPhone app",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_004",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_104",
+    "published_at": "2026-02-28T09:30:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Negative returns shown on dashboard without any context or market commentary. I panicked and stopped my monthly SIP after 2 months. You need an onboarding guide explaining market cycles to first-time beginners.",
+    "thread_context": {
+      "rating": 1,
+      "title": "Unexplained negative returns caused me to stop",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_005",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_105",
+    "published_at": "2026-03-04T13:15:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "The app crashes whenever I try to download my mutual fund capital gains statement on iPad Pro. Customer support bot keeps giving generic answers instead of connecting to a human agent.",
+    "thread_context": {
+      "rating": 1,
+      "title": "iPad crash on tax report download",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_006",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_106",
+    "published_at": "2026-03-08T18:00:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Very happy with the disciplined investing habit Groww helped me build. Completed 18 consecutive months of SIP without missing a single payment. Autopay mandate has been 100% reliable.",
+    "thread_context": {
+      "rating": 5,
+      "title": "18 months of disciplined compounding",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_007",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_107",
+    "published_at": "2026-03-12T10:45:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "SIP payment got debited from my bank but Groww status showed processing for 4 whole days. During this time I could not tell if the transaction failed or succeeded. Better realtime transaction tracking is needed.",
+    "thread_context": {
+      "rating": 2,
+      "title": "Status stuck on processing for 4 days",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_008",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_108",
+    "published_at": "2026-03-16T14:20:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Dark mode looks incredible on OLED iPhone screen. Would be great if there was an option to hide portfolio value in public so strangers can not peek at my savings when I am checking returns on the metro.",
+    "thread_context": {
+      "rating": 4,
+      "title": "Need privacy mode to hide portfolio value",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_009",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_109",
+    "published_at": "2026-03-21T07:50:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "The XIRR number fluctuates wildly every day when starting out with small amounts. It told me my returns were -45% after one bad market day. This terrified me until I researched online and found out annualized formulas distort small tenures.",
+    "thread_context": {
+      "rating": 3,
+      "title": "XIRR distortion creates unnecessary fear",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "appstore_exp_010",
+    "source_platform": "app_store",
+    "source_url": "https://apps.apple.com/in/app/groww-stocks-mutual-fund/id1404871703",
+    "author_id_hash": "ios_usr_110",
+    "published_at": "2026-03-25T12:35:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Notifications arrive at random times. Got a push alert at 11 PM saying my SIP is due tomorrow, but when I opened the app it said payment already received. Notification sync between backend and iOS push server is buggy.",
+    "thread_context": {
+      "rating": 3,
+      "title": "Late and conflicting push notifications",
+      "app_name": "groww-stocks-mutual-fund"
+    },
+    "product_context": "groww_specific"
+  }
+]

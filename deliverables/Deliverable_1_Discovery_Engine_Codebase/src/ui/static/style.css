@@ -1,0 +1,1452 @@
+/* ====================================================================
+   Groww Discovery Engine: Executive Research Suite Design System
+   Brand: Groww Mint Emerald (#00D09C / #008764) & Pure Clean Slate
+   Typography: Plus Jakarta Sans (Headings/Metrics) + Inter (Body/UI)
+   ==================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --groww-primary: #00D09C;
+  --groww-primary-dark: #008764;
+  --groww-primary-hover: #00B386;
+  --groww-primary-tint: #E6F7F3;
+  --groww-primary-tint-hover: #D1F3EA;
+  --groww-bg: #F8FAFC;
+  --groww-card-bg: #FFFFFF;
+  --groww-card-border: #E2E8F0;
+  --groww-card-border-hover: #CBD5E1;
+  --groww-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --groww-card-shadow-hover: 0 6px 18px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
+
+  --groww-text-main: #0F172A;
+  --groww-text-muted: #475569;
+  --groww-text-subtle: #64748B;
+  --groww-border-subtle: #F1F5F9;
+
+  --groww-accent-blue: #0284C7;
+  --groww-accent-amber: #D97706;
+  --groww-accent-red: #DC2626;
+  --groww-accent-purple: #7C3AED;
+  --groww-accent-emerald: #059669;
+}
+
+/* ====================================================================
+   Global Typography & Reset
+   ==================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stSidebar"],
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] *,
+[data-testid="stText"],
+[class*="st-"],
+button,
+input,
+select,
+textarea,
+div[data-baseweb],
+.stMetric,
+.stSelectbox,
+.stTextInput {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base Body Font Sizing - Enhanced Readability */
+html,
+body {
+  font-size: 16.5px;
+}
+
+p,
+span,
+label,
+li {
+  font-size: 16.5px;
+  line-height: 1.62;
+}
+
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] span {
+  font-size: 16.5px !important;
+  line-height: 1.65 !important;
+}
+
+[data-testid="stText"] {
+  font-size: 16px !important;
+}
+
+/* Preserve Streamlit Material Icons */
+[data-testid="stIconMaterial"],
+.material-symbols-rounded,
+.material-symbols-outlined,
+[class*="material-symbols"],
+[data-testid="stSidebarCollapseButton"] * {
+  font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+}
+
+/* Hide unrendered collapse button ligature text */
+[data-testid="stSidebarCollapseButton"] {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+[data-testid="stSidebarCollapseButton"]:hover {
+  opacity: 1;
+}
+
+/* Headings and Titles - Bold, Confident & Groww Styled */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.page-title,
+.kpi-value,
+[data-testid="stMetricValue"],
+.brand-title,
+.section-header {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.02em !important;
+  color: var(--groww-text-main) !important;
+}
+
+/* Base Body & Layout */
+.stApp {
+  background-color: var(--groww-bg) !important;
+}
+
+/* Hide Streamlit Top Chrome / Header for Clean Executive Feel */
+#MainMenu {
+  visibility: hidden;
+}
+
+header[data-testid="stHeader"] {
+  background: transparent !important;
+  height: 0 !important;
+  padding: 0 !important;
+  visibility: hidden !important;
+}
+
+.stApp>header {
+  height: 0 !important;
+}
+
+footer {
+  visibility: hidden;
+}
+
+.stDeployButton {
+  display: none !important;
+}
+
+div[data-testid="stDecoration"] {
+  display: none !important;
+}
+
+/* Main Content Area Spacing - Compact & Professional */
+.main .block-container {
+  padding-top: 1.25rem !important;
+  padding-bottom: 2.5rem !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  max-width: 1440px !important;
+}
+
+/* Tighten Vertical Spacing in Streamlit to Remove Irrelevant Blank Space */
+div[data-testid="stVerticalBlock"] {
+  gap: 0.85rem !important;
+}
+
+[data-testid="element-container"]:empty {
+  display: none !important;
+}
+
+/* ====================================================================
+   Sidebar Navigation - True Groww Web App Sidebar
+   ==================================================================== */
+section[data-testid="stSidebar"] {
+  background-color: #FFFFFF !important;
+  border-right: 1px solid var(--groww-card-border) !important;
+  padding-top: 1.25rem !important;
+  width: 280px !important;
+}
+
+/* Hide the Navigation Menu Label in Sidebar */
+section[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stWidgetLabel"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"]>label:first-child {
+  display: none !important;
+}
+
+/* Completely Hide Radio Buttons & Circles in Sidebar */
+section[data-testid="stSidebar"] div[data-testid="stRadio"] input[type="radio"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] [data-baseweb="radio"] input,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label>div>div:first-child,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label>div:first-child:not([data-testid="stMarkdownContainer"]),
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label [data-baseweb="radio"]>div:first-child,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[class*="RadioDot"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[class*="RadioMark"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] svg {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Radio Group Container */
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 0 !important;
+}
+
+/* Sidebar Navigation Items - Clean Pill Buttons */
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+  background-color: transparent !important;
+  border-radius: 9px !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) {
+  background: #EBF3FE !important;
+  color: #1D4ED8 !important;
+  font-weight: 700 !important;
+  border-left: 3.5px solid #2563EB !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label p {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  color: #475569 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p {
+  color: #0F172A !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p {
+  font-weight: 700 !important;
+  color: #1D4ED8 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input[value*="RAG Assistant"]) {
+  position: relative;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input[value*="RAG Assistant"])::after {
+  content: "#AI";
+  position: absolute;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.15);
+  color: #1D4ED8;
+}
+
+/* Sidebar Section Headers */
+.sidebar-section-header {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #94A3B8 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  margin: 16px 0 8px 6px !important;
+}
+
+/* Sidebar Bottom Status Card */
+.sidebar-corpus-card {
+  background: #F8FAFC;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00D09C;
+  margin-right: 6px;
+  box-shadow: 0 0 6px #00D09C;
+}
+
+/* ====================================================================
+   Page Header Component (Standardized across all views)
+   ==================================================================== */
+.page-header-container {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--groww-border-subtle);
+}
+
+.page-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  margin: 0 0 4px 0 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.25 !important;
+}
+
+.page-subtitle {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 16.5px !important;
+  color: #475569 !important;
+  margin: 0 !important;
+  line-height: 1.6 !important;
+}
+
+/* ====================================================================
+   Native Streamlit Metric Cards Styling (Unified with Custom Cards)
+   ==================================================================== */
+[data-testid="stMetric"] {
+  background: #FFFFFF !important;
+  border: 1px solid var(--groww-card-border) !important;
+  border-radius: 12px !important;
+  padding: 16px 18px !important;
+  box-shadow: var(--groww-card-shadow) !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-testid="stMetric"]:hover {
+  transform: translateY(-2px) !important;
+  border-color: #CBD5E1 !important;
+  box-shadow: var(--groww-card-shadow-hover) !important;
+}
+
+[data-testid="stMetricLabel"]>div,
+[data-testid="stMetricLabel"] label,
+[data-testid="stMetricLabel"] p {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 4px !important;
+}
+
+[data-testid="stMetricValue"]>div {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+}
+
+[data-testid="stMetricDelta"] {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+}
+
+/* ====================================================================
+   Top Mission Philosophy Banner Pill (Reference Inspiration Design)
+   ==================================================================== */
+.top-mission-pill {
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #FAF5FF 100%);
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 22px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 16.5px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  letter-spacing: -0.01em;
+}
+
+.top-mission-pill .arrow {
+  color: #008764;
+  margin: 0 8px;
+  font-weight: 800;
+}
+
+/* ====================================================================
+   Executive KPI Cards (Overview, Engine Info, & View Headers)
+   ==================================================================== */
+.executive-kpi-card {
+  background: #FFFFFF;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--groww-card-shadow);
+  text-align: left;
+  /* Left-aligned like screenshot */
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.executive-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #CBD5E1;
+  box-shadow: var(--groww-card-shadow-hover);
+}
+
+.kpi-title {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #64748B !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  letter-spacing: -0.025em;
+}
+
+.kpi-subtitle {
+  font-size: 13.5px !important;
+  color: #008764 !important;
+  /* Green like screenshot */
+  font-weight: 600 !important;
+  line-height: 1.4;
+}
+
+/* ====================================================================
+   Content Section Cards & Containers
+   ==================================================================== */
+.overview-section-card {
+  background: #FFFFFF;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: var(--groww-card-shadow);
+  margin-bottom: 14px;
+}
+
+.overview-section-card h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin: 0 0 12px 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Evidence & Theme Cards */
+.evidence-card {
+  background: #FFFFFF;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: var(--groww-card-shadow);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.evidence-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: var(--groww-card-shadow-hover);
+}
+
+.verbatim-quote-box {
+  background: rgba(0, 208, 156, 0.05);
+  border-left: 3.5px solid var(--groww-primary);
+  border-radius: 4px 8px 8px 4px;
+  padding: 14px 18px;
+  font-size: 16.5px !important;
+  font-style: italic;
+  color: #1E293B;
+  margin: 10px 0;
+  line-height: 1.7;
+}
+
+/* Pipeline Step Flow Boxes */
+.pipeline-step-box {
+  background: #F8FAFC;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.pipeline-step-box:hover {
+  border-color: #00D09C;
+  background-color: #FFFFFF;
+}
+
+.pipeline-step-arrow {
+  text-align: center;
+  color: #008764;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 3px 0;
+  line-height: 1;
+}
+
+/* Horizontal Pipeline Stepper (Exact match to screenshot) */
+.horizontal-pipeline-container {
+  position: relative;
+  padding: 24px 10px 14px 10px;
+  margin: 12px 0 6px 0;
+}
+
+.pipeline-track {
+  position: absolute;
+  top: 42px;
+  left: 9%;
+  right: 9%;
+  height: 2.5px;
+  background: linear-gradient(90deg, #3B82F6 0%, #06B6D4 25%, #8B5CF6 50%, #10B981 75%, #F59E0B 100%);
+  z-index: 1;
+}
+
+.pipeline-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  gap: 8px;
+}
+
+.pipeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.node-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.node-blue {
+  border-color: #3B82F6;
+  color: #1D4ED8;
+}
+
+.node-cyan {
+  border-color: #06B6D4;
+  color: #0E7490;
+}
+
+.node-purple {
+  border-color: #8B5CF6;
+  color: #6D28D9;
+}
+
+.node-green {
+  border-color: #10B981;
+  color: #047857;
+}
+
+.node-amber {
+  border-color: #F59E0B;
+  color: #B45309;
+}
+
+.node-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin-bottom: 2px;
+}
+
+.node-sub {
+  font-size: 13px !important;
+  color: #64748B !important;
+  line-height: 1.35;
+}
+
+/* ====================================================================
+   Pillar Score Cards (Opportunity Matrix)
+   ==================================================================== */
+.pillar-metric-box {
+  background: #F8FAFC;
+  border: 1px solid var(--groww-card-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+  transition: border-color 0.15s ease;
+}
+
+.pillar-metric-box:hover {
+  border-color: #CBD5E1;
+  background: #FFFFFF;
+}
+
+.pillar-score-label {
+  font-size: 13.5px !important;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.pillar-score-val {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.pillar-score-desc {
+  font-size: 14px !important;
+  color: #64748B;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ====================================================================
+   Badges & Tags - Clean, Legible & Professional
+   ==================================================================== */
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px !important;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.badge-play-store {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284C7;
+  border: 1px solid rgba(2, 132, 199, 0.22);
+}
+
+.badge-reddit {
+  background: rgba(234, 88, 12, 0.08);
+  color: #EA580C;
+  border: 1px solid rgba(234, 88, 12, 0.22);
+}
+
+.badge-youtube {
+  background: rgba(220, 38, 38, 0.08);
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.22);
+}
+
+.badge-app-store {
+  background: rgba(100, 116, 139, 0.08);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.22);
+}
+
+.badge-forum {
+  background: rgba(124, 58, 237, 0.08);
+  color: #7C3AED;
+  border: 1px solid rgba(124, 58, 237, 0.22);
+}
+
+.badge-stage-new {
+  background: rgba(124, 58, 237, 0.08);
+  color: #7C3AED;
+  border: 1px solid rgba(124, 58, 237, 0.22);
+}
+
+.badge-stage-stopped {
+  background: rgba(239, 68, 68, 0.08);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+}
+
+.badge-stage-continuing {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.badge-tier-1 {
+  background: rgba(0, 208, 156, 0.12);
+  color: #008764;
+  border: 1px solid rgba(0, 208, 156, 0.35);
+  font-weight: 800;
+}
+
+.badge-tier-2 {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284C7;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  font-weight: 800;
+}
+
+/* ====================================================================
+   Streamlit Native Buttons - Vibrant Groww Green
+   ==================================================================== */
+.stButton>button {
+  background-color: #00D09C !important;
+  color: #0F172A !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 22px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stButton>button:hover {
+  background-color: #00B386 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(0, 208, 156, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Sidebar button styling */
+section[data-testid="stSidebar"] .stButton>button {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid var(--groww-card-border) !important;
+  box-shadow: var(--groww-card-shadow) !important;
+  font-size: 15px !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button:hover {
+  background-color: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+  color: #008764 !important;
+  transform: none !important;
+}
+
+/* Input Fields & Select Boxes */
+div[data-baseweb="select"]>div,
+div[data-baseweb="input"]>div {
+  border-color: var(--groww-card-border) !important;
+  border-radius: 8px !important;
+  background-color: #FFFFFF !important;
+  font-size: 16px !important;
+}
+
+div[data-baseweb="select"]>div:focus-within,
+div[data-baseweb="input"]>div:focus-within {
+  border-color: var(--groww-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 208, 156, 0.2) !important;
+}
+
+/* Native Expanders */
+[data-testid="stExpander"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid var(--groww-card-border) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--groww-card-shadow) !important;
+  margin-top: 6px !important;
+}
+
+[data-testid="stExpander"] details summary {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+}
+
+/* Custom Evidence Dropdown */
+details.evidence-dropdown summary {
+  list-style: none !important;
+}
+
+details.evidence-dropdown summary::-webkit-details-marker {
+  display: none !important;
+}
+
+details.evidence-dropdown summary:hover {
+  background-color: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+details.evidence-dropdown[open] summary {
+  background-color: #F0FDF4 !important;
+  border-color: #00D09C !important;
+}
+
+/* Radio buttons options in main views */
+div[data-testid="stRadio"] label p {
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] div {
+  font-size: 15.5px !important;
+  font-weight: 600 !important;
+}
+
+/* Progress Bars */
+[data-testid="stProgress"]>div>div>div>div {
+  background: linear-gradient(90deg, #00D09C 0%, #008764 100%) !important;
+  border-radius: 4px !important;
+}
+
+/* Tables and DataFrames */
+div[data-testid="stDataFrame"] {
+  border: 1px solid var(--groww-card-border) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: var(--groww-card-shadow) !important;
+  font-size: 15px !important;
+}
+
+table {
+  font-size: 15px !important;
+}
+
+table th {
+  font-size: 13.5px !important;
+}
+
+table td {
+  font-size: 15px !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--groww-primary);
+}
+
+/* ====================================================================
+   Qualitative RAG Assistant Component (Refined Reference Style)
+   ==================================================================== */
+.rag-sticky-header {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 1.15rem 1.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rag-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rag-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00D09C 0%, #008764 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  box-shadow: 0 2px 8px rgba(0, 208, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.rag-header-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.2;
+}
+
+.rag-header-subtitle {
+  font-size: 0.88rem;
+  color: #64748B;
+  margin-top: 3px;
+}
+
+.rag-header-badge {
+  background: #E6F7F3;
+  border: 1px solid #A7F3D0;
+  color: #008764;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.45rem 1.05rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rag-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00D09C;
+  animation: pulseDot 2s infinite;
+}
+
+.rag-suggested-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.rag-suggested-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+}
+
+.rag-chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.rag-message-user {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.rag-bubble-user {
+  background: linear-gradient(135deg, #008764 0%, #00D09C 100%);
+  color: #FFFFFF !important;
+  border-radius: 18px 18px 4px 18px;
+  padding: 1rem 1.45rem;
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 82%;
+  box-shadow: 0 2px 8px rgba(0, 135, 100, 0.25);
+  font-weight: 500;
+}
+
+.rag-message-ai {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 1.75rem;
+  align-items: flex-start;
+}
+
+.rag-ai-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00D09C 0%, #008764 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(0, 208, 156, 0.3);
+}
+
+.rag-bubble-ai {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px 18px 18px 18px;
+  padding: 1.4rem 1.75rem;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  line-height: 1.7;
+  font-size: 16px;
+  color: #1E293B;
+}
+
+.rag-sources-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #F1F5F9;
+}
+
+.rag-source-chip {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  color: #475569;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rag-empty-state {
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  margin-top: 1.25rem;
+}
+
+.rag-empty-icon {
+  font-size: 3.2rem;
+  line-height: 1;
+  margin-bottom: 0.85rem;
+}
+
+.rag-empty-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 0.45rem;
+}
+
+.rag-empty-desc {
+  font-size: 1rem;
+  color: #64748B;
+  max-width: 620px;
+  margin: 0 auto 1.5rem auto;
+  line-height: 1.6;
+}
+
+.rag-doc-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.rag-doc-chip {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+
+/* ====================================================================
+   Engine Info & Discovery Pipeline (Matches Reference Inspiration Design)
+   ==================================================================== */
+.engine-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 0 2rem 0;
+}
+
+.engine-header {
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.engine-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.95rem;
+  background: #F1F3F4;
+  border: 1px solid #DADCE0;
+  border-radius: 20px;
+  color: #3C4043;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
+.engine-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 2.35rem;
+  font-weight: 800;
+  margin: 0 0 0.65rem 0;
+  background: linear-gradient(135deg, #1A73E8 0%, #8430CE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.025em;
+}
+
+.engine-subtitle {
+  color: #5F6368;
+  max-width: 820px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.engine-quote-card {
+  text-align: center;
+  background: linear-gradient(90deg, #F8FAFD 0%, #F3E8FD 100%);
+  border: 1px solid #E8EAF1;
+  border-radius: 16px;
+  padding: 1.35rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  margin-bottom: 0.5rem;
+}
+
+.engine-quote-text {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.engine-quote-arrow {
+  color: #1A73E8;
+  margin: 0 0.5rem;
+  font-weight: 800;
+}
+
+.engine-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .engine-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.engine-stat-card {
+  background: #FFFFFF;
+  border: 1px solid #E0E2E6;
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.engine-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.08);
+}
+
+.engine-stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5F6368;
+  margin-bottom: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.engine-stat-value {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  margin: 0 0 0.45rem 0;
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.engine-stat-subtext {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.engine-subtext-green {
+  color: #188038;
+}
+
+.engine-subtext-blue {
+  color: #1A73E8;
+}
+
+.engine-section-card {
+  background: #FFFFFF;
+  border: 1px solid #E0E2E6;
+  border-radius: 16px;
+  padding: 1.65rem 1.85rem;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.04);
+  margin-bottom: 1.25rem;
+}
+
+.engine-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #F1F3F4;
+}
+
+.engine-section-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #202124;
+}
+
+.engine-timeline-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 1.75rem 1.5rem;
+  position: relative;
+}
+
+.engine-timeline-line {
+  position: absolute;
+  top: 36px;
+  left: 45px;
+  right: 45px;
+  height: 2px;
+  background: linear-gradient(90deg, #1A73E8 0%, #8430CE 50%, #D93025 75%, #F4B400 100%);
+  z-index: 1;
+}
+
+.engine-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.engine-timeline-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid #E0E2E6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.engine-timeline-step:hover .engine-timeline-icon-wrap {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
+.engine-timeline-name {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.engine-timeline-desc {
+  color: #5F6368;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.engine-two-col-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .engine-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+  .engine-timeline-line {
+    display: none;
+  }
+  .engine-timeline-wrapper {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+}
+
+.engine-caps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.engine-cap-card {
+  background: #F8FAFD;
+  border: 1px solid #E0E2E6;
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.engine-cap-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.engine-cap-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  margin-bottom: 0.85rem;
+}
+
+.engine-cap-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  margin: 0 0 0.4rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.engine-cap-desc {
+  color: #5F6368;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.engine-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.engine-source-row {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  background: #FFFFFF;
+  border: 1px solid #E0E2E6;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.engine-source-row:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.engine-source-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.engine-source-info {
+  flex-grow: 1;
+}
+
+.engine-source-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  margin: 0 0 0.2rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.engine-source-desc {
+  color: #5F6368;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.engine-source-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.engine-source-count {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  color: #202124;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.engine-source-pct {
+  color: #1A73E8;
+  font-size: 0.78rem;
+  font-weight: 600;
+}

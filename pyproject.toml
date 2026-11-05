@@ -1,0 +1,43 @@
+# pyproject.toml - Groww AI-Powered Discovery Engine
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "groww-discovery-engine"
+version = "1.0.0"
+description = "Auditable AI-assisted research discovery engine for first-time mutual fund SIP continuation analysis"
+readme = "context.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+authors = [
+    {name = "Growth Engineering Team (Groww)"}
+]
+dependencies = [
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "pyyaml>=6.0.1",
+    "rich>=13.7.0",
+    "groq>=0.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --import-mode=importlib"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    ".",
+    "src",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

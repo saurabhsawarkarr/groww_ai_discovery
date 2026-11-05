@@ -1,0 +1,797 @@
+We’ll build Part 1: AI-Powered Discovery Engine for Groww as an implementation-ready product problem statement, using the assignment as the source of truth.
+
+The main principle is that the engine should discover what investors are experiencing from public conversations—not start with an assumed problem and force the data to fit it. Its job is to produce traceable evidence, recurring behavioural patterns, competing hypotheses, and questions for further research. It should not decide the final problem or solution on its own.
+
+I’ll separate the assignment’s explicit requirements from our proposed implementation choices so you know what is mandatory and what we can refine while building.
+
+# Part 1 — Detailed Problem Statement
+
+Product: Groww · Team: Growth · Project: AI-Powered Discovery Engine
+
+## 1. Executive summary
+
+Groww needs to increase the percentage of first-time mutual fund investors who still have an active SIP 12 months after starting their first SIP. However, the underlying user problem that causes continuation to break down is not known at the beginning of this assignment.
+
+The discovery challenge is to understand what happens between the moment a first-time investor starts a SIP and the months that follow. Investors may have different expectations, financial circumstances, levels of understanding, information needs, concerns, habits, and sources of advice. Some may continue consistently, some may consider reducing or pausing contributions, and others may stop. We must discover these differences rather than assume a single reason explains them.
+
+To investigate this, we will build an AI-Powered Discovery Engine for Groww that gathers and analyzes publicly available conversations about SIPs, first-time investing, and the mutual fund investing experience in India.
+
+The engine will combine data collection, data cleaning, structured evidence extraction, pattern discovery, cross-segment comparison, hypothesis generation, and human evaluation. It will go beyond basic sentiment analysis or review summarization by identifying repeated behaviours and unmet needs, quantifying patterns within the collected dataset where possible, and comparing potential opportunity areas against the 12-month SIP continuation goal.
+
+The output will be an evidence-backed research foundation: traceable findings, supporting user statements, competing hypotheses, unanswered questions, and recommendations for what to investigate through primary research. It will not automatically declare a root cause or prescribe a product solution.
+
+This directly addresses Part 1 of the assignment. The resulting evidence will later inform metric decomposition, interviews, problem definition, and MVP development.
+
+## 2. Business context and problem background
+
+### 2.1 Business objective
+
+The assignment defines the strategic goal as:
+
+> Increase the percentage of first-time mutual fund investors who still have an active SIP 12 months after starting their first one.
+
+The assignment defines an active SIP as having at least one successful instalment in the last 30 days.
+
+This is the business outcome the overall project must eventually influence. The discovery engine itself does not directly increase continuation; it helps the team understand which user problems may be worth solving to influence it.
+
+### 2.2 What is unknown
+
+The assignment does not provide the underlying user problem. Therefore, we must not begin by assuming that investors stop because of market declines, poor returns, confusing dashboards, financial instability, or any other single explanation.
+
+Instead, the engine must investigate questions such as:
+
+- Why did investors start their first SIP, and what did they expect?
+- What changed in their circumstances, perceptions, or behaviour after starting?
+- What did they monitor, and when?
+- What did they find confusing, disappointing, or difficult to interpret?
+- What happened before they considered changing, pausing, or stopping a SIP?
+- What actions did they take when they were uncertain?
+- What did continuing investors do differently, and what evidence supports that difference?
+- Which patterns differ across relevant investor segments?
+- Which unmet needs appear repeatedly and may be addressable through the product experience?
+
+These are discovery questions, not predetermined findings. The engine must be able to surface unexpected patterns too.
+
+### 2.3 Core problem statement
+
+We do not yet have a sufficiently evidence-backed understanding of the behaviours, experiences, circumstances, and unmet needs that shape first-time mutual fund investors’ decisions to continue, reduce, pause, or stop their SIPs during the first 12 months.
+
+Public feedback exists across multiple platforms, but the available conversations may be fragmented, inconsistent, repetitive, incomplete, and difficult to compare. Reading them manually or relying on general-purpose AI summaries may fail to reveal meaningful behavioural sequences, differences between investor segments, contradictory evidence, or the strength of a potential pattern.
+
+We need a repeatable, AI-assisted discovery workflow that transforms these conversations into structured, traceable evidence and helps us identify which potential problems deserve further investigation.
+
+## 3. Product vision and intended user
+
+### Product vision
+
+Create a research discovery system that helps a product manager investigate first-time SIP continuation by turning fragmented public investor conversations into auditable evidence, behavioural patterns, hypotheses, and research questions.
+
+### Primary user
+
+The primary user is a Product Manager on Groww’s Growth Team who needs to understand why first-time investors continue or disengage from their SIP journey.
+
+The system should also be usable by a researcher or analyst supporting the investigation.
+
+### Primary user need
+
+“I need to understand what investors actually experience after starting a SIP, identify recurring behavioural patterns across different public sources, and determine which potential problems deserve deeper research—without relying on assumptions or unverified AI conclusions.”
+
+### Product promise
+
+Given a defined research question and a set of public conversations, the engine should help the product manager answer:
+
+1. What are investors saying and doing?
+2. What patterns appear in the available evidence?
+3. How frequently do those patterns appear in our dataset?
+4. Which investor contexts or journey stages are associated with them?
+5. What evidence supports or contradicts each interpretation?
+6. What remains uncertain?
+7. What should we investigate next?
+
+## 4. Scope of the discovery engine
+
+In scope
+
+- Discovering public conversations relevant to first-time SIP investing in India.
+- Cleaning, filtering, deduplicating, and organizing collected material.
+- Extracting structured evidence about motivations, expectations, behaviour, concerns, workarounds, and reported outcomes.
+- Discovering recurring patterns without forcing every item into predetermined themes.
+- Comparing patterns across sources, journey stages, and segments where evidence permits.
+- Generating competing hypotheses and primary research questions.
+- Comparing potential opportunity areas against the business objective.
+- Evaluating AI extraction and interpretation against manually labelled evidence.
+
+Out of scope for Part 1
+
+- Declaring a final root cause before primary research.
+- Treating public comments as representative of all Groww investors.
+- Claiming that an observed behaviour caused SIP discontinuation without evidence.
+- Designing or deploying the final user-facing solution.
+- Recommending specific mutual funds, stocks, or investment decisions.
+- Using fear, FOMO, or urgency-based nudges.
+- Collecting private Groww account data, PAN details, account numbers, or portfolio screenshots.
+
+The final two solution constraints are specified in the broader assignment. They must be respected in later stages; Part 1 is a research tool, not an investment-advice system.
+
+## 5. Research questions the engine must answer
+
+The assignment explicitly requires investigation of the following areas. These should guide extraction and analysis, but they should not become fixed conclusions or mandatory themes.
+
+| Research area               | Questions to investigate                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Motivation and expectations | Why did an investor start a SIP? What outcome did they expect, and over what time frame?                                               |
+| Early experience            | What did they notice, check, learn, or struggle with in the first months?                                                              |
+| Continuing behaviour        | What actions, routines, or circumstances appear in conversations from people who continue?                                             |
+| Change in behaviour         | What happened before someone considered reducing, pausing, or stopping a SIP?                                                          |
+| Monitoring habits           | What do investors check, how often do they check it, and what are they trying to understand?                                           |
+| In-product friction         | What is confusing, difficult to interpret, missing, or frustrating in the app experience?                                              |
+| Outside-product behaviour   | Where do investors go when uncertain—search engines, YouTube, forums, friends, family, advisers, or other sources?                     |
+| Decision context            | What circumstances or events precede a reported decision or consideration?                                                             |
+| Segment differences         | How do experiences differ by age, income stability, source of money, or who influenced the decision, where such details are available? |
+| Unmet needs                 | What recurring needs, questions, or gaps remain unresolved in the available conversations?                                             |
+
+Important distinction: A person discussing a market decline is not automatically considering stopping their SIP. A person reporting low returns has not necessarily stopped. A person continuing a SIP has not necessarily found the experience satisfactory. The engine must preserve these distinctions.
+
+## 6. Data sources and collection strategy
+
+The assignment allows the engine to analyze public conversations from several sources. We will use Groww as the selected product context, while also investigating broader Indian SIP and first-time investing discussions so the findings are not limited to people who already use Groww.
+
+### 6.1 Proposed source mix
+
+[Google Play Store : changements majeurs pour les notes et commentaires, découvrez la nouvelle interface](https://images.openai.com/static-rsc-4/8eeit-SLXx5_RIUEMs-XprK53aOoslMrz6AFbiLzoT4wtOe2dy2axmPV0EJ_B3gQQiqFdJPN2s6xvR4vxV1OzUD5BuqCAyQHa4Uk0DlLpb2bd9eAkvnHWA_W0Q_KtpTAKZ1NxNbJ68Js-wsYhEjpmlIqnxJb73YFVNG8D73zedA?purpose=inline)
+
+1\. Google Play Store reviews
+
+Collect publicly available reviews of Groww, particularly those discussing SIP setup, instalments, portfolio tracking, returns, confusion, support, or investing behaviour.
+
+Why: These can reveal product-specific experiences, although not every review will be about SIP continuation.
+
+[How to Redesign an App: When to Do It and What to Start With - UX Magazine](https://images.openai.com/static-rsc-4/tWL__q8VdTuBFJhxy6iCOlVUWvAjJ0sJhU8ziPBaDZI4r7f8zKFTpZjCK0tLQMSZzycy3dcRplktmWPjfnOclsnzT7nK2lFIj71BWyyLU9BNCwEkkwVe5ypSbtkQlhKv3EViSZ5TO4QMZRd-kUpI0sQAkTDDbq7qsP8yueuMH_o?purpose=inline)
+
+2\. Apple App Store reviews
+
+Analyze relevant Groww reviews to add another source of product feedback and identify patterns that may be present across app platforms.
+
+[Building a Reddit Comment Section Like Multi-Level Accordion in ReactJS With Code Example | Medium](https://images.openai.com/static-rsc-4/7B5SK38HiMCaBIxmU_ovPsP5FSjoMFcCQalzZD0CS-iAVYanSI2eHizZlN2I4pIXnxmmIuR8eisD1TmHp4dhRTl-_Jz_xj0LcSTz1OduIR8zNttWtlm1yo95rv978y0i4qBY_CCgK3hWLCNlqW-FpcoJhnpj7zTzSwh0rotxrU4?purpose=inline)
+
+3\. Reddit discussions
+
+Search relevant Indian investing communities for discussions about first SIPs, contribution changes, expectations, uncertainty, and investing habits.
+
+Why: Discussions may include more context about why people made decisions than short app reviews.
+
+[Ask us anything about trading, investing and markets - AMA (Ask Me Anything) - Trading Q&A by Zerodha - All your queries on trading and markets answered](https://images.openai.com/static-rsc-4/yyNVxcShxD_Qh6RO54QpqQTUF5p7GTg8M7eBuL7LuloN86wPVPeKjSMFGtThED6fP37G_uv-FlYGMakqZ81HiyPtOqBnywEanieu3UQiRq4MJnWcL9TuF7Km-WS0FHomwPM028CqxNIkB425oBDQ6ZNJB4wNiPYl4z4o7puUbi8?purpose=inline)
+
+4\. TradingQ&A and investing forums
+
+Investigate public questions and responses about SIPs, recurring contributions, investor confusion, and investing processes.
+
+[재테크 유튜브 서대리tv 미국 주식 배당 투자 적립식 투자](https://images.openai.com/static-rsc-4/TaJ1zQpoxItjTLtJUnQXEMxBGENK9JYsqrZ564RAZAhb7TYKtJcBgiCWTznNEdXQLa68wH1zWnCr0UgRUaEpaFPMSif_x_i09b7bStwrvaANZ26H2X3Fd74SDjtOSv-NVXs52vPqi6EvuCpZnw6cSp2SUbUszXdXK0zGGJAOAXA?purpose=inline)
+
+5\. YouTube comments
+
+Collect relevant public comments on Indian personal-finance and SIP-related videos. Record the video context because a comment's meaning may depend on the topic being discussed.
+
+[Let's talk about Lemmy : r/redditsync](https://images.openai.com/static-rsc-4/yeTmX4NS2ijYic5SATpfLer9_5MsVdn_2hgX5bTGS6SW8NvmQ4vwSyTapzwemrmE5p7AOk6mLm4EjdXxZm-CB6PlXlqG2X4PMqijQPOLayTCnVLdmkPMFcftwr72bEDZusKsW6hXJtK0R5liQxYPBhCKCfSgl7GSpPf4tDVdQm0?purpose=inline)
+
+6\. Other public conversations
+
+Include other accessible public discussions only where they contribute relevant evidence and can be collected within platform rules.
+
+These are proposed collection sources, not a claim that all have already been accessed or that all will permit automated extraction. Actual access and collection volumes must be recorded in the Evidence Log.
+
+### 6.2 Groww-specific versus category-level evidence
+
+The engine should label evidence according to its context:
+
+- Groww-specific: The author explicitly describes using Groww or a Groww feature.
+- Category-level: The author discusses SIPs or mutual fund investing without identifying Groww.
+- Other-product-specific: The author explicitly describes a different investment app.
+- Unknown: The product context cannot be determined reliably.
+
+This matters because a pattern observed across Indian SIP discussions may be relevant to Groww, but it does not prove that Groww users experience the same problem at the same rate.
+
+### 6.3 Initial sampling plan
+
+The assignment does not prescribe a minimum number of reviews or conversations. Therefore, we should begin with a manageable pilot, validate the workflow, and expand based on the quality and coverage of the data.
+
+Proposed starting plan—not an assignment requirement:
+
+| Stage              | Suggested scope                                                          | Purpose                                                        |
+| ------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Pilot              | 100–200 raw public items across 2–3 accessible sources                   | Test collection, cleaning, extraction, and relevance filtering |
+| Initial analysis   | Expand to approximately 500–1,000 raw items if collection is feasible    | Discover initial patterns and identify source gaps             |
+| Quality evaluation | About 20 manually labelled items, as required by the assignment          | Evaluate extraction quality and document failures              |
+| Expansion          | Add more sources or items based on missing coverage and observed quality | Improve diversity and test whether patterns persist            |
+
+The counts above are engineering starting points, not statistical requirements or proof of representativeness. If a source yields fewer relevant items, record the actual count rather than manufacturing a target volume.
+
+### 6.4 Collection rules
+
+Every collected item should retain enough metadata to be traced back to its source.
+
+- Source platform and content type.
+- Original item identifier, when available.
+- Original URL or a valid reference to the public item.
+- Publication date, when available.
+- Collection date.
+- Original text or a permitted stored representation.
+- Product context, where identifiable.
+- Collection method and any limitations.
+
+Collection must respect each platform's terms, access restrictions, rate limits, and privacy expectations. Do not bypass access controls or collect private content.
+
+## 7. End-to-end workflow
+
+The discovery engine will use a pipeline with seven stages. Each stage should have a defined input, processing task, and output so that the results can be inspected and corrected.
+
+### 1
+
+### Collect
+
+Gather accessible public conversations
+
+### 2
+
+### Clean and qualify
+
+Remove duplicates, noise, and irrelevant items
+
+### 3
+
+### Extract evidence
+
+Convert relevant items into structured records
+
+### 4
+
+### Discover patterns
+
+Cluster similar evidence and compare differences
+
+### 5
+
+### Generate hypotheses
+
+Explain possible patterns and competing interpretations
+
+### 6
+
+### Compare opportunities
+
+Assess potential relevance to SIP continuation
+
+### 7
+
+### Evaluate quality
+
+Compare outputs with human labels and record corrections
+
+Human review can correct outputs and send records back through the pipeline.
+
+### Stage 1 — Collect public conversations
+
+Objective: Create a dataset of relevant public investor conversations.
+
+The system should accept content from supported source connectors, permitted exports, or manually imported files. Each source adapter should normalize its output into a common format while preserving the original text and source metadata.
+
+The system should record collection failures, unavailable sources, date ranges, query terms, and limitations. A failed collection must not be represented as a source containing zero relevant conversations unless that has actually been established.
+
+Output: A raw dataset with source metadata and collection logs.
+
+### Stage 2 — Clean, deduplicate, and qualify
+
+Objective: Ensure that subsequent analysis uses relevant, usable evidence.
+
+Processing tasks:
+
+1. Normalize text and metadata without changing the author's meaning.
+2. Detect exact duplicates.
+3. Flag likely near-duplicates, reposts, and repeated content.
+4. Filter irrelevant material, such as unrelated Groww complaints or investment discussions that do not inform the research questions.
+5. Preserve relevant negative, positive, neutral, and mixed experiences.
+6. Mark ambiguous or insufficiently contextualized items for review rather than forcing a decision.
+7. Maintain a reason for each exclusion.
+
+A complaint about login failure may be relevant to the overall app experience but not necessarily to SIP continuation. The system should classify relevance to the current research scope, not assume every product complaint is evidence about the target metric.
+
+Output: A qualified dataset, an exclusion log, and deduplication statistics.
+
+### Stage 3 — Extract structured behavioural evidence
+
+Objective: Convert unstructured conversations into consistent records that can be compared and audited.
+
+The LLM should extract what the author explicitly reports, identify the behaviour or situation being discussed, and flag what remains unknown. It must not invent an investor profile, decision, emotion, or causal relationship.
+
+A single conversation may contain multiple distinct pieces of evidence. Where needed, create multiple evidence records linked to the same original item instead of compressing everything into one broad summary.
+
+Output: Structured evidence records linked to their source items.
+
+### Stage 4 — Discover recurring patterns
+
+Objective: Identify relationships and repeated experiences emerging from the evidence.
+
+The engine should group semantically similar evidence, inspect differences between records, and identify patterns that may deserve further investigation.
+
+It should not start with a fixed list of assumed root causes. Initial research questions can guide the extraction, but the actual themes should emerge from the collected evidence.
+
+Analysis should include:
+
+- Number of relevant items associated with a pattern.
+- Number of distinct authors, where reliably identifiable.
+- Distribution across sources.
+- Journey stages represented.
+- Available segment differences.
+- Supporting and contradictory examples.
+- Evidence gaps and uncertainty.
+
+Output: Candidate themes with counts, representative evidence, contradictory evidence, and confidence limitations.
+
+### Stage 5 — Generate hypotheses and research questions
+
+Objective: Explain what a pattern might mean without presenting an interpretation as a proven fact.
+
+For each important theme, the engine should generate one or more plausible interpretations. It should identify what evidence supports each interpretation, what evidence challenges it, and what additional information would help distinguish between alternatives.
+
+For example, suppose several public comments explicitly describe difficulty understanding returns. One possible hypothesis is that uncertainty about investment progress makes it harder for some investors to maintain confidence in their SIP. Another possibility is that the comments reflect a general information need without any effect on continuation.
+
+Both interpretations require further investigation. The engine must not claim either is a verified cause of stopping.
+
+Output: Competing hypotheses, unanswered questions, and proposed interview or survey questions.
+
+### Stage 6 — Compare potential opportunities
+
+Objective: Help the product manager decide which hypotheses deserve further research against the business outcome.
+
+Candidate opportunities should be compared using:
+
+- Evidence prevalence within the collected dataset.
+- Severity or importance as reported by affected users.
+- Relevance to the first 12 months of a first-time investor's SIP journey.
+- Plausible relationship with continuation behaviour.
+- Relevance to the selected investor segment.
+- Strength and diversity of supporting evidence.
+- Contradictory evidence and uncertainty.
+- Potential for the product experience to influence the problem.
+
+Do not automatically rank a theme first because it has the most mentions. A frequently discussed issue may have little relevance to continuation, while a less frequent but consequential experience may deserve investigation.
+
+Output: A transparent shortlist of opportunities for primary research, with the rationale and limitations behind each selection.
+
+### Stage 7 — Evaluate and improve the engine
+
+Objective: Demonstrate that AI-generated records and interpretations are sufficiently reliable to inform further research.
+
+The system must support a manually labelled set of approximately 20 items, compare AI outputs against human labels, and document failures and corrections.
+
+This evaluation is not a one-time checkbox. Corrections should inform prompt changes, extraction rules, filtering, and subsequent runs.
+
+Output: A quality evaluation report and an AI Evidence Log.
+
+## 8. Structured evidence schema — the most important part to get right
+
+This is the core of the system. If evidence extraction is weak, clustering and hypothesis generation will also be weak, regardless of which AI model is used.
+
+Each relevant item should be converted into a structured record. The schema below is a proposed implementation design based on the assignment's research questions.
+
+### 8.1 Required fields
+
+| Field                   | What the engine should capture                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `evidence_id`           | Unique identifier for the extracted evidence record.                                                           |
+| `source_id`             | Identifier linking the record to its original public item.                                                     |
+| `source_platform`       | Play Store, App Store, Reddit, YouTube, forum, or other source.                                                |
+| `source_url`            | Link to the original public item, when available.                                                              |
+| `published_at`          | Original publication date, if available.                                                                       |
+| `product_context`       | Groww-specific, category-level, other-product-specific, or unknown.                                            |
+| `investor_context`      | Experience level, stated financial circumstances, or other relevant context explicitly reported by the author. |
+| `journey_stage`         | Before starting, newly started, continuing, considering a change, paused, stopped, or unknown.                 |
+| `motivation`            | Why the author says they started or wanted to start a SIP.                                                     |
+| `expectation`           | What outcome or experience they expected, if explicitly stated.                                                |
+| `trigger_or_situation`  | The event, circumstance, or context the author reports before a concern or decision.                           |
+| `reported_behaviour`    | What the author says they did, considered doing, or routinely does.                                            |
+| `friction_or_concern`   | The explicitly reported confusion, difficulty, uncertainty, disappointment, or other concern.                  |
+| `monitoring_behaviour`  | What they check and how often, when stated.                                                                    |
+| `workaround`            | What they do outside the product or instead of the intended product action.                                    |
+| `reported_outcome`      | The result or consequence explicitly described by the author.                                                  |
+| `evidence_quote`        | The shortest useful original excerpt that supports the extraction.                                             |
+| `evidence_type`         | Explicitly stated, inferred, or unknown.                                                                       |
+| `missing_information`   | Important details the conversation does not establish.                                                         |
+| `extraction_confidence` | Model-reported confidence or a clearly defined confidence category; not a substitute for evaluation.           |
+| `review_status`         | Unreviewed, accepted, corrected, or rejected by a human reviewer.                                              |
+
+Fields should allow null or unknown values. Do not force an LLM to populate every field with a guess.
+
+### 8.2 Use separate labels for reported facts and interpretation
+
+The system must distinguish four levels of reasoning.
+
+Level 1
+
+Evidence
+
+What the person actually said or reported, linked to the original item.
+
+Level 2
+
+Theme
+
+A recurring pattern connecting multiple pieces of evidence.
+
+Level 3
+
+Hypothesis
+
+A possible explanation for the observed pattern that still needs validation.
+
+Level 4
+
+Validated problem
+
+A problem supported by the combined discovery evidence and primary research, with its boundaries and remaining uncertainty documented.
+
+The first three levels are within the discovery engine's scope. The final problem definition belongs to a later assignment stage and must be informed by primary research.
+
+### 8.3 Example of correct extraction
+
+The following is a hypothetical example, not a finding from actual Groww users.
+
+Original statement:
+
+> “I don't understand why my returns are showing differently, so I searched YouTube to understand it.”
+
+Possible extraction:
+
+- Reported behaviour: Searched YouTube for an explanation.
+- Friction: Difficulty understanding the displayed returns.
+- Workaround: Used an external video platform to seek clarification.
+- Journey stage: Unknown, unless the author provides more context.
+- Reported outcome: Sought an explanation; whether they understood it is unknown.
+- SIP continuation: Unknown.
+- Evidence type: Explicitly stated for the confusion and workaround.
+
+A valid theme might emerge if multiple independent conversations describe similar difficulties interpreting investment information.
+
+A possible hypothesis could be that some investors need more understandable explanations of their investment progress. But this example alone does not establish that the difficulty leads to a paused or stopped SIP.
+
+## 9. Theme discovery and analysis requirements
+
+### 9.1 How themes should emerge
+
+The engine should use a two-part approach:
+
+1. Exploratory discovery: Cluster extracted evidence by semantic similarity and inspect recurring experiences without imposing a fixed set of root causes.
+2. Research-question mapping: Once candidate themes emerge, map them to questions such as motivations, continuation, change in behaviour, confusion, workarounds, and segment differences.
+
+This combines open discovery with structured investigation. The research questions guide the analysis, but they do not dictate its conclusions.
+
+### 9.2 What every theme must contain
+
+Each candidate theme should have:
+
+- A concise theme name and description.
+- The evidence records that support it.
+- The number of items and distinct authors, where possible.
+- The source distribution.
+- Representative quotes with source links.
+- Counterexamples or contradictory evidence.
+- Relevant journey stages and segments.
+- A clear separation between reported facts and interpretation.
+- Known limitations and unanswered questions.
+- One or more hypotheses, if justified by the evidence.
+- Questions to investigate through interviews or surveys.
+
+### 9.3 Quantification rules
+
+Counts must describe the dataset actually collected, not all Indian investors.
+
+For example, if 35 of 200 relevant collected items mention difficulty understanding returns, the engine can report that 17.5% of those items contain that pattern, provided the classification criteria are defined and applied consistently.
+
+It must not claim that 17.5% of Groww users experience that problem. Public conversations are self-selected, authors may post multiple times, and the dataset may not represent the product's users.
+
+Where possible, report both item counts and distinct-author counts. Deduplicate repeated content and explain how author identity was handled without attempting to identify anonymous people.
+
+### 9.4 Segment analysis
+
+The assignment specifically asks how patterns differ across factors such as income stability, age, source of money, and who influenced the investment decision.
+
+The engine should extract these only when the author explicitly reports them or the context supports them reliably.
+
+Examples of segment labels include:
+
+- Income stability: stable, variable, explicitly unstable, or unknown.
+- Source of money: salary, business income, family support, savings, or other stated source.
+- Influence: self-directed, friend, family, social media, financial professional, or unknown.
+- Age group: an explicitly stated age or defensible age band, otherwise unknown.
+
+Do not infer age, income, or financial circumstances from writing style or other weak signals. Segment comparisons should include unknowns and disclose small sample sizes. If there is insufficient evidence for a comparison, report that gap instead of manufacturing a conclusion.
+
+## 10. Hypothesis generation and opportunity comparison
+
+The discovery engine should help the product manager move from evidence to a research decision.
+
+For each promising theme, create a hypothesis record with the following fields:
+
+| Field                               | Purpose                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| Observed pattern                    | What appears repeatedly in the dataset.                                       |
+| Supporting evidence                 | Specific records, quotes, and source links.                                   |
+| Alternative explanations            | Other plausible interpretations of the same evidence.                         |
+| Missing evidence                    | What is not known or has not been observed.                                   |
+| Possible connection to continuation | Why the pattern could matter to the target business outcome.                  |
+| Research question                   | What primary research should investigate.                                     |
+| Validation approach                 | Interview, survey, additional data collection, or another appropriate method. |
+| Confidence and limitations          | How strong the current evidence is and what it cannot establish.              |
+
+### Opportunity comparison framework
+
+Once evidence exists, use a transparent comparison framework rather than an opaque AI-generated ranking.
+
+1\. Prevalence
+
+How often does the pattern occur in the collected data, and across how many distinct authors and sources?
+
+2\. User impact
+
+How important or consequential do affected investors describe the experience to be?
+
+3\. Business relevance
+
+Is there evidence of a plausible connection to starting, maintaining, reducing, pausing, or stopping a SIP during the first year?
+
+4\. Evidence quality
+
+Are the observations explicit, diverse, traceable, and supported by more than one independent source?
+
+5\. Product influence
+
+Is there a plausible way the product experience could address the need, without assuming the solution in advance?
+
+These criteria are proposed implementation choices, not scoring rules supplied by the assignment. Initially, the system should compare opportunities qualitatively and show the evidence behind each assessment. Avoid assigning arbitrary numerical scores until the criteria and scoring definitions are defensible.
+
+## 11. AI Evidence Log and evaluation plan
+
+The assignment explicitly requires an AI Evidence Log that documents source types and volumes, a manually labelled golden set of about 20 items, agreement between human and AI labels, failure cases, and two to three examples of rejected or corrected AI output.
+
+This is a required deliverable, not an optional enhancement.
+
+### 11.1 Build the golden set
+
+Select approximately 20 relevant items from the collected dataset. Include a mix of sources, short and long statements, ambiguous cases, different journey stages where available, and examples that could be easily misinterpreted.
+
+For each item, a human reviewer should label:
+
+- Whether the item is relevant to the research scope.
+- The explicit evidence quote.
+- Journey stage, if identifiable.
+- Reported behaviour and concern.
+- Workaround and outcome, if present.
+- Evidence type: explicit, inferred, or unknown.
+- Important information that cannot be determined.
+- Any interpretation the item does not support.
+
+The human labels are the reference for the initial evaluation. They should be created before inspecting the corresponding AI output wherever practical, reducing the risk of simply accepting the model's interpretation.
+
+### 11.2 Measure agreement
+
+Compare AI extraction against human labels field by field.
+
+| Evaluation dimension     | What to check                                                         |
+| ------------------------ | --------------------------------------------------------------------- |
+| Relevance classification | Did the engine correctly include or exclude the item?                 |
+| Evidence extraction      | Did it capture the correct statement without changing its meaning?    |
+| Behaviour and friction   | Did it identify what the person actually reported?                    |
+| Journey stage            | Did it correctly identify the stage or leave it unknown?              |
+| Workarounds and outcomes | Did it extract only what the source supports?                         |
+| Unsupported inference    | Did it invent a cause, profile, or outcome not present in the source? |
+| Source traceability      | Can the extracted record be traced back to the correct original item? |
+
+Report the number and percentage of exact or acceptable matches for each field. For example, if 18 of 20 human-labelled items agree on relevance classification, report 90% agreement on that field.
+
+Do not combine all fields into one headline accuracy number without explaining the calculation. A correct theme label does not compensate for fabricated evidence or an unsupported causal claim.
+
+A 20-item set is useful for an initial quality check, but it is too small to establish that the engine will generalize reliably across all platforms and investor segments.
+
+### 11.3 Document two to three AI failures
+
+The Evidence Log should include real examples from the actual workflow, not invented failure stories.
+
+Potential failure types to look for include:
+
+- The model interprets a complaint about returns as an intention to stop a SIP, although no such intention was expressed.
+- The model assigns an investor to an income or age segment without explicit evidence.
+- The model merges two different problems into one theme because they use similar words.
+- The model summarizes a statement but loses the original meaning or context.
+- The model produces a hypothesis that sounds plausible but has little supporting evidence.
+
+For every actual failure, record the original item, AI output, human correction, reason for correction, and the change made to the workflow or prompt.
+
+## 12. Proposed technical approach
+
+The assignment allows any AI-native stack, including Claude, GPTs, agents, workflows, n8n, Zapier, and other tools. It does not mandate a particular model or architecture.
+
+For this project, the following is a practical starting design.
+
+A. Data ingestion
+
+Collect through permitted APIs, source-specific collection tools, accessible exports, or manual import. Use separate adapters where source formats differ.
+
+B. Processing and storage
+
+Normalize records, deduplicate content, track provenance, and store raw metadata separately from extracted evidence. A structured database or structured files are sufficient for an initial MVP.
+
+C. LLM extraction
+
+Use a model with structured-output support to populate the evidence schema. Require evidence quotes, source IDs, and explicit unknown values. Validate outputs against the schema before saving.
+
+D. Pattern discovery
+
+Use embeddings or other similarity methods to propose clusters, then use an LLM to help describe candidate patterns. Review the underlying evidence before accepting a theme.
+
+E. Analysis and evaluation
+
+Calculate counts programmatically where possible, compare groups with adequate evidence, generate research questions, and run the golden-set evaluation.
+
+F. Research interface
+
+Present the source dataset, evidence records, themes, hypotheses, and evaluation results so a reviewer can inspect the reasoning and trace claims to source material.
+
+### Does this require RAG?
+
+Not necessarily.
+
+Retrieval-augmented generation (RAG) can help retrieve relevant evidence for a theme or question and make the resulting explanation traceable. However, RAG alone does not perform reliable extraction, prove that a theme is valid, or establish causality.
+
+For the first version, prioritize structured extraction, source traceability, reproducible counts, and human evaluation. Add retrieval when it improves evidence lookup and analysis at the scale you actually collect.
+
+### A note on Grok
+
+You mentioned Grok earlier. It can be evaluated as a candidate model, but selecting it does not automatically guarantee better data coverage or more representative insights. Data diversity depends primarily on the sources collected and their coverage; model choice affects extraction and interpretation quality.
+
+The engine should therefore be model-agnostic where practical, and the selected model should be tested against the same golden set before being trusted.
+
+## 13. Functional requirements
+
+The first working version should support the following capabilities.
+
+| ID    | Requirement                                                        | Priority          |
+| ----- | ------------------------------------------------------------------ | ----------------- |
+| FR-01 | Import or collect public conversations from supported sources.     | Must              |
+| FR-02 | Preserve original text, source metadata, and source references.    | Must              |
+| FR-03 | Normalize records and detect exact duplicates.                     | Must              |
+| FR-04 | Classify research relevance and record exclusion reasons.          | Must              |
+| FR-05 | Extract structured evidence using the agreed schema.               | Must              |
+| FR-06 | Preserve unknown fields rather than inventing missing information. | Must              |
+| FR-07 | Link each evidence record to its original source item.             | Must              |
+| FR-08 | Discover candidate themes from the extracted evidence.             | Must              |
+| FR-09 | Display supporting and contradictory evidence for themes.          | Must              |
+| FR-10 | Compare counts across sources and segments when data permits.      | Must              |
+| FR-11 | Generate hypotheses, alternatives, and primary research questions. | Must              |
+| FR-12 | Compare potential opportunities against transparent criteria.      | Must              |
+| FR-13 | Support human-labelled golden-set evaluation.                      | Must              |
+| FR-14 | Log corrections, rejected outputs, and evaluation results.         | Must              |
+| FR-15 | Export or share the findings and AI Evidence Log.                  | Must              |
+| FR-16 | Provide automated, continuous ingestion from every source.         | Later enhancement |
+| FR-17 | Provide advanced dashboards and complex segment analytics.         | Later enhancement |
+
+These priorities are a proposed build plan for Part 1. They are not a claim that the assignment mandates any particular technology.
+
+## 14. Non-functional requirements and safeguards
+
+The engine should also meet these quality requirements:
+
+- Traceability: Every material finding should link to the evidence supporting it.
+- Reproducibility: The workflow should record the collection scope, model or prompt version, and analysis method.
+- Transparency: Counts, exclusions, source gaps, and evaluation limitations should be visible.
+- Consistency: The same evidence schema and label definitions should be used across sources.
+- Uncertainty handling: Ambiguous evidence should be marked unknown or sent for human review.
+- Privacy: Use public data appropriately and avoid collecting unnecessary personal information.
+- Safety: Do not turn the discovery engine into an investment recommendation system.
+- Failure handling: Malformed model outputs, unavailable sources, and processing failures should be logged instead of silently discarded.
+- Human oversight: The product manager should be able to inspect and correct evidence and interpretations.
+
+## 15. Success criteria for Part 1
+
+The engine is successful when it demonstrates that the product manager can move from raw public conversations to evidence-backed research priorities through a repeatable and inspectable workflow.
+
+### Definition of done
+
+- A working discovery workflow can be run and demonstrated.
+- Public sources, collection methods, date ranges, and actual data volumes are documented.
+- Cleaning and relevance filtering are demonstrated, with exclusions and duplicates accounted for.
+- Relevant conversations are transformed into structured evidence records.
+- Evidence records can be traced to their source items.
+- Candidate themes include supporting evidence and contradictory examples where available.
+- Counts are calculated from the actual dataset and not presented as population-level estimates.
+- Segment comparisons are made only when the data supports them.
+- The engine produces hypotheses and research questions rather than asserting unverified root causes.
+- Potential opportunities are compared transparently against the business objective.
+- A golden set of about 20 manually labelled items is evaluated.
+- The evaluation records agreement and failure cases.
+- Two to three actual examples of corrected or rejected AI outputs are documented.
+- The workflow can be tested by another person, and the findings can be shared.
+
+The assignment does not define a minimum accuracy percentage for the golden set. We should establish and report measured performance honestly rather than inventing a target and claiming it has been achieved.
+
+## 16. Key risks and mitigations
+
+| Risk                               | Why it matters                                                        | Mitigation                                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Biased source coverage             | Public posters may not represent all investors.                       | Document source mix and limitations; avoid population-level claims.                                    |
+| Sparse evidence about continuation | Many comments will not state whether a SIP continued.                 | Preserve unknown outcomes and investigate gaps through interviews.                                     |
+| False causal conclusions           | Correlation or co-occurrence does not prove why someone stopped.      | Separate evidence, theme, hypothesis, and validated problem.                                           |
+| LLM hallucinations                 | Invented context can mislead product decisions.                       | Require source-linked evidence, schema validation, and human evaluation.                               |
+| Duplicate or coordinated content   | Counts may exaggerate how common a pattern appears.                   | Deduplicate and report item and distinct-author counts where possible.                                 |
+| Overly broad themes                | Different problems may be incorrectly merged.                         | Inspect examples, refine clusters, and retain contradictory cases.                                     |
+| Missing segment information        | Comparisons may be unreliable.                                        | Use unknown labels and state when evidence is insufficient.                                            |
+| Source access limitations          | Some platforms may restrict automated collection.                     | Use permitted methods, record failed attempts, and substitute other accessible sources when necessary. |
+| Model overconfidence               | Plausible wording may appear more certain than the evidence warrants. | Require uncertainty statements and human approval for important interpretations.                       |
+
+## 17. Expected outputs and deliverables
+
+Part 1 should produce four concrete artefacts.
+
+Deliverable 1 — Working AI Discovery Engine
+
+A testable workflow that gathers or imports data, processes it, extracts evidence, discovers patterns, and generates research outputs.
+
+Deliverable 2 — Discovery Findings
+
+A structured set of evidence records, themes, dataset-level counts, segment comparisons where supported, competing hypotheses, and research questions.
+
+Deliverable 3 — AI Evidence Log
+
+Source types and volumes, the manually labelled golden set, agreement results, failure cases, and two to three real examples of AI outputs corrected or rejected by human review.
+
+Deliverable 4 — One-slide workflow explanation
+
+A concise diagram for the final deck showing how the system collects data, extracts evidence, discovers themes, generates hypotheses, and evaluates quality.
+
+The assignment's final deck has a maximum of 10 slides, so the workflow explanation should be designed to fit into one slide rather than becoming a separate long presentation.
+
+## 18. How Part 1 connects to the rest of the assignment
+
+The discovery engine is the foundation, not the end of the project.
+
+### Business metric
+
+12-month SIP continuation
+
+### Product outcomes
+
+Identify behaviours that could influence continuation
+
+### AI discovery
+
+Collect evidence, discover patterns, generate hypotheses
+
+### Primary research
+
+Interview 5–6 investors from a selected segment
+
+### Problem definition
+
+Validate or challenge hypotheses and identify the root cause
+
+### MVP and evaluation
+
+Build, test, and measure a solution to the validated problem
+
+The important handoff from Part 1 is not “AI says investors stop because of X.” It is a defensible shortlist of potential problems, evidence for and against each, and clear questions that the interviews can answer.
+
+## 19. Recommended build order
+
+To start building without getting stuck designing the entire system at once, follow this order:
+
+1. Define the data schema and evidence rules. This prevents the model from generating inconsistent, hard-to-compare summaries.
+2. Collect a small pilot dataset. Start with accessible Groww reviews and one or two additional public sources.
+3. Build cleaning and relevance filtering. Confirm that the dataset actually contains material relevant to SIP investing.
+4. Implement structured LLM extraction. Generate one evidence record per relevant observation, with source references.
+5. Manually inspect the extracted records. Correct obvious errors before building theme discovery.
+6. Create the golden set. Evaluate extraction quality early enough to improve the prompts and workflow.
+7. Build theme discovery and hypothesis generation. Ground each output in the extracted evidence.
+8. Add opportunity comparison and export. Produce the findings and Evidence Log required for submission.
+
+My recommendation as a Senior PM: Do not start by building a complicated multi-agent system. Start with a reliable, end-to-end workflow on a small real dataset. The biggest risk is not choosing the wrong AI model; it is generating convincing insights that cannot be traced back to what investors actually said.
+
+Your first build milestone should be simple: collect public conversations, turn them into correctly structured evidence, and let a human verify the results. Once that works, add clustering, hypotheses, and opportunity comparison.

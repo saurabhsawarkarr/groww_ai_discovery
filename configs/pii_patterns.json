@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "patterns": [
+    {
+      "name": "indian_phone",
+      "regex": "(?:\\+91[\\-\\s]?|91[\\-\\s]?|0)?[6-9]\\d{9}\\b",
+      "replacement": "[REDACTED_PHONE]",
+      "description": "Indian 10-digit mobile phone numbers with optional country code (+91/91/0)"
+    },
+    {
+      "name": "pan_card",
+      "regex": "\\b[A-Z]{5}[0-9]{4}[A-Z]{1}\\b",
+      "replacement": "[REDACTED_PAN]",
+      "description": "Indian Permanent Account Number (PAN) 10-character alphanumeric"
+    },
+    {
+      "name": "email_address",
+      "regex": "\\b[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\\b",
+      "replacement": "[REDACTED_EMAIL]",
+      "description": "Standard email address matching"
+    },
+    {
+      "name": "ifsc_code",
+      "regex": "\\b[A-Z]{4}0[A-Z0-9]{6}\\b",
+      "replacement": "[REDACTED_IFSC]",
+      "description": "Indian Financial System Code (IFSC) 11-character bank branch code"
+    },
+    {
+      "name": "bank_account",
+      "regex": "(?i)\\b(?:a/c|acc(?:ount)?(?:\\s*no(?:\\.|umber)?)?[:\\s#]*)\\s*\\d{9,18}\\b|\\b\\d{11,18}\\b",
+      "replacement": "[REDACTED_BANK_INFO]",
+      "description": "Indian bank account numbers with contextual keywords or 11-18 standalone digits"
+    },
+    {
+      "name": "upi_id",
+      "regex": "\\b[a-zA-Z0-9.\\-_]{2,256}@[a-zA-Z]{2,64}\\b",
+      "replacement": "[REDACTED_UPI]",
+      "description": "UPI Virtual Payment Address (VPA)"
+    },
+    {
+      "name": "aadhaar_number",
+      "regex": "\\b[2-9]\\d{3}[\\s\\-]\\d{4}[\\s\\-]\\d{4}\\b",
+      "replacement": "[REDACTED_AADHAAR]",
+      "description": "12-digit Indian Aadhaar number formatted with spaces or hyphens"
+    }
+  ]
+}

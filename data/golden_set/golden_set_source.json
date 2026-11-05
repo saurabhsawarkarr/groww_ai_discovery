@@ -1,0 +1,202 @@
+[
+  {
+    "raw_id": "golden_ps_001",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_001",
+    "author_id_hash": "a111b222c333d444",
+    "raw_text": "Negative XIRR showing in my first month of SIP. Very worried about losing my money. UI is easy to navigate but returns are terrifying.",
+    "thread_context": {"score": 2, "reviewCreatedVersion": "14.1"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_ps_002",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_002",
+    "author_id_hash": "b222c333d444e555",
+    "raw_text": "Bank autopay mandate deduction failed without notification and Groww support took 4 days to respond. Missed my SIP date.",
+    "thread_context": {"score": 1, "reviewCreatedVersion": "14.2"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_ps_003",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_003",
+    "author_id_hash": "c333d444e555f666",
+    "raw_text": "Started my first SIP of 500 rupees last week. Smooth onboarding and KYC completed within 5 minutes.",
+    "thread_context": {"score": 5, "reviewCreatedVersion": "14.2"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_ps_004",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_004",
+    "author_id_hash": "d444e555f666a777",
+    "raw_text": "Wanted to pause my SIP for 1 month because of emergency cash needs, but pause option was difficult to locate in app.",
+    "thread_context": {"score": 3, "reviewCreatedVersion": "14.0"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_ps_005",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_005",
+    "author_id_hash": "e555f666a777b888",
+    "raw_text": "Cancelled all my ongoing SIPs after 2 months. The hidden exit loads and market swings are not suitable for conservative people.",
+    "thread_context": {"score": 1, "reviewCreatedVersion": "13.9"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_rd_006",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/g06_first_sip",
+    "author_id_hash": "f666a777b888c999",
+    "raw_text": "Started Rs 3000 monthly SIP in Parag Parikh Flexi Cap 4 months ago. Current value is down by -6%. Checked Reddit for workarounds and senior investors advised ignoring short-term NAV dips.",
+    "thread_context": {"parent_title": "4 months into first SIP and returns are negative", "subreddit": "IndiaInvestments"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_rd_007",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/g07_mandate_bounce",
+    "author_id_hash": "a777b888c999d000",
+    "raw_text": "Salary was delayed by 5 days, so my SIP instalment failed. SBI charged Rs 295 bounce fee. To avoid repeated penalties, I paused my SIP for 2 months until salary cycle regularizes.",
+    "thread_context": {"parent_title": "Paused SIP after bank ECS bounce penalty", "subreddit": "mutualfunds"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_rd_008",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/g08_xirr_math",
+    "author_id_hash": "b888c999d000e111",
+    "raw_text": "I have been running SIP for 6 months. Absolute return is +4% but XIRR shows +11.2%. I spent 2 hours on YouTube trying to understand how cash flows are annualized in XIRR.",
+    "thread_context": {"parent_title": "Confusion understanding XIRR vs absolute return calculation", "subreddit": "IndiaInvestments"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_rd_009",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/g09_step_up_appraisal",
+    "author_id_hash": "c999d000e111f222",
+    "raw_text": "Got a 15% salary hike and used the annual step up feature on Groww to increase monthly contribution from Rs 4000 to Rs 5000. Automating the step up prevents lifestyle inflation.",
+    "thread_context": {"parent_title": "Step up feature helped me invest my appraisal bonus", "subreddit": "mutualfunds"},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_rd_010",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndianStockMarket/comments/g10_stop_sip_laptop",
+    "author_id_hash": "d000e111f222a333",
+    "raw_text": "Stopped my 5-month SIP and redeemed units to buy a replacement laptop because I had no emergency fund. Now I realize starting SIP without an emergency buffer was a critical mistake.",
+    "thread_context": {"parent_title": "Redeemed SIP early due to lack of emergency fund", "subreddit": "IndianStockMarket"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_yt_011",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=vid01&lc=yt_011",
+    "author_id_hash": "e111f222a333b444",
+    "raw_text": "Sir my SIP deduction date was 5th but units are not allocated yet. Is this normal or did payment get lost?",
+    "thread_context": {"video_title": "Mutual Funds for Beginners: Complete SIP Guide India", "like_count": 12},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_yt_012",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=vid02&lc=yt_012",
+    "author_id_hash": "f222a333b444c555",
+    "raw_text": "If market falls by 20% in my first year of SIP, should I stop or continue? Very scared of losing hard earned salary.",
+    "thread_context": {"video_title": "How to handle market correction during ongoing SIP", "like_count": 45},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_yt_013",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=vid03&lc=yt_013",
+    "author_id_hash": "a333b444c555d666",
+    "raw_text": "I am 21 and want to start my first SIP on Groww with 1000 rupees. Can I change the fund later without paying penalty?",
+    "thread_context": {"video_title": "Groww App Tutorial: How to set up first mutual fund SIP", "like_count": 8},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_yt_014",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=vid04&lc=yt_014",
+    "author_id_hash": "b444c555d666e777",
+    "raw_text": "Bank deducted 1000 rupees for SIP but Groww shows status as pending. Who should I contact, Groww or bank?",
+    "thread_context": {"video_title": "What to do when mutual fund SIP payment fails", "like_count": 19},
+    "product_context": "groww_specific",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_amb_015",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_015",
+    "author_id_hash": "c555d666e777f888",
+    "raw_text": "Nice user interface and clean graphs but sometimes takes time.",
+    "thread_context": {"score": 4, "reviewCreatedVersion": "14.1"},
+    "product_context": "groww_specific",
+    "is_qualified": 0
+  },
+  {
+    "raw_id": "golden_amb_016",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/g16_ambiguous",
+    "author_id_hash": "d666e777f888a999",
+    "raw_text": "Thinking about mutual funds vs fixed deposits. Everyone talks about returns but inflation is also high.",
+    "thread_context": {"parent_title": "FD vs Mutual Fund thoughts", "subreddit": "IndiaInvestments"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_amb_017",
+    "source_platform": "play_store",
+    "source_url": "https://play.google.com/store/apps/details?id=com.nextbillion.groww&reviewId=gp_017",
+    "author_id_hash": "e777f888a999b000",
+    "raw_text": "Invested in small cap index, returns are down by 4 percent.",
+    "thread_context": {"score": 3, "reviewCreatedVersion": "14.2"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_cnt_018",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/g18_counter_1",
+    "author_id_hash": "f888a999b000c111",
+    "raw_text": "Nifty dropped 4% this month and portfolio is in red. Instead of stopping my SIP, I stepped up my monthly contribution by Rs 1500 to buy more units while NAV is discounted.",
+    "thread_context": {"parent_title": "Counter-cyclical investing: buying more in market dip", "subreddit": "mutualfunds"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_cnt_019",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/IndiaInvestments/comments/g19_counter_2",
+    "author_id_hash": "a999b000c111d222",
+    "raw_text": "Completed exactly 12 months of my first Nifty 50 Index SIP today. There were months when portfolio was down 8%, but I never checked the balance and let autopay run. Currently sitting at +14% XIRR.",
+    "thread_context": {"parent_title": "12 Month SIP milestone completed - lessons in discipline", "subreddit": "IndiaInvestments"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  },
+  {
+    "raw_id": "golden_cnt_020",
+    "source_platform": "reddit",
+    "source_url": "https://www.reddit.com/r/mutualfunds/comments/g20_counter_3",
+    "author_id_hash": "b000c111d222e333",
+    "raw_text": "For my first 7 months of SIP, my portfolio was strictly in red between -2% and -8%. I was tempted to cancel autopay every single month. In month 8 market rallied and now I am at +16%. Glad I stayed invested.",
+    "thread_context": {"parent_title": "Stayed through 7 months of red returns - now in green", "subreddit": "mutualfunds"},
+    "product_context": "category_level",
+    "is_qualified": 1
+  }
+]

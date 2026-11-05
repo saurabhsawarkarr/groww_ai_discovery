@@ -1,0 +1,33 @@
+app:
+  name: "Groww Discovery Engine"
+  version: "1.0.0"
+  environment: "development"
+
+database:
+  path: "data/database/discovery_engine.db"
+
+ingestion:
+  play_store:
+    app_id: "com.nextbillion.groww"
+    lang: "en"
+    country: "in"
+    default_count: 200
+  reddit:
+    subreddits: ["IndiaInvestments", "mutualfunds", "IndianStockMarket"]
+    search_queries: ["first sip", "sip review", "stop sip", "pause sip", "xirr confusion"]
+    limit_per_query: 50
+  youtube:
+    queries: ["first time mutual fund sip india", "how to choose sip groww"]
+    max_results: 100
+
+extraction:
+  model_provider: "groq" # "groq" | "openai" | "anthropic" | "gemini"
+  model_name: "openai/gpt-oss-120b"
+  temperature: 0.0
+  max_retries: 2
+  quote_guardrail_enforced: true
+
+clustering:
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  min_cluster_size: 3
+  metric: "cosine"

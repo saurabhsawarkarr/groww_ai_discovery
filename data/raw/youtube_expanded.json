@@ -1,0 +1,77 @@
+[
+  {
+    "raw_id": "youtube_exp_001",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=groww_sip_guide_2026",
+    "author_id_hash": "yt_usr_101",
+    "published_at": "2026-02-15T15:00:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Sir please make a detailed video on how to change SIP date on Groww without paying bank mandate charges again. I selected 5th but salary comes on 10th and my SIP failed twice.",
+    "thread_context": {
+      "video_title": "Groww Mutual Fund Complete Beginner Guide 2026",
+      "video_id": "groww_sip_guide_2026",
+      "like_count": 24
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "youtube_exp_002",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=groww_sip_guide_2026",
+    "author_id_hash": "yt_usr_102",
+    "published_at": "2026-02-22T19:30:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Great tutorial! But why does Groww deduct money at 9 AM and only give NAV at 11 PM night? Is it better to invest via lump sum on market dips instead of monthly fixed SIP?",
+    "thread_context": {
+      "video_title": "Groww Mutual Fund Complete Beginner Guide 2026",
+      "video_id": "groww_sip_guide_2026",
+      "like_count": 18
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "youtube_exp_003",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=sip_xirr_demystified",
+    "author_id_hash": "yt_usr_103",
+    "published_at": "2026-03-05T12:15:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Finally someone explained XIRR properly. I was about to stop my SIP in Groww because my total profit was 500 rupees on 10000 invested but the app showed 22% XIRR which felt like fake calculation.",
+    "thread_context": {
+      "video_title": "How Mutual Fund XIRR Is Actually Calculated",
+      "video_id": "sip_xirr_demystified",
+      "like_count": 42
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "youtube_exp_004",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=sip_xirr_demystified",
+    "author_id_hash": "yt_usr_104",
+    "published_at": "2026-03-15T18:40:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Is it possible to pause SIP on Groww if I lose my job for 3 months? Or does the AMC freeze the folio if no money is deposited?",
+    "thread_context": {
+      "video_title": "How Mutual Fund XIRR Is Actually Calculated",
+      "video_id": "sip_xirr_demystified",
+      "like_count": 15
+    },
+    "product_context": "groww_specific"
+  },
+  {
+    "raw_id": "youtube_exp_005",
+    "source_platform": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=tax_sip_rules_2026",
+    "author_id_hash": "yt_usr_105",
+    "published_at": "2026-03-28T14:10:00+00:00",
+    "collected_at": "2026-10-24T00:30:00+00:00",
+    "raw_text": "Can you explain FIFO rule for SIP redemption tax? Groww does not display which specific units have completed 12 months for LTCG 12.5% vs STCG 20% tax slab.",
+    "thread_context": {
+      "video_title": "New Mutual Fund Capital Gains Tax Rules 2026",
+      "video_id": "tax_sip_rules_2026",
+      "like_count": 37
+    },
+    "product_context": "groww_specific"
+  }
+]
