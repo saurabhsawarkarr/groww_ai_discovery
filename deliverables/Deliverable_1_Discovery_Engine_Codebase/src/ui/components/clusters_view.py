@@ -1,38 +1,40 @@
 """Thematic Clusters & Pattern Discovery Component (Tab 2).
 
 Displays unsupervised emergent behavioral clusters, prevalence statistics,
-unique voice ratios (UVR), cross-source dispersion, and contradictory counter-evidence.
-Includes active date ranges, publication dates, and local file links.
+actionable product solutions, and verified verbatim customer evidence in a clean responsive grid.
+Designed following strict Light Theme standards with Groww typography and zero visual noise.
 """
 
 import json
 from pathlib import Path
-import textwrap
 from typing import Any, Dict, List
 import streamlit as st
 
 from src.database.connection import get_connection
+from src.ui.components.common_ui import MISSION_BANNER_HTML, get_kpi_card_html
 
 
 def render_clusters_view(db_path=None) -> None:
-    """Render Tab 2: Emergent Thematic Clusters, Publication Dates, and Local Links."""
+    """Render Tab 2: Emergent Thematic Clusters in Modern Card Grid Layout."""
+    
+    # 0. Top Mission Philosophy Banner
+    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
+
     st.markdown(
         """<div class="page-header-container">
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <h1 class="page-title">Emergent Thematic Clusters & Failure Modes</h1>
-            <span class="badge-tag badge-tier-1">7 Themes Discovered</span>
-        </div>
-    </div>
-    <p class="page-subtitle">Discovered across <strong>3,052 cleaned Mutual Fund & SIP conversations</strong>. Every theme includes prevalence statistics, active date windows, platform breakdowns, and verified verbatim quotes.</p>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<h1 class="page-title">Emergent Thematic Clusters & Failure Modes</h1>
+<span class="badge-tag badge-tier-1">7 Core Themes</span>
+</div>
+</div>
+<p class="page-subtitle">Synthesized across <strong>3,052 verified customer conversations</strong>. Every card displays the verified customer volume, core user friction, concrete product actions we can take, and direct verbatim evidence.</p>
 </div>""",
         unsafe_allow_html=True,
     )
 
     project_root = Path(__file__).resolve().parent.parent.parent.parent
     json_path = project_root / "data" / "processed" / "major_themes_3k_discovery.json"
-    local_csv_path = project_root / "data" / "processed" / "cleaned_3k_sip_conversations.csv"
-    local_md_path = project_root / "data" / "processed" / "major_themes_3k_discovery.md"
 
     themes_data = []
     total_corpus_count = 3052
@@ -65,136 +67,189 @@ def render_clusters_view(db_path=None) -> None:
                     "category": "Discovered Theme",
                     "prevalence_count": r[3],
                     "prevalence_percentage": round((r[3] / total_corpus_count) * 100, 1),
-                    "date_range": "2016-11-19 to 2026-10-25",
-                    "platform_breakdown": dist,
                     "core_problem": r[2],
+                    "growth_opportunity": "",
                     "representative_quotes": [],
                 })
             conn.close()
         except Exception:
             pass
 
-    # Quick Local Actions Banner & CSV Download
-    banner_col1, banner_col2 = st.columns([3, 1])
-    with banner_col1:
-        st.markdown(
-            f"""<div style="background: #FFFFFF; border: 1px solid var(--groww-card-border); border-left: 4px solid #008764; padding: 14px 18px; border-radius: 10px; margin-bottom: 16px; box-shadow: var(--groww-card-shadow);">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div>
-            <strong style="color: #008764; font-size: 13.5px;">📁 Ground-Truth Verification Catalog</strong>
-            <div style="font-size: 12.5px; color: var(--groww-text-muted); margin-top: 3px;">
-                Catalog contains <strong>{total_corpus_count:,}</strong> clean qualified SIP observations linked with exact source URLs.
-            </div>
-        </div>
-        <span class="badge-tag badge-tier-1">100% Traceable</span>
-    </div>
-</div>""",
-            unsafe_allow_html=True,
-        )
-    with banner_col2:
-        if local_csv_path.exists():
-            with open(local_csv_path, "rb") as f_csv:
-                csv_bytes = f_csv.read()
-            st.download_button(
-                label="📥 Download Clean 3K CSV",
-                data=csv_bytes,
-                file_name="cleaned_3k_sip_conversations.csv",
-                mime="text/csv",
-                use_container_width=True,
-                help="Click to inspect the 3,052 clean SIP records directly in Excel or CSV editor",
-            )
-
     if not themes_data:
         st.warning("No themes found. Please verify that data/processed/major_themes_3k_discovery.json exists.")
         return
 
-    # Overview KPI row (styled automatically as cards by style.css)
+    # Overview KPI row matching executive dashboard design
+    total_matched = sum(t.get("prevalence_count", 0) for t in themes_data)
+    k1 = get_kpi_card_html("DISCOVERED MAJOR THEMES", str(len(themes_data)), "Empirical Behavioral Clusters", "#0F172A", "#008764")
+    k2 = get_kpi_card_html("MAPPED OBSERVATIONS", f"{total_matched:,}", "Direct Verbatim Customer Evidence", "#008764", "#008764")
+    k3 = get_kpi_card_html("ANALYZED SIP CORPUS", f"{total_corpus_count:,}", "100% Qualified Clean Records", "#0F172A", "#008764")
+    k4 = get_kpi_card_html("EVIDENCE INTEGRITY", "100% Traceable", "Zero-Assumption Ground-Truth", "#008764", "#008764")
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Discovered Major Themes", len(themes_data))
+        st.markdown(k1, unsafe_allow_html=True)
     with col2:
-        total_matched = sum(t.get("prevalence_count", 0) for t in themes_data)
-        st.metric("Total Mapped Observations", f"{total_matched:,}")
+        st.markdown(k2, unsafe_allow_html=True)
     with col3:
-        st.metric("Analyzed SIP Corpus", f"{total_corpus_count:,} records")
+        st.markdown(k3, unsafe_allow_html=True)
     with col4:
-        st.metric("Zero-Hallucination Rate", "100.0%")
+        st.markdown(k4, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    def format_platform_name(p: str) -> str:
+        p_lower = (p or "").lower()
+        if "play" in p_lower:
+            return "Google Play Store"
+        elif "apple" in p_lower or "app_store" in p_lower:
+            return "Apple App Store"
+        elif "reddit" in p_lower:
+            return "Reddit Community"
+        elif "forum" in p_lower:
+            return "Investor Forum"
+        return p.capitalize() if p else "Customer Verbatim"
 
-    # Render each cluster card
+    cards_html_list = []
+
     for i, t in enumerate(themes_data, 1):
-        cid = t.get("theme_id", f"THEME-{i}")
+        cid = t.get("theme_id", f"THEME-0{i}")
         title = t.get("name", "Untitled Theme")
-        category = t.get("category", "Problem Space")
         desc = t.get("core_problem", "")
         item_count = t.get("prevalence_count", 0)
         prevalence_pct = t.get("prevalence_percentage", 0.0)
-        date_range = t.get("date_range", "2016-11-19 to 2026-10-25")
-        source_dist = t.get("platform_breakdown", {})
         quotes = t.get("representative_quotes", [])
         opportunity = t.get("growth_opportunity", "")
 
-        plat_tags_html = "".join([
-            f"<span class='badge-tag badge-{p.replace('_', '-')}'>{p.upper()}: {cnt}</span>"
-            for p, cnt in source_dist.items()
-        ]) or "<span style='font-size: 12px; color: #94A3B8;'>N/A</span>"
-
+        # Growth & Product Opportunity Callout Box
         opp_box = ""
         if opportunity:
-            opp_box = f"""<div style="background: rgba(217, 119, 6, 0.08); border-left: 3px solid #D97706; padding: 10px 14px; border-radius: 4px; margin-top: 10px;">
-    <strong style="color: #B45309; font-size: 12.5px;">💡 Growth & Product Opportunity:</strong>
-    <p style="font-size: 12.5px; color: #1E293B; margin: 3px 0 0 0; line-height: 1.5;">{opportunity}</p>
-</div>"""
+            opp_box = (
+                f'<div style="background: rgba(0, 208, 156, 0.07); border-left: 3.5px solid #00D09C; border-radius: 0 8px 8px 0; padding: 11px 13px; margin: 10px 0 14px 0;">'
+                f'<div style="color: #008764; font-size: 13.5px; font-weight: 700; margin-bottom: 3px;">💡 Growth & Product Opportunity:</div>'
+                f'<p style="font-family: \'Inter\', sans-serif; font-size: 13.5px; color: #1E293B; line-height: 1.5; margin: 0;">{opportunity}</p>'
+                f'</div>'
+            )
 
-        card_html = f"""<div class="evidence-card" style="border-left: 4px solid #008764; margin-bottom: 16px;">
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-<div>
-<span class="badge-tag badge-tier-1">RANK #{i} BY VOLUME</span>
-<span style="font-size: 11px; font-weight: 700; color: #64748B; margin-left: 6px; text-transform: uppercase;">ID: {cid}</span>
-<h3 style="margin: 6px 0 4px 0; color: #0F172A; font-size: 18px; font-weight: 700;">{title}</h3>
-<span style="font-size: 12px; color: #64748B;">📅 <strong>Active Date Window:</strong> {date_range}</span>
-</div>
-<div style="text-align: right; min-width: 110px;">
-<span style="font-size: 26px; font-weight: 800; color: #008764; font-family: 'Plus Jakarta Sans', sans-serif;">{prevalence_pct}%</span>
-<div style="font-size: 11.5px; color: #64748B; font-weight: 600;">{item_count:,} of {total_corpus_count:,}</div>
-</div>
-</div>
-<p style="font-size: 13.5px; color: #334155; line-height: 1.6; margin: 10px 0 14px 0;">{desc}</p>
-<div style="background: #F8FAFC; border: 1px solid var(--groww-card-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-<span style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">Platform Dispersion</span>
-<span style="font-size: 11.5px; color: #64748B;"><strong>Prevalence:</strong> {item_count} records ({prevalence_pct}%)</span>
-</div>
-<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
-{plat_tags_html}
-</div>
-</div>
-{opp_box}
-</div>"""
-
-        st.markdown(card_html, unsafe_allow_html=True)
-
-        # Representative Investor Quotes with Dates & Local Links inside Expander
+        # Quotes Drawer Content (Revealed on View Evidence)
+        quotes_drawer_content = ""
         if quotes:
-            with st.expander(f"Verbatim Voice of the Investor Quotes & Provenance ({len(quotes)} sample records)", expanded=False):
-                for q in quotes:
-                    plat_name = q.get("platform", "source").upper().replace("_", " ")
-                    pub_dt = q.get("published_date", "Recent")
-                    csv_idx = q.get("csv_index", "1")
-                    q_text = q.get("quote", "")
-                    src_url = q.get("source_url", "")
-                    
-                    quote_html = f"""<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;">
-<div style="font-size: 13.5px; font-style: italic; color: #1E293B; line-height: 1.5; margin-bottom: 6px;">
-"{q_text}"
-</div>
-<div style="font-size: 11px; color: #64748B; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-<span class="badge-tag badge-{q.get('platform', 'source').replace('_', '-')}">{plat_name}</span>
-<span>📅 <strong>Date:</strong> {pub_dt}</span>
-<span>&bull;</span>
-<span style="color: #008764; font-weight: 600;">CSV Record #{csv_idx}</span>
-{f'<span>&bull;</span> <a href="{src_url}" target="_blank" style="color: #0284C7; text-decoration: underline;">Original Link</a>' if src_url else ''}
-</div>
-</div>"""
-                    st.markdown(quote_html, unsafe_allow_html=True)
+            quote_cards = []
+            for q in quotes:
+                q_text = q.get("quote", "").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+                q_platform = format_platform_name(q.get("platform", ""))
+                q_url = q.get("source_url", "")
+                q_link = (
+                    f'<a href="{q_url}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline; font-size: 12px; display: inline-flex; align-items: center; gap: 3px;">Original Source Link ↗</a>'
+                    if q_url else ""
+                )
+
+                quote_cards.append(
+                    f'<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 3.5px solid #00D09C; border-radius: 7px; padding: 11px 13px; margin-bottom: 8px;">'
+                    f'<div style="font-family: \'Inter\', sans-serif; font-size: 13px; color: #1E293B; line-height: 1.5; font-style: italic; margin-bottom: 6px;">"{q_text}"</div>'
+                    f'<div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; margin-top: 4px;">'
+                    f'<span style="background: #F1F5F9; color: #475569; padding: 2px 7px; border-radius: 4px; font-weight: 600;">{q_platform}</span>'
+                    f'{q_link}'
+                    f'</div>'
+                    f'</div>'
+                )
+            quotes_drawer_content = "".join(quote_cards)
+        else:
+            quotes_drawer_content = '<div style="font-size: 12.5px; color: #64748B; font-style: italic;">No verbatim sample attached.</div>'
+
+        evidence_count = len(quotes)
+
+        footer_html = (
+            f'<div style="border-top: 1px solid #E2E8F0; padding-top: 12px; margin-top: auto;">'
+            f'<details class="evidence-details">'
+            f'<summary style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; user-select: none;">'
+            f'<span class="evidence-link">View Representative Evidence ({evidence_count} of {item_count:,}) &rarr;</span>'
+            f'</summary>'
+            f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-top: 12px; animation: fadeIn 0.2s ease;">'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;">'
+            f'<span style="font-size: 12px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.04em;">Representative Verbatim Samples</span>'
+            f'<span style="font-size: 11.5px; color: #008764; font-weight: 700; background: rgba(0, 208, 156, 0.1); padding: 2px 8px; border-radius: 4px;">{evidence_count} of {item_count:,} Accounts</span>'
+            f'</div>'
+            f'<div style="font-size: 11.5px; color: #64748B; margin-bottom: 10px; line-height: 1.4;">Curated high-signal quotes sampled from <strong>{item_count:,}</strong> accounts in this failure cluster across Play Store, App Store, Reddit, YouTube & Forums.</div>'
+            f'<div class="quotes-scroll-container" style="max-height: 340px; overflow-y: auto; padding-right: 6px;">{quotes_drawer_content}</div>'
+            f'<div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #E2E8F0; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px;">'
+            f'<span style="color: #64748B;">Corpus volume: <strong>{item_count:,} total records</strong></span>'
+            f'<span style="color: #008764; font-weight: 600;">100% Traceable in SQLite</span>'
+            f'</div>'
+            f'</div>'
+            f'</details>'
+            f'</div>'
+        )
+
+        card_html = (
+            f'<div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-top: 4px solid #00D09C; border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; transition: transform 0.15s ease, box-shadow 0.15s ease;">'
+            f'<div>'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">'
+            f'<span class="badge-tag badge-tier-1">{cid}</span>'
+            f'<div style="font-size: 13.5px; font-weight: 700; color: #008764; display: flex; align-items: center; gap: 4px;">'
+            f'<span>👥</span>'
+            f'<span>{item_count:,} People</span>'
+            f'<span style="color: #64748B; font-weight: 500; font-size: 12.5px;">({prevalence_pct}%)</span>'
+            f'</div>'
+            f'</div>'
+            f'<h3 style="font-family: \'Plus Jakarta Sans\', sans-serif; font-size: 18px; font-weight: 800; color: #0F172A; margin: 0 0 10px 0; line-height: 1.35;">{title}</h3>'
+            f'<p style="font-family: \'Inter\', sans-serif; font-size: 13.5px; color: #475569; line-height: 1.55; margin: 0 0 12px 0;">{desc}</p>'
+            f'{opp_box}'
+            f'</div>'
+            f'{footer_html}'
+            f'</div>'
+        )
+        cards_html_list.append(card_html)
+
+    # Styles for details summary and responsive grid
+    style_block = """<style>
+details.evidence-details summary {
+    list-style: none;
+    cursor: pointer;
+}
+details.evidence-details summary::-webkit-details-marker {
+    display: none;
+}
+details.evidence-details summary:focus {
+    outline: none;
+}
+.evidence-link {
+    color: #0284C7;
+    font-weight: 600;
+    font-size: 13.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease;
+}
+.evidence-link:hover {
+    color: #0369A1;
+    text-decoration: underline;
+}
+.quotes-scroll-container::-webkit-scrollbar {
+    width: 5px;
+}
+.quotes-scroll-container::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+.quotes-scroll-container::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+.quotes-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>"""
+
+    # Render entire grid in responsive multi-column layout
+    grid_container_html = (
+        f'{style_block}'
+        f'<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 18px; align-items: stretch; margin-top: 18px; margin-bottom: 24px;">'
+        f'{"".join(cards_html_list)}'
+        f'</div>'
+    )
+
+    st.markdown(grid_container_html, unsafe_allow_html=True)

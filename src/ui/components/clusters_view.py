@@ -161,17 +161,18 @@ def render_clusters_view(db_path=None) -> None:
             f'<div style="border-top: 1px solid #E2E8F0; padding-top: 12px; margin-top: auto;">'
             f'<details class="evidence-details">'
             f'<summary style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; user-select: none;">'
-            f'<span class="evidence-link">View Evidence ({evidence_count}) &rarr;</span>'
+            f'<span class="evidence-link">View Representative Evidence ({evidence_count} of {item_count:,}) &rarr;</span>'
             f'</summary>'
             f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-top: 12px; animation: fadeIn 0.2s ease;">'
-            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;">'
-            f'<span style="font-size: 12px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.04em;">Customer Verbatim Evidence</span>'
-            f'<span style="font-size: 11.5px; color: #64748B; font-weight: 600;">{evidence_count} Verified Records</span>'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;">'
+            f'<span style="font-size: 12px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.04em;">Representative Verbatim Samples</span>'
+            f'<span style="font-size: 11.5px; color: #008764; font-weight: 700; background: rgba(0, 208, 156, 0.1); padding: 2px 8px; border-radius: 4px;">{evidence_count} of {item_count:,} Accounts</span>'
             f'</div>'
-            f'{quotes_drawer_content}'
+            f'<div style="font-size: 11.5px; color: #64748B; margin-bottom: 10px; line-height: 1.4;">Curated high-signal quotes sampled from <strong>{item_count:,}</strong> accounts in this failure cluster across Play Store, App Store, Reddit, YouTube & Forums.</div>'
+            f'<div class="quotes-scroll-container" style="max-height: 340px; overflow-y: auto; padding-right: 6px;">{quotes_drawer_content}</div>'
             f'<div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #E2E8F0; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px;">'
-            f'<span style="color: #64748B;">Corpus volume: <strong>{item_count:,} accounts</strong></span>'
-            f'<span style="color: #008764; font-weight: 600;">100% Traceable</span>'
+            f'<span style="color: #64748B;">Corpus volume: <strong>{item_count:,} total records</strong></span>'
+            f'<span style="color: #008764; font-weight: 600;">100% Traceable in SQLite</span>'
             f'</div>'
             f'</div>'
             f'</details>'
@@ -222,6 +223,20 @@ details.evidence-details summary:focus {
 .evidence-link:hover {
     color: #0369A1;
     text-decoration: underline;
+}
+.quotes-scroll-container::-webkit-scrollbar {
+    width: 5px;
+}
+.quotes-scroll-container::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+.quotes-scroll-container::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+.quotes-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }

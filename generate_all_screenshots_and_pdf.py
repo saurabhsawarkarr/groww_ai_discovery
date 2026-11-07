@@ -76,6 +76,12 @@ with sync_playwright() as p:
     print("Navigating to: Failure Themes...", flush=True)
     page.locator('section[data-testid="stSidebar"] [role="radiogroup"] label').filter(has_text="Failure Themes").click()
     page.wait_for_timeout(3000)
+    # Open the first evidence drawer so representative verbatim quotes are visibly showcased
+    page.evaluate("""() => {
+        const details = document.querySelector('details.evidence-details');
+        if (details) details.open = true;
+    }""")
+    page.wait_for_timeout(1000)
     capture_full_current_page("02_failure_themes.png")
 
     # 3. User Segments
