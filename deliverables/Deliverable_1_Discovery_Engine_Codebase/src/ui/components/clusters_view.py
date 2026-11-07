@@ -263,23 +263,19 @@ Empirical behavioral failure clusters discovered across <strong>3,052 qualified 
         platform_breakdown = t.get("platform_breakdown", {})
 
         meta = THEME_METADATA_MAP.get(cid, {
-            "friction_category": "Failure Theme",
-            "category_color": "#008764",
-            "category_bg": "rgba(0, 208, 156, 0.08)",
-            "category_border": "rgba(0, 208, 156, 0.25)",
-            "card_top_border": "#00D09C",
             "root_trigger": t.get("core_problem", ""),
             "critical_window": "First-Year Journey",
             "product_levers": [
-                ("💡 Product Intervention", "#008764", "rgba(0, 208, 156, 0.08)")
+                "💡 Product Intervention"
             ],
         })
 
-        # Product lever pills (Strategy A)
+        # Product lever pills in clean unified Groww mint tint
         levers_html_list = []
-        for label, color, bg in meta.get("product_levers", []):
+        for item in meta.get("product_levers", []):
+            label = item[0] if isinstance(item, (list, tuple)) else str(item)
             levers_html_list.append(
-                f'<span style="font-family: \'Inter\', sans-serif; font-size: 11.5px; font-weight: 600; color: {color}; background: {bg}; border: 1px solid {color}33; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">{label}</span>'
+                f'<span style="font-family: \'Inter\', sans-serif; font-size: 11.5px; font-weight: 600; color: #008764; background: rgba(0, 208, 156, 0.08); border: 1px solid rgba(0, 208, 156, 0.22); padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">{label}</span>'
             )
         product_levers_html = "".join(levers_html_list)
 
