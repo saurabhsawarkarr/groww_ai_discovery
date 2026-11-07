@@ -81,74 +81,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
 }
 
 
-def render_channel_distribution_bar(platform_breakdown: Dict[str, int]) -> str:
-    """Render Strategy C: Slim segmented multi-platform ingestion breakdown bar in subtle Groww palette."""
-    play_count = platform_breakdown.get("play_store", 0)
-    reddit_count = platform_breakdown.get("reddit", 0)
-    yt_count = platform_breakdown.get("youtube", 0)
-    forum_count = platform_breakdown.get("forum", 0)
-    app_count = platform_breakdown.get("app_store", 0)
-
-    total = play_count + reddit_count + yt_count + forum_count + app_count
-    if total == 0:
-        return ""
-
-    play_pct = round((play_count / total) * 100)
-    reddit_pct = round((reddit_count / total) * 100)
-    yt_pct = round((yt_count / total) * 100)
-    forum_pct = round((forum_count / total) * 100)
-    app_pct = round((app_count / total) * 100)
-
-    p_map = [
-        ("Play Store", play_count),
-        ("Reddit", reddit_count),
-        ("YouTube", yt_count),
-        ("Forums", forum_count),
-        ("App Store", app_count),
-    ]
-    p_map.sort(key=lambda x: x[1], reverse=True)
-    top_channel, top_count = p_map[0]
-    top_pct = round((top_count / total) * 100)
-
-    # Restrained professional palette: Groww Mint + Muted Slates (Less colors)
-    segments_html = []
-    if play_pct > 0:
-        segments_html.append(f'<div style="width: {play_pct}%; background: #00D09C;" title="Google Play Store: {play_count} ({play_pct}%)"></div>')
-    if reddit_pct > 0:
-        segments_html.append(f'<div style="width: {reddit_pct}%; background: #475569;" title="Reddit Community: {reddit_count} ({reddit_pct}%)"></div>')
-    if yt_pct > 0:
-        segments_html.append(f'<div style="width: {yt_pct}%; background: #64748B;" title="YouTube Comments: {yt_count} ({yt_pct}%)"></div>')
-    if forum_pct > 0:
-        segments_html.append(f'<div style="width: {forum_pct}%; background: #94A3B8;" title="Investor Forums: {forum_count} ({forum_pct}%)"></div>')
-    if app_pct > 0:
-        segments_html.append(f'<div style="width: {app_pct}%; background: #008764;" title="Apple App Store: {app_count} ({app_pct}%)"></div>')
-
-    legend_items = []
-    if play_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #00D09C;"></span>Play ({play_pct}%)</span>')
-    if reddit_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #475569;"></span>Reddit ({reddit_pct}%)</span>')
-    if yt_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #64748B;"></span>YouTube ({yt_pct}%)</span>')
-    if forum_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94A3B8;"></span>Forums ({forum_pct}%)</span>')
-
-    return (
-        f'<div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #F1F5F9; margin-bottom: 12px;">'
-        f'<div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748B; margin-bottom: 5px;">'
-        f'<span style="font-weight: 600;">Data Ingestion Spread</span>'
-        f'<span style="font-weight: 700; color: #0F172A;">Lead: {top_channel} ({top_pct}%)</span>'
-        f'</div>'
-        f'<div style="display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: #E2E8F0; gap: 1px;">'
-        f'{"".join(segments_html)}'
-        f'</div>'
-        f'<div style="display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: #64748B; margin-top: 6px; flex-wrap: wrap;">'
-        f'{"".join(legend_items)}'
-        f'</div>'
-        f'</div>'
-    )
-
-
 def render_clusters_view(db_path=None) -> None:
     """Render Tab 2: Emergent Thematic Clusters in Modern Card Grid Layout."""
     
@@ -279,8 +211,6 @@ Empirical behavioral failure clusters discovered across <strong>3,052 qualified 
             )
         product_levers_html = "".join(levers_html_list)
 
-        # Strategy C Channel Ingestion mini-bar
-        distribution_bar_html = render_channel_distribution_bar(platform_breakdown)
 
         # Quotes Drawer Content (Revealed on View Evidence)
         quotes_drawer_content = ""
@@ -351,7 +281,6 @@ Empirical behavioral failure clusters discovered across <strong>3,052 qualified 
             f'{product_levers_html}'
             f'</div>'
             f'</div>'
-            f'{distribution_bar_html}'
             f'</div>'
             f'{footer_html}'
             f'</div>'
