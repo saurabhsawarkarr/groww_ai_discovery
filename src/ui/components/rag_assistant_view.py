@@ -25,8 +25,6 @@ def get_shared_pipeline() -> RAGPipeline:
 def render_rag_assistant_view(db_path=None) -> None:
     """Render the complete interactive RAG Assistant view with separate LLM adapter."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     # Initialize session state for RAG configuration and chat
     if "rag_provider" not in st.session_state:

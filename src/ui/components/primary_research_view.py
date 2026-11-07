@@ -11,8 +11,6 @@ from src.ui.components.common_ui import MISSION_BANNER_HTML, get_kpi_card_html
 def render_primary_research_view(db_path=None) -> None:
     """Render Primary Research tools (Surveys and 1:1 Interview Protocols)."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container">

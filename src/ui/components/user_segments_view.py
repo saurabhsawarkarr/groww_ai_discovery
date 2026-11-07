@@ -14,8 +14,6 @@ from src.ui.components.common_ui import MISSION_BANNER_HTML
 def render_user_segments_view(db_path=None) -> None:
     """Render User Segments & Journey Stages."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container">

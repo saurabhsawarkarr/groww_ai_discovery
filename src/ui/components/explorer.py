@@ -29,8 +29,6 @@ def update_review_status(evidence_id: str, new_status: str, db_path=None) -> Non
 def render_explorer(db_path=None) -> None:
     """Render Tab 1: Evidence Explorer with interactive filtering and provenance."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container">

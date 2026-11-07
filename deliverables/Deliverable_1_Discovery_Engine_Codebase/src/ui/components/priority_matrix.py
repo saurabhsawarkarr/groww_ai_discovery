@@ -45,9 +45,9 @@ Discovers high-leverage product opportunities by synthesizing our <strong>3,052 
     synthesizer = LLMOpportunitySynthesizer()
     bets = synthesizer.get_strategic_bets()
     tab_bet1, tab_bet2, tab_bet3, tab_custom = st.tabs([
-        "⚡ Strategic Bet #1: Autopay Recovery",
-        "🛡️ Strategic Bet #2: Volatility Shield",
-        "🧹 Strategic Bet #3: Portfolio Hygiene",
+        "🛡️ Bet 1: Cash-Flow & Autopay (Finding 3)",
+        "📉 Bet 2: Volatility & Return Pacing (Findings 1 & 4)",
+        "🎯 Bet 3: Goal Anchoring & Overlap (Finding 2)",
         "🔍 Custom LLM Discovery",
     ])
 
@@ -295,8 +295,6 @@ Discovers high-leverage product opportunities by synthesizing our <strong>3,052 
 def render_priority_matrix(db_path=None) -> None:
     """Render Tab 3: 5-Pillar Opportunity Matrix and Targeted Interview Guides."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container">
@@ -430,6 +428,16 @@ def render_priority_matrix(db_path=None) -> None:
     with s_col4:
         st.markdown(pkpi4, unsafe_allow_html=True)
 
+    FINDING_MAP = {
+        "THEME-01": "🛡️ Finding 3: Emergency Funds",
+        "THEME-02": "🎯 Finding 2: Not Setting Goals",
+        "THEME-03": "🛡️ Finding 3: Emergency Funds",
+        "THEME-04": "📉 Finding 1: Market Fluctuations",
+        "THEME-05": "🚀 Finding 4: Return Expectations",
+        "THEME-06": "📉 Finding 1: Market Fluctuations",
+        "THEME-07": "🎯 Finding 2: Not Setting Goals",
+    }
+
     # Ranked Summary Table View
     st.markdown("<h3 style='font-size: 21px; font-weight: 700; color: #0F172A; margin: 12px 0 8px 0;'>Prioritized Opportunities Overview</h3>", unsafe_allow_html=True)
     table_data = []
@@ -437,6 +445,7 @@ def render_priority_matrix(db_path=None) -> None:
         p = o["pillars"]
         table_data.append({
             "Rank": f"#{o['rank']}",
+            "Aligned Finding": FINDING_MAP.get(o["cluster_id"], "Research Finding"),
             "Opportunity Space": o["title"],
             "Priority Score": f"{o['priority_score']:.2f} / 5.0",
             "Priority Tier": o["priority_tier"],
@@ -449,13 +458,50 @@ def render_priority_matrix(db_path=None) -> None:
 
     st.markdown("<h3 style='font-size: 21px; font-weight: 700; color: #0F172A; margin: 16px 0 10px 0;'>Deep-Dive: 5-Pillar Assessments, Competing Hypotheses & Protocols</h3>", unsafe_allow_html=True)
 
+    opp_filter = st.radio(
+        "Filter Opportunities by Aligned Finding:",
+        [
+            "All Opportunities (Unified 4-Finding View)",
+            "📉 Finding 1: Market Fluctuations (Themes 4 & 6)",
+            "🎯 Finding 2: Not Setting Financial Goals (Themes 2 & 7)",
+            "🛡️ Finding 3: Lack of Emergency Funds (Themes 1 & 3)",
+            "🚀 Finding 4: Unrealistic Return Expectations (Theme 5)",
+        ],
+        horizontal=True,
+        key="opp_finding_filter",
+    )
+
+    opps_to_render = []
+    for o in ranked_opps:
+        cid = o["cluster_id"]
+        if "All" in opp_filter:
+            opps_to_render.append(o)
+        elif "Finding 1" in opp_filter and cid in ["THEME-04", "THEME-06"]:
+            opps_to_render.append(o)
+        elif "Finding 2" in opp_filter and cid in ["THEME-02", "THEME-07"]:
+            opps_to_render.append(o)
+        elif "Finding 3" in opp_filter and cid in ["THEME-01", "THEME-03"]:
+            opps_to_render.append(o)
+        elif "Finding 4" in opp_filter and cid in ["THEME-05"]:
+            opps_to_render.append(o)
+
     # Cohesive Opportunity Cards
-    for opp in ranked_opps:
+    for opp in opps_to_render:
         cid = opp["cluster_id"]
         hyps = hyps_by_cluster.get(cid, [])
         p = opp["pillars"]
         rank = opp["rank"]
         tier_class = "badge-tier-1" if "Tier 1" in opp["priority_tier"] else "badge-tier-2"
+
+        finding_badge = FINDING_MAP.get(cid, "Research Finding")
+        if cid in ["THEME-04", "THEME-06"]:
+            finding_style = "background: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE;"
+        elif cid in ["THEME-02", "THEME-07"]:
+            finding_style = "background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A;"
+        elif cid in ["THEME-01", "THEME-03"]:
+            finding_style = "background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"
+        else:
+            finding_style = "background: #F0F9FF; color: #0369A1; border: 1px solid #BAE6FD;"
 
         hyp_boxes = ""
         if len(hyps) >= 2:
@@ -476,6 +522,7 @@ def render_priority_matrix(db_path=None) -> None:
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
 <div>
 <span class="badge-tag {tier_class}">RANK #{rank} &bull; {opp['priority_tier'].upper()}</span>
+<span style="font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-left: 6px; {finding_style}">{finding_badge.upper()}</span>
 <span style="font-size: 14px; font-weight: 700; color: #64748B; margin-left: 6px;">CLUSTER: {cid.upper()}</span>
 <h3 style="margin: 6px 0 4px 0; color: #0F172A; font-size: 22px; font-weight: 700;">{opp['title']}</h3>
 </div>

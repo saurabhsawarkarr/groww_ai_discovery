@@ -17,8 +17,6 @@ from src.ui.components.common_ui import MISSION_BANNER_HTML, get_kpi_card_html
 def render_clusters_view(db_path=None) -> None:
     """Render Tab 2: Emergent Thematic Clusters in Modern Card Grid Layout."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container" style="margin-bottom: 20px;">

@@ -295,8 +295,6 @@ Discovers high-leverage product opportunities by synthesizing our <strong>3,052 
 def render_priority_matrix(db_path=None) -> None:
     """Render Tab 3: 5-Pillar Opportunity Matrix and Targeted Interview Guides."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
         """<div class="page-header-container">

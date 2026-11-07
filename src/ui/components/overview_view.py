@@ -99,8 +99,6 @@ FRUSTRATION_PROFILE_HTML = """<div class="overview-section-card" style="height: 
 def render_overview_view(db_path=None) -> None:
     """Render the clean Executive Overview matching the modern Discovery Engine design."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     # 1. Standard Page Header Area
     st.markdown(HEADER_HTML, unsafe_allow_html=True)

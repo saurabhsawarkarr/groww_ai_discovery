@@ -25,8 +25,6 @@ def get_shared_pipeline() -> RAGPipeline:
 def render_rag_assistant_view(db_path=None) -> None:
     """Render the complete interactive RAG Assistant view with separate LLM adapter."""
     
-    # 0. Top Mission Philosophy Banner
-    st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     # Initialize session state for RAG configuration and chat
     if "rag_provider" not in st.session_state:
@@ -106,7 +104,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                 index=LLMAdapter.PROVIDERS.index(st.session_state["rag_provider"])
                 if st.session_state["rag_provider"] in LLMAdapter.PROVIDERS
                 else 0,
-                key="cfg_provider_select_del",
+                key="cfg_provider_select",
             )
             st.session_state["rag_provider"] = selected_provider
 
@@ -127,7 +125,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                 "Model Identifier",
                 value=st.session_state.get("rag_model") or default_model,
                 help="Model name (e.g. gemini-3.5-flash, gpt-4o, claude-3-5-sonnet, llama-3.3-70b-versatile)",
-                key="cfg_model_input_del",
+                key="cfg_model_input",
             )
             st.session_state["rag_model"] = model_val
 
@@ -137,7 +135,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                 value=st.session_state.get("rag_api_key", ""),
                 type="password",
                 help="API key for your chosen provider. Kept strictly in local memory session.",
-                key="cfg_api_key_input_del",
+                key="cfg_api_key_input",
             )
             st.session_state["rag_api_key"] = key_val
 
@@ -146,22 +144,22 @@ def render_rag_assistant_view(db_path=None) -> None:
                 value=st.session_state.get("rag_base_url", ""),
                 placeholder="e.g. http://localhost:11434 or https://your-proxy.com/v1",
                 help="Specify custom host URL for Ollama, vLLM, or corporate proxies.",
-                key="cfg_base_url_input_del",
+                key="cfg_base_url_input",
             )
             st.session_state["rag_base_url"] = base_url_val
 
         col_param1, col_param2, col_btn = st.columns([1.5, 1.5, 1.2])
         with col_param1:
             st.session_state["rag_top_k"] = st.slider(
-                "Evidence Chunks (Top-K)", min_value=3, max_value=10, value=st.session_state["rag_top_k"], key="slider_topk_del"
+                "Evidence Chunks (Top-K)", min_value=3, max_value=10, value=st.session_state["rag_top_k"]
             )
         with col_param2:
             st.session_state["rag_temperature"] = st.slider(
-                "Generation Temperature", min_value=0.0, max_value=1.0, value=st.session_state["rag_temperature"], step=0.05, key="slider_temp_del"
+                "Generation Temperature", min_value=0.0, max_value=1.0, value=st.session_state["rag_temperature"], step=0.05
             )
         with col_btn:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            if st.button("🔌 Test Connection", use_container_width=True, key="btn_test_conn_del"):
+            if st.button("🔌 Test Connection", use_container_width=True):
                 with st.spinner("Testing connection to separate LLM..."):
                     ok, msg = LLMAdapter.test_connection(
                         provider=st.session_state["rag_provider"],
@@ -179,29 +177,29 @@ def render_rag_assistant_view(db_path=None) -> None:
 
     q_row1 = st.columns(3)
     with q_row1[0]:
-        if st.button("🚨 Why do bank autopay mandates fail silently?", use_container_width=True, key="q1_del"):
+        if st.button("🚨 Why do bank autopay mandates fail silently?", use_container_width=True):
             st.session_state["rag_query_input"] = "Why do bank autopay mandates fail silently and cause involuntary churn?"
             st.rerun()
     with q_row1[1]:
-        if st.button("📉 What causes Month 1–3 return panic?", use_container_width=True, key="q2_del"):
+        if st.button("📉 What causes Month 1–3 return panic?", use_container_width=True):
             st.session_state["rag_query_input"] = "What causes panic and SIP cancellations during Months 1 to 3 when portfolio shows negative returns?"
             st.rerun()
     with q_row1[2]:
-        if st.button("🧩 Scheme overlap & over-diversification", use_container_width=True, key="q3_del"):
+        if st.button("🧩 Scheme overlap & over-diversification", use_container_width=True):
             st.session_state["rag_query_input"] = "Why do novice investors accumulate 6+ overlapping funds and what friction does it cause?"
             st.rerun()
 
     q_row2 = st.columns(3)
     with q_row2[0]:
-        if st.button("💸 How does the ₹450 ECS penalty trigger churn?", use_container_width=True, key="q4_del"):
+        if st.button("💸 How does the ₹450 ECS penalty trigger churn?", use_container_width=True):
             st.session_state["rag_query_input"] = "How does the fear of ₹450 bank ECS bounce penalties push investors to cancel their entire SIP?"
             st.rerun()
     with q_row2[1]:
-        if st.button("⏱️ Why does T+2 settlement delay cause fraud anxiety?", use_container_width=True, key="q5_del"):
+        if st.button("⏱️ Why does T+2 settlement delay cause fraud anxiety?", use_container_width=True):
             st.session_state["rag_query_input"] = "Why do users panic over the 48-hour AMC unit allotment delay and misinterpret processing states?"
             st.rerun()
     with q_row2[2]:
-        if st.button("🛡️ What habits help investors continue 12+ months?", use_container_width=True, key="q6_del"):
+        if st.button("🛡️ What habits help investors continue 12+ months?", use_container_width=True):
             st.session_state["rag_query_input"] = "What mental models and product features help investors continue SIPs past 12 months?"
             st.rerun()
 
@@ -213,14 +211,14 @@ def render_rag_assistant_view(db_path=None) -> None:
             "Filter Platform Source",
             ["All", "Play Store", "Reddit", "App Store", "YouTube", "Forum"],
             index=0,
-            key="rag_plat_filter_del",
+            key="rag_plat_filter",
         )
     with fcol2:
         stage_filter = st.selectbox(
             "Filter Journey Stage",
             ["All", "newly_started", "continuing", "paused", "stopped"],
             index=0,
-            key="rag_stage_filter_del",
+            key="rag_stage_filter",
         )
 
     # 5. Inquiry Input Bar
@@ -230,14 +228,14 @@ def render_rag_assistant_view(db_path=None) -> None:
         value=st.session_state.get("rag_query_input", ""),
         placeholder="Ask anything about first-time SIP churn, investor psychology, or payment friction…",
         label_visibility="collapsed",
-        key="main_rag_input_del",
+        key="main_rag_input",
     )
 
     action_c1, action_c2 = st.columns([4, 1])
     with action_c1:
-        submit_clicked = st.button("🔍 Synthesize Qualitative Insight", type="primary", use_container_width=True, key="btn_sub_del")
+        submit_clicked = st.button("🔍 Synthesize Qualitative Insight", type="primary", use_container_width=True)
     with action_c2:
-        if st.button("🗑️ Clear Chat History", use_container_width=True, key="btn_clear_del"):
+        if st.button("🗑️ Clear Chat History", use_container_width=True):
             st.session_state["rag_history"] = []
             st.session_state["rag_query_input"] = ""
             st.rerun()

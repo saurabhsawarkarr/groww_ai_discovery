@@ -6,9 +6,7 @@ Provides:
 - Standard Section Card Wrappers
 """
 
-MISSION_BANNER_HTML = """<div class="top-mission-pill">
-&ldquo;From customer voices <span class="arrow">&rarr;</span> structured evidence <span class="arrow">&rarr;</span> behavioral understanding <span class="arrow">&rarr;</span> actionable insight.&rdquo;
-</div>"""
+MISSION_BANNER_HTML = ""
 
 
 def get_kpi_card_html(
