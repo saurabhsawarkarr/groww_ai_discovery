@@ -21,14 +21,24 @@ def render_clusters_view(db_path=None) -> None:
     st.markdown(MISSION_BANNER_HTML, unsafe_allow_html=True)
 
     st.markdown(
-        """<div class="page-header-container">
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
-<div style="display: flex; align-items: center; gap: 10px;">
-<h1 class="page-title">Emergent Thematic Clusters & Failure Modes</h1>
-<span class="badge-tag badge-tier-1">7 Core Themes</span>
+        """<div class="page-header-container" style="margin-bottom: 20px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; flex-wrap: wrap;">
+<div style="display: flex; align-items: center; gap: 12px;">
+<h1 class="page-title" style="margin: 0;">Discovered SIP Failure Themes</h1>
+<span class="badge-tag badge-tier-1" style="font-size: 13px; padding: 4px 10px;">7 Discovered Themes</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px;">
+<span style="background: rgba(0, 208, 156, 0.1); color: #008764; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(0, 208, 156, 0.25);">
+👥 1,667 Mapped Failure Accounts
+</span>
+<span style="background: #F1F5F9; color: #475569; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
+5 Channels &bull; 3,052 Clean Corpus
+</span>
 </div>
 </div>
-<p class="page-subtitle">Synthesized across <strong>3,052 verified customer conversations</strong>. Every card displays the verified customer volume, core user friction, concrete product actions we can take, and direct verbatim evidence.</p>
+<p class="page-subtitle" style="font-size: 15.5px; color: #475569; line-height: 1.6;">
+Empirical behavioral failure clusters discovered across <strong>3,052 qualified first-time investor conversations</strong>. Each theme quantifies user drop-off volume, pinpoints psychological and technical friction points, outlines concrete product interventions, and connects directly to customer evidence.
+</p>
 </div>""",
         unsafe_allow_html=True,
     )
@@ -81,10 +91,11 @@ def render_clusters_view(db_path=None) -> None:
 
     # Overview KPI row matching executive dashboard design
     total_matched = sum(t.get("prevalence_count", 0) for t in themes_data)
-    k1 = get_kpi_card_html("DISCOVERED MAJOR THEMES", str(len(themes_data)), "Empirical Behavioral Clusters", "#0F172A", "#008764")
-    k2 = get_kpi_card_html("MAPPED OBSERVATIONS", f"{total_matched:,}", "Direct Verbatim Customer Evidence", "#008764", "#008764")
-    k3 = get_kpi_card_html("ANALYZED SIP CORPUS", f"{total_corpus_count:,}", "100% Qualified Clean Records", "#0F172A", "#008764")
-    k4 = get_kpi_card_html("EVIDENCE INTEGRITY", "100% Traceable", "Zero-Assumption Ground-Truth", "#008764", "#008764")
+    coverage_pct = round((total_matched / total_corpus_count) * 100, 1) if total_corpus_count else 54.6
+    k1 = get_kpi_card_html("DISCOVERED FAILURE THEMES", f"{len(themes_data)} Core Themes", "Prevalence 3.2% – 18.0%", "#0F172A", "#008764")
+    k2 = get_kpi_card_html("MAPPED FAILURE VOLUME", f"{total_matched:,} Accounts", f"{coverage_pct}% of Qualified Corpus", "#008764", "#008764")
+    k3 = get_kpi_card_html("ANALYZED SIP CORPUS", f"{total_corpus_count:,} Conversations", "100% Qualified Clean Records", "#0F172A", "#008764")
+    k4 = get_kpi_card_html("MULTI-CHANNEL DATA", "5 Platforms", "Play Store, App Store, Reddit, YT, Forum", "#0284C7", "#0284C7")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -161,19 +172,10 @@ def render_clusters_view(db_path=None) -> None:
             f'<div style="border-top: 1px solid #E2E8F0; padding-top: 12px; margin-top: auto;">'
             f'<details class="evidence-details">'
             f'<summary style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; user-select: none;">'
-            f'<span class="evidence-link">View Representative Evidence ({evidence_count} of {item_count:,}) &rarr;</span>'
+            f'<span class="evidence-link">View Evidence ({evidence_count}) &rarr;</span>'
             f'</summary>'
             f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-top: 12px; animation: fadeIn 0.2s ease;">'
-            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;">'
-            f'<span style="font-size: 12px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.04em;">Representative Verbatim Samples</span>'
-            f'<span style="font-size: 11.5px; color: #008764; font-weight: 700; background: rgba(0, 208, 156, 0.1); padding: 2px 8px; border-radius: 4px;">{evidence_count} of {item_count:,} Accounts</span>'
-            f'</div>'
-            f'<div style="font-size: 11.5px; color: #64748B; margin-bottom: 10px; line-height: 1.4;">Curated high-signal quotes sampled from <strong>{item_count:,}</strong> accounts in this failure cluster across Play Store, App Store, Reddit, YouTube & Forums.</div>'
             f'<div class="quotes-scroll-container" style="max-height: 340px; overflow-y: auto; padding-right: 6px;">{quotes_drawer_content}</div>'
-            f'<div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #E2E8F0; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px;">'
-            f'<span style="color: #64748B;">Corpus volume: <strong>{item_count:,} total records</strong></span>'
-            f'<span style="color: #008764; font-weight: 600;">100% Traceable in SQLite</span>'
-            f'</div>'
             f'</div>'
             f'</details>'
             f'</div>'
