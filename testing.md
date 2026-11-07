@@ -164,6 +164,5 @@ All 7 empirical themes discovered from the 3,052 qualified dataset are cleanly a
 8. **Decoupled Verbatim Quotes from Card Body (Sample Reference Design):**
    * Removed the heavy inline quote blocks from the card body so cards remain compact, balanced, and uniform in height.
    * Integrated the sample card footer:
-     * Bottom-Left: `View Evidence ({N}) →` styled as an interactive link.
-     * Bottom-Right: `[ ⛁ Explore Category ]` styled with a layered database pill button.
+     * Bottom-Left: `View Evidence ({N}) →` styled as an interactive link (removed redundant `Explore Category` pill to keep card actions minimal and focused).
    * Expanding the footer unfolds the full customer verbatim quotes, platform tags, and direct clickable `Original Source Link ↗` records with zero clutter.

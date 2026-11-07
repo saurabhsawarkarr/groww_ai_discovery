@@ -129,7 +129,7 @@ def render_clusters_view(db_path=None) -> None:
                 f'</div>'
             )
 
-        # Quotes Drawer Content (Revealed on View Evidence / Explore Category)
+        # Quotes Drawer Content (Revealed on View Evidence)
         quotes_drawer_content = ""
         if quotes:
             quote_cards = []
@@ -162,10 +162,6 @@ def render_clusters_view(db_path=None) -> None:
             f'<details class="evidence-details">'
             f'<summary style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; user-select: none;">'
             f'<span class="evidence-link">View Evidence ({evidence_count}) &rarr;</span>'
-            f'<span class="explore-cat-btn">'
-            f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>'
-            f' Explore Category'
-            f'</span>'
             f'</summary>'
             f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-top: 12px; animation: fadeIn 0.2s ease;">'
             f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;">'
@@ -226,25 +222,6 @@ details.evidence-details summary:focus {
 .evidence-link:hover {
     color: #0369A1;
     text-decoration: underline;
-}
-.explore-cat-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    border-radius: 7px;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #1E293B;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    transition: all 0.15s ease;
-}
-.explore-cat-btn:hover {
-    background: #F1F5F9;
-    border-color: #94A3B8;
-    color: #0F172A;
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }

@@ -151,7 +151,7 @@ def render_clusters_view(db_path=None) -> None:
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
 <div>
 <span class="badge-tag badge-tier-1">RANK #{i} BY VOLUME</span>
-<span style="font-size: 11px; font-weight: 700; color: #64748B; margin-left: 6px; text-transform: uppercase;">ID: {cid} &bull; {category}</span>
+<span style="font-size: 11px; font-weight: 700; color: #64748B; margin-left: 6px; text-transform: uppercase;">ID: {cid}</span>
 <h3 style="margin: 6px 0 4px 0; color: #0F172A; font-size: 18px; font-weight: 700;">{title}</h3>
 <span style="font-size: 12px; color: #64748B;">📅 <strong>Active Date Window:</strong> {date_range}</span>
 </div>
