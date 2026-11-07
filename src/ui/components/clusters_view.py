@@ -16,108 +16,73 @@ from src.ui.components.common_ui import MISSION_BANNER_HTML, get_kpi_card_html
 
 THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-01": {
-        "friction_category": "Involuntary Bank Churn",
-        "category_color": "#DC2626",
-        "category_bg": "rgba(220, 38, 38, 0.08)",
-        "category_border": "rgba(220, 38, 38, 0.25)",
-        "card_top_border": "#DC2626",
         "root_trigger": "Salary delay of 2–3 days leaves bank account empty on auto-debit day, causing silent mandate cancellation with zero fallback recovery link.",
         "critical_window": "Month 3–6 • Early Mandate Phase",
         "product_levers": [
-            ("⚡ 1-Click Fallback UPI Retry", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🔔 WhatsApp T-24h Pre-Debit Ping", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🗓️ 5-Day Smart Salary Flex Buffer", "#008764", "rgba(0, 208, 156, 0.08)"),
+            "⚡ 1-Click Fallback UPI Retry",
+            "🔔 WhatsApp T-24h Pre-Debit Ping",
+            "🗓️ 5-Day Smart Salary Flex Buffer",
         ],
     },
     "THEME-02": {
-        "friction_category": "Cognitive Overload / Overlap",
-        "category_color": "#0284C7",
-        "category_bg": "rgba(2, 132, 199, 0.08)",
-        "category_border": "rgba(2, 132, 199, 0.25)",
-        "card_top_border": "#0284C7",
         "root_trigger": "Chasing trending YouTube fund picks leads to 6+ overlapping funds with >70% stock redundancy, causing decision fatigue and premature liquidation.",
         "critical_window": "Month 4–8 • Portfolio Clutter Phase",
         "product_levers": [
-            ("🔍 1-Click Portfolio Overlap Cleaner", "#0284C7", "rgba(2, 132, 199, 0.08)"),
-            ("🎯 3-Fund Core Foundation Bundle", "#0284C7", "rgba(2, 132, 199, 0.08)"),
-            ("⚠️ Duplicate Category Warning Modal", "#0284C7", "rgba(2, 132, 199, 0.08)"),
+            "🔍 1-Click Portfolio Overlap Cleaner",
+            "🎯 3-Fund Core Foundation Bundle",
+            "⚠️ Duplicate Category Warning Modal",
         ],
     },
     "THEME-03": {
-        "friction_category": "Involuntary Penalty Panic",
-        "category_color": "#DC2626",
-        "category_bg": "rgba(220, 38, 38, 0.08)",
-        "category_border": "rgba(220, 38, 38, 0.25)",
-        "card_top_border": "#DC2626",
         "root_trigger": "Retail bank ₹450–₹590 auto-debit bounce penalty scares first-time investors into permanently cancelling their mandate to avoid recurring bank charges.",
         "critical_window": "Month 2–5 • Early Cash Crunch",
         "product_levers": [
-            ("🛡️ Pre-Flight Bank Balance Verification", "#DC2626", "rgba(220, 38, 38, 0.08)"),
-            ("⏸️ 1-Click 7-Day Auto-Pause / Skip", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("💰 Emergency Cash Buffer Setup Flow", "#008764", "rgba(0, 208, 156, 0.08)"),
+            "🛡️ Pre-Flight Bank Balance Verification",
+            "⏸️ 1-Click 7-Day Auto-Pause / Skip",
+            "💰 Emergency Cash Buffer Setup Flow",
         ],
     },
     "THEME-04": {
-        "friction_category": "Emotional Volatility Shock",
-        "category_color": "#D97706",
-        "category_bg": "rgba(217, 119, 6, 0.08)",
-        "category_border": "rgba(217, 119, 6, 0.25)",
-        "card_top_border": "#D97706",
         "root_trigger": "Normal 2–5% short-term market corrections trigger loss aversion and red-portfolio shock, prompting panic cancellations at the bottom of the cycle.",
         "critical_window": "Month 1–3 • First Correction Shock",
         "product_levers": [
-            ("📉 Accumulation Lens (Unit Growth View)", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🛡️ Volatility Reassurance Crash Context", "#D97706", "rgba(217, 119, 6, 0.08)"),
-            ("⏳ 5-Year Market Cycle Time Machine", "#0284C7", "rgba(2, 132, 199, 0.08)"),
+            "📉 Accumulation Lens (Unit Growth View)",
+            "🛡️ Volatility Reassurance Crash Context",
+            "⏳ 5-Year Market Cycle Time Machine",
         ],
     },
     "THEME-05": {
-        "friction_category": "Expectation Mismatch",
-        "category_color": "#D97706",
-        "category_bg": "rgba(217, 119, 6, 0.08)",
-        "category_border": "rgba(217, 119, 6, 0.25)",
-        "card_top_border": "#D97706",
         "root_trigger": "Anchored to 15–20% bull-run marketing calculators, users interpret normal Year 1 flat/low XIRR as fund failure and prematurely stop disciplined investing.",
         "critical_window": "Month 6–12 • Horizon Mismatch",
         "product_levers": [
-            ("📊 Hide <1Y Annualized XIRR by Default", "#D97706", "rgba(217, 119, 6, 0.08)"),
-            ("💵 Absolute Rupee Wealth Accumulated", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🌱 Visual Compounding Horizon Simulator", "#0284C7", "rgba(2, 132, 199, 0.08)"),
+            "📊 Hide <1Y Annualized XIRR by Default",
+            "💵 Absolute Rupee Wealth Accumulated",
+            "🌱 Visual Compounding Horizon Simulator",
         ],
     },
     "THEME-06": {
-        "friction_category": "Operational Settlement Anxiety",
-        "category_color": "#CA8A04",
-        "category_bg": "rgba(202, 138, 4, 0.08)",
-        "category_border": "rgba(202, 138, 4, 0.25)",
-        "card_top_border": "#CA8A04",
         "root_trigger": "2-to-3 business day lag between bank debit and mutual fund unit allotment causes anxiety that money is lost or debited at unfavorable NAV rates.",
         "critical_window": "Month 1–4 • Settlement Anxiety",
         "product_levers": [
-            ("⏱️ Real-Time In-App Settlement Tracker", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🔒 NAV Cutoff Lock-In Guarantee Badge", "#0284C7", "rgba(2, 132, 199, 0.08)"),
-            ("📲 Automated Unit Allotment Push Ping", "#008764", "rgba(0, 208, 156, 0.08)"),
+            "⏱️ Real-Time In-App Settlement Tracker",
+            "🔒 NAV Cutoff Lock-In Guarantee Badge",
+            "📲 Automated Unit Allotment Push Ping",
         ],
     },
     "THEME-07": {
-        "friction_category": "Goal Disconnect / Habit Decay",
-        "category_color": "#7C3AED",
-        "category_bg": "rgba(124, 58, 237, 0.08)",
-        "category_border": "rgba(124, 58, 237, 0.25)",
-        "card_top_border": "#7C3AED",
         "root_trigger": "Investing without a concrete life milestone makes SIP deductions feel like discretionary monthly costs rather than disciplined wealth building.",
         "critical_window": "Month 6–12 • Habit Erosion",
         "product_levers": [
-            ("🎯 Mandatory Goal-Anchored SIP Setup", "#7C3AED", "rgba(124, 58, 237, 0.08)"),
-            ("🏁 Milestone Progress Bar (e.g. 15% to Car)", "#008764", "rgba(0, 208, 156, 0.08)"),
-            ("🏆 Milestone Horizon Shield Visualizer", "#0284C7", "rgba(2, 132, 199, 0.08)"),
+            "🎯 Mandatory Goal-Anchored SIP Setup",
+            "🏁 Milestone Progress Bar (e.g. 15% to Car)",
+            "🏆 Milestone Horizon Shield Visualizer",
         ],
     },
 }
 
 
 def render_channel_distribution_bar(platform_breakdown: Dict[str, int]) -> str:
-    """Render Strategy C: Slim segmented multi-platform ingestion breakdown bar."""
+    """Render Strategy C: Slim segmented multi-platform ingestion breakdown bar in subtle Groww palette."""
     play_count = platform_breakdown.get("play_store", 0)
     reddit_count = platform_breakdown.get("reddit", 0)
     yt_count = platform_breakdown.get("youtube", 0)
@@ -145,27 +110,28 @@ def render_channel_distribution_bar(platform_breakdown: Dict[str, int]) -> str:
     top_channel, top_count = p_map[0]
     top_pct = round((top_count / total) * 100)
 
+    # Restrained professional palette: Groww Mint + Muted Slates (Less colors)
     segments_html = []
     if play_pct > 0:
         segments_html.append(f'<div style="width: {play_pct}%; background: #00D09C;" title="Google Play Store: {play_count} ({play_pct}%)"></div>')
     if reddit_pct > 0:
-        segments_html.append(f'<div style="width: {reddit_pct}%; background: #FF4500;" title="Reddit Community: {reddit_count} ({reddit_pct}%)"></div>')
+        segments_html.append(f'<div style="width: {reddit_pct}%; background: #475569;" title="Reddit Community: {reddit_count} ({reddit_pct}%)"></div>')
     if yt_pct > 0:
-        segments_html.append(f'<div style="width: {yt_pct}%; background: #EF4444;" title="YouTube Comments: {yt_count} ({yt_pct}%)"></div>')
+        segments_html.append(f'<div style="width: {yt_pct}%; background: #64748B;" title="YouTube Comments: {yt_count} ({yt_pct}%)"></div>')
     if forum_pct > 0:
-        segments_html.append(f'<div style="width: {forum_pct}%; background: #64748B;" title="Investor Forums: {forum_count} ({forum_pct}%)"></div>')
+        segments_html.append(f'<div style="width: {forum_pct}%; background: #94A3B8;" title="Investor Forums: {forum_count} ({forum_pct}%)"></div>')
     if app_pct > 0:
-        segments_html.append(f'<div style="width: {app_pct}%; background: #007AFF;" title="Apple App Store: {app_count} ({app_pct}%)"></div>')
+        segments_html.append(f'<div style="width: {app_pct}%; background: #008764;" title="Apple App Store: {app_count} ({app_pct}%)"></div>')
 
     legend_items = []
     if play_count > 0:
         legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #00D09C;"></span>Play ({play_pct}%)</span>')
     if reddit_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #FF4500;"></span>Reddit ({reddit_pct}%)</span>')
+        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #475569;"></span>Reddit ({reddit_pct}%)</span>')
     if yt_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #EF4444;"></span>YouTube ({yt_pct}%)</span>')
+        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #64748B;"></span>YouTube ({yt_pct}%)</span>')
     if forum_count > 0:
-        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #64748B;"></span>Forums ({forum_pct}%)</span>')
+        legend_items.append(f'<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94A3B8;"></span>Forums ({forum_pct}%)</span>')
 
     return (
         f'<div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #F1F5F9; margin-bottom: 12px;">'
@@ -361,34 +327,25 @@ Empirical behavioral failure clusters discovered across <strong>3,052 qualified 
             f'</div>'
         )
 
-        top_border_color = meta.get("card_top_border", "#00D09C")
-        cat_color = meta.get("category_color", "#008764")
-        cat_bg = meta.get("category_bg", "rgba(0, 208, 156, 0.08)")
-        cat_border = meta.get("category_border", "rgba(0, 208, 156, 0.25)")
-        cat_name = meta.get("friction_category", "Failure Theme")
-
         card_html = (
-            f'<div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-top: 4px solid {top_border_color}; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; min-height: 350px; transition: transform 0.15s ease, box-shadow 0.15s ease;">'
+            f'<div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-top: 4px solid #00D09C; border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; min-height: 340px; transition: transform 0.15s ease, box-shadow 0.15s ease;">'
             f'<div>'
-            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; flex-wrap: wrap;">'
-            f'<div style="display: flex; align-items: center; gap: 6px;">'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">'
             f'<span class="badge-tag badge-tier-1">{cid}</span>'
-            f'<span style="font-size: 11px; font-weight: 700; color: {cat_color}; background: {cat_bg}; border: 1px solid {cat_border}; padding: 2.5px 8px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em;">{cat_name}</span>'
-            f'</div>'
             f'<div style="font-size: 13.5px; font-weight: 700; color: #008764; display: flex; align-items: center; gap: 4px;">'
             f'<span>👥</span>'
             f'<span>{item_count:,} People</span>'
-            f'<span style="color: #64748B; font-weight: 500; font-size: 12px;">({prevalence_pct}%)</span>'
+            f'<span style="color: #64748B; font-weight: 500; font-size: 12.5px;">({prevalence_pct}%)</span>'
             f'</div>'
             f'</div>'
-            f'<h3 style="font-family: \'Plus Jakarta Sans\', sans-serif; font-size: 17.5px; font-weight: 800; color: #0F172A; margin: 0 0 10px 0; line-height: 1.35;">{title}</h3>'
-            f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3.5px solid {top_border_color}; border-radius: 0 7px 7px 0; padding: 8px 11px; margin-bottom: 10px;">'
-            f'<div style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;">🎯 Root Friction Trigger</div>'
-            f'<div style="font-family: \'Inter\', sans-serif; font-size: 12.5px; color: #1E293B; line-height: 1.45;">{meta["root_trigger"]}</div>'
+            f'<h3 style="font-family: \'Plus Jakarta Sans\', sans-serif; font-size: 18px; font-weight: 800; color: #0F172A; margin: 0 0 12px 0; line-height: 1.35;">{title}</h3>'
+            f'<div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3.5px solid #00D09C; border-radius: 0 8px 8px 0; padding: 9px 12px; margin-bottom: 11px;">'
+            f'<div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;">🎯 Root Friction Trigger</div>'
+            f'<div style="font-family: \'Inter\', sans-serif; font-size: 13px; color: #1E293B; line-height: 1.45;">{meta["root_trigger"]}</div>'
             f'</div>'
-            f'<div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B; margin-bottom: 12px;">'
+            f'<div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #64748B; margin-bottom: 12px;">'
             f'<span style="font-weight: 700; color: #0F172A;">⏱️ Critical Window:</span>'
-            f'<span style="background: #F1F5F9; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11.5px; border: 1px solid #E2E8F0;">{meta["critical_window"]}</span>'
+            f'<span style="background: #F1F5F9; color: #334155; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; border: 1px solid #E2E8F0;">{meta["critical_window"]}</span>'
             f'</div>'
             f'<div style="margin-bottom: 8px;">'
             f'<div style="font-size: 11px; font-weight: 700; color: #008764; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">'
