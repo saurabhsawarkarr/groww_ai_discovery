@@ -8,7 +8,10 @@ from datetime import datetime, timezone
 import hashlib
 import logging
 from typing import Any, Dict, List, Optional
-from app_store_scraper import AppStore
+try:
+    from app_store_scraper import AppStore
+except ImportError:
+    AppStore = None
 
 from src.connectors.base import BaseSourceConnector, RawRecord
 
@@ -111,7 +114,7 @@ class AppStoreConnector(BaseSourceConnector):
             logger.warning("iTunes RSS fetch error: %s. Attempting fallback scraper...", str(rss_err))
 
         # 2. If RSS didn't yield records, attempt app-store-scraper fallback
-        if not records:
+        if not records and AppStore is not None:
             try:
                 scraper = AppStore(
                     country=self.country,
