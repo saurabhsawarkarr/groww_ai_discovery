@@ -13,13 +13,12 @@ def get_kpi_card_html(
     title: str,
     value: str,
     subtitle: str,
-    value_color: str = "#0F172A",
-    sub_color: str = "#008764",
+    value_color: str = "#F1F5F9",
+    sub_color: str = "#00D09C",
 ) -> str:
-    """Generate HTML for left-aligned crisp KPI card exactly matching the inspiration screenshot."""
+    """Generate HTML for left-aligned crisp KPI card styled for dark Groww theme."""
     return f"""<div class="executive-kpi-card">
 <div class="kpi-title">{title}</div>
 <div class="kpi-value" style="color: {value_color};">{value}</div>
 <div class="kpi-subtitle" style="color: {sub_color};">{subtitle}</div>
 </div>"""
-

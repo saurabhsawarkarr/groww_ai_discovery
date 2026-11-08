@@ -4,24 +4,13 @@ Enforces:
 1. Strict SEBI Non-Advice Guardrails (no specific fund recommendations).
 2. Non-FOMO Guardrails (no urgency, countdowns, or manipulative nudges).
 3. Verbatim customer quote citations using [EVID-X] format.
+4. Structured 4-section executive format.
 """
 
 from typing import Any, Dict, List
+from src.rag.rules import RAG_SYSTEM_RULES_PROMPT
 
-
-SEBI_SYSTEM_INSTRUCTIONS = """You are the Principal Growth Product Strategist for Groww Mutual Funds.
-You specialize in qualitative user research, behavioral finance heuristics, and product discovery.
-Your mission is to analyze customer feedback and synthesize actionable product strategies to improve:
-"12-Month First-Time Mutual Fund SIP Continuation Rate".
-
-STRICT EPISTEMIC & REGULATORY INVARIANTS:
-1. SEBI COMPLIANCE: NEVER recommend specific mutual funds, AMC schemes, or stocks (no fund picking).
-2. ETHICAL PRODUCT NUDGES: NEVER suggest artificial countdowns, FOMO, or fear-based messaging.
-3. EMPIRICAL CITATIONS: Every claim about user friction or behavior MUST be substantiated with explicit citations
-   referencing the retrieved evidence chunks using [EVID-1], [EVID-2], etc.
-4. ACTIONABLE PRODUCT FOCUS: Solutions must focus on UX clarity, payment infrastructure resilience,
-   transparent settlement tracking, and cognitive de-biasing.
-"""
+SEBI_SYSTEM_INSTRUCTIONS = RAG_SYSTEM_RULES_PROMPT
 
 
 class RAGPromptBuilder:
@@ -31,7 +20,7 @@ class RAGPromptBuilder:
     def build_evidence_context(retrieved_evidence: List[Dict[str, Any]]) -> str:
         """Format retrieved evidence records into numbered citation blocks."""
         if not retrieved_evidence:
-            return "No matching customer evidence records found."
+            return "No matching customer evidence records found in the 3,052 corpus."
 
         chunks = []
         for idx, item in enumerate(retrieved_evidence, 1):
@@ -43,7 +32,7 @@ class RAGPromptBuilder:
             
             chunk = (
                 f"--- [EVID-{idx}] ---\n"
-                f"Platform: {plat} | Stage: {stage} | Date: {date} | Discovered Theme: {theme}\n"
+                f"Platform: {plat} | Journey Stage: {stage} | Date: {date} | Theme Mapped: {theme}\n"
                 f"Verbatim Customer Discourse: \"{quote}\"\n"
             )
             chunks.append(chunk)
@@ -61,11 +50,11 @@ class RAGPromptBuilder:
 RETRIEVED EMPIRICAL EVIDENCE CHUNKS (Top {len(retrieved_evidence)}):
 {context_str}
 
-REQUIRED SYNTHESIS STRUCTURE:
+REQUIRED SYNTHESIS STRUCTURE (MANDATORY):
 Please synthesize a high-impact, executive-level qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence. Structure your response with the following markdown sections:
 
 ### 1. Executive Summary & Behavioral Dynamic
-Synthesize the underlying investor psychology and user behavior demonstrated in the quotes. Explain why this happens to first-time investors.
+Synthesize the underlying investor psychology, heuristics, and mental models demonstrated in the quotes. Explain why this happens to first-time investors.
 
 ### 2. Discovered Friction & Root Cause Breakdown
 - **Operational / Technical Friction:** Breakdown of system drops, bank rejections, or delay ambiguities cited by users.
@@ -73,7 +62,7 @@ Synthesize the underlying investor psychology and user behavior demonstrated in 
 Cite specific evidence using [EVID-1], [EVID-2], etc.
 
 ### 3. Voice of Customer Verbatim Highlights
-Highlight the 2-3 most compelling verbatim quotes from the retrieved evidence that reveal investor pain points.
+Highlight the 2-3 most compelling verbatim quotes from the retrieved evidence that reveal investor pain points, mentioning platform source.
 
 ### 4. Strategic PM Recommendations (12-Month Retention Impact)
 Provide 2-3 concrete, high-leverage product features or UX ergonomics that resolve this friction without violating SEBI guidelines or using FOMO nudges.
@@ -87,4 +76,3 @@ Provide 2-3 concrete, high-leverage product features or UX ergonomics that resol
             {"role": "system", "content": SEBI_SYSTEM_INSTRUCTIONS},
             {"role": "user", "content": cls.build_user_prompt(query, retrieved_evidence)},
         ]
-

@@ -84,10 +84,10 @@ def render_explorer(db_path=None) -> None:
         return
 
     # Hero Metric Grid matching inspiration design
-    ekpi1 = get_kpi_card_html("TOTAL VERIFIED EVIDENCE", f"{len(records):,}", "Direct Verbatim Customer Quotes", "#0F172A", "#008764")
-    ekpi2 = get_kpi_card_html("INVESTOR JOURNEY STAGES", "7", "newly_started to stopped", "#0F172A", "#008764")
-    ekpi3 = get_kpi_card_html("EXTRACTION CONFIDENCE", "98.5%", "High Precision NLP Extraction", "#008764", "#008764")
-    ekpi4 = get_kpi_card_html("CROSS-SOURCE COVERAGE", "5 Platforms", "Play Store, YouTube, Reddit, Forums", "#0284C7", "#0284C7")
+    ekpi1 = get_kpi_card_html("TOTAL VERIFIED EVIDENCE", f"{len(records):,}", "Direct Verbatim Customer Quotes", "#F1F5F9", "#00D09C")
+    ekpi2 = get_kpi_card_html("INVESTOR JOURNEY STAGES", "7", "newly_started to stopped", "#F1F5F9", "#00D09C")
+    ekpi3 = get_kpi_card_html("EXTRACTION CONFIDENCE", "98.5%", "High Precision NLP Extraction", "#00D09C", "#00D09C")
+    ekpi4 = get_kpi_card_html("CROSS-SOURCE COVERAGE", "5 Platforms", "Play Store, YouTube, Reddit, Forums", "#38BDF8", "#38BDF8")
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -104,8 +104,8 @@ def render_explorer(db_path=None) -> None:
     # Filter Bar Card
     with st.container():
         st.markdown(
-            """<div style="background: #FFFFFF; border: 1px solid var(--groww-card-border); border-radius: 12px; padding: 12px 18px; margin-bottom: 12px; box-shadow: var(--groww-card-shadow);">
-<span style="font-size: 14.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">🔍 Evidence Filters</span>
+            """<div style="background: #151A24; border: 1px solid var(--groww-card-border); border-radius: 12px; padding: 12px 18px; margin-bottom: 12px; box-shadow: var(--groww-card-shadow);">
+<span style="font-size: 14.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">Evidence Filters</span>
 </div>""",
             unsafe_allow_html=True,
         )
@@ -148,7 +148,7 @@ def render_explorer(db_path=None) -> None:
     # Sub-header with item count and pagination
     count_col, page_col = st.columns([3, 1])
     with count_col:
-        st.markdown(f"<div style='font-size: 16px; color: #475569; padding-top: 6px;'>Showing <strong>{len(filtered)}</strong> of <strong>{len(records)}</strong> verified observations</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 16px; color: #94A3B8; padding-top: 6px;'>Showing <strong>{len(filtered)}</strong> of <strong>{len(records)}</strong> verified observations</div>", unsafe_allow_html=True)
 
     page_size = 10
     total_pages = max(1, (len(filtered) + page_size - 1) // page_size)
@@ -178,10 +178,10 @@ def render_explorer(db_path=None) -> None:
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 <span class="badge-tag {badge_class}">{platform.upper()}</span>
 <span class="badge-tag badge-stage-{stage}">{stage.replace('_', ' ').upper()}</span>
-<span style="font-size: 14px; color: #64748B;">Author: <code>{author_hash[:10]}</code></span>
+<span style="font-size: 14px; color: #94A3B8;">Author: <code>{author_hash[:10]}</code></span>
 </div>
 <div style="display: flex; align-items: center; gap: 8px;">
-<span style="font-size: 14px; font-weight: 700; color: #008764; background: #E6F7F3; padding: 4px 10px; border-radius: 6px;">
+<span style="font-size: 14px; font-weight: 700; color: #00D09C; background: #E6F7F3; padding: 4px 10px; border-radius: 6px;">
 {confidence_pct}% Confidence
 </span>
 </div>
@@ -189,26 +189,26 @@ def render_explorer(db_path=None) -> None:
 <div class="verbatim-quote-box">
 "{quote}"
 </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #F8FAFC; border: 1px solid var(--groww-card-border); border-radius: 8px; padding: 14px; margin-top: 10px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #1A2230; border: 1px solid var(--groww-card-border); border-radius: 8px; padding: 14px; margin-top: 10px;">
 <div>
-<span style="font-size: 13.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Reported Behaviour</span>
-<div style="font-size: 15.5px; color: #0F172A; font-weight: 600; margin-top: 3px; line-height: 1.45;">{rec.get('reported_behaviour') or 'N/A'}</div>
+<span style="font-size: 13.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Reported Behaviour</span>
+<div style="font-size: 15.5px; color: #F1F5F9; font-weight: 600; margin-top: 3px; line-height: 1.45;">{rec.get('reported_behaviour') or 'N/A'}</div>
 </div>
 <div>
-<span style="font-size: 13.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Friction / Concern</span>
+<span style="font-size: 13.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Friction / Concern</span>
 <div style="font-size: 15.5px; color: #DC2626; margin-top: 3px; line-height: 1.45;">{rec.get('friction_or_concern') or 'None explicitly stated'}</div>
 </div>
 <div>
-<span style="font-size: 13.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Trigger / Situation</span>
-<div style="font-size: 15.5px; color: #0F172A; margin-top: 3px; line-height: 1.45;">{rec.get('trigger_or_situation') or 'Unstated'}</div>
+<span style="font-size: 13.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Trigger / Situation</span>
+<div style="font-size: 15.5px; color: #F1F5F9; margin-top: 3px; line-height: 1.45;">{rec.get('trigger_or_situation') or 'Unstated'}</div>
 </div>
 <div>
-<span style="font-size: 13.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Observed Workaround</span>
-<div style="font-size: 15.5px; color: #475569; margin-top: 3px; line-height: 1.45;">{rec.get('workaround') or 'None reported'}</div>
+<span style="font-size: 13.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Observed Workaround</span>
+<div style="font-size: 15.5px; color: #94A3B8; margin-top: 3px; line-height: 1.45;">{rec.get('workaround') or 'None reported'}</div>
 </div>
 <div>
-<span style="font-size: 13.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Reported Outcome</span>
-<div style="font-size: 15.5px; color: #008764; font-weight: 600; margin-top: 3px; line-height: 1.45;">{rec.get('reported_outcome') or 'Unresolved / In Progress'}</div>
+<span style="font-size: 13.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Reported Outcome</span>
+<div style="font-size: 15.5px; color: #00D09C; font-weight: 600; margin-top: 3px; line-height: 1.45;">{rec.get('reported_outcome') or 'Unresolved / In Progress'}</div>
 </div>
 </div>
 </div>"""

@@ -56,6 +56,7 @@ class TestUIDashboard:
         conn.commit()
         conn.close()
 
+        load_system_stats.clear()
         updated_stats = load_system_stats(temp_db)
         assert updated_stats["total_raw"] == 1
         assert updated_stats["total_qual"] == 1
