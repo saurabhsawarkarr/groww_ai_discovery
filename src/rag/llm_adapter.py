@@ -584,11 +584,18 @@ class LLMAdapter:
                     "stopping my sip",
                     "cancelling my sip",
                     "close my sip",
+                    "close sip",
                     "how to close",
                     "steps to stop",
                     "steps to cancel",
                     "stop sip",
                     "cancel sip",
+                    "discontinue sip",
+                    "discontinue my sip",
+                    "how to discontinue",
+                    "want to discontinue",
+                    "stop investment",
+                    "cancel investment",
                 ]
             )
             and not any(

@@ -19,7 +19,7 @@ from src.rag.evaluator import RAGEvaluator
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v2.5_dynamic") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v3.2_hotfix_reload") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -161,6 +161,11 @@ def render_rag_assistant_view(db_path=None) -> None:
             if has_messages:
                 if st.button("New Chat", key="ai_eng_new_chat", use_container_width=True):
                     st.session_state["chat_messages"] = []
+                    st.cache_resource.clear()
+                    st.rerun()
+            else:
+                if st.button("Reset Engine", key="ai_eng_reset_cache", use_container_width=True, help="Flush in-memory engine cache"):
+                    st.cache_resource.clear()
                     st.rerun()
         with btn_c2:
             st.markdown(
