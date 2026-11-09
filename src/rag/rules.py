@@ -27,6 +27,17 @@ Comprehensive Specification:
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+__all__ = [
+    "HOW_IT_SHOULD_ANSWER_SPECIFICATION",
+    "HOW_IT_SHOULD_NOT_ANSWER_SPECIFICATION",
+    "RAG_SYSTEM_RULES_PROMPT",
+    "RAGRulesEngine",
+    "DISALLOWED_FUND_ADVISORY_PATTERNS",
+    "DISALLOWED_FOMO_DARK_PATTERNS",
+    "DISALLOWED_VICTIM_BLAMING_PATTERNS",
+    "DISALLOWED_GENERIC_FLUFF_PATTERNS",
+]
+
 
 # =============================================================================
 # SPECIFICATION: HOW IT SHOULD ANSWER

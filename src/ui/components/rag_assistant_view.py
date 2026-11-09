@@ -16,7 +16,6 @@ import streamlit as st
 from src.rag.retriever import HybridEvidenceRetriever
 from src.rag.pipeline import RAGPipeline
 from src.rag.evaluator import RAGEvaluator
-from src.rag.rules import HOW_IT_SHOULD_ANSWER_SPECIFICATION, HOW_IT_SHOULD_NOT_ANSWER_SPECIFICATION
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
