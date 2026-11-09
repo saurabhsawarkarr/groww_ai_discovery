@@ -19,7 +19,7 @@ from src.rag.evaluator import RAGEvaluator
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v2.4_streamlined") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v2.5_dynamic") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)

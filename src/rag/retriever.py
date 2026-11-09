@@ -98,10 +98,32 @@ def _tokenize(text: str) -> List[str]:
 
 
 def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
-    """Tokenize query, apply typo corrections, and separate informative terms from stopwords."""
+    """Tokenize query, apply typo corrections, stem common financial plurals,
+    and enrich query terms based on explicit domain intents."""
     raw = _tokenize(query)
-    corrected = [TYPO_CORRECTIONS.get(w, w) for w in raw]
-    q_str = " ".join(corrected)
+    
+    # Stem common financial plurals so they match singular tokens in corpus
+    stemmed = []
+    for w in raw:
+        w_corr = TYPO_CORRECTIONS.get(w, w)
+        if w_corr == "banks":
+            stemmed.append("bank")
+        elif w_corr == "funds":
+            stemmed.append("fund")
+        elif w_corr == "sips":
+            stemmed.append("sip")
+        elif w_corr == "mandates":
+            stemmed.append("mandate")
+        elif w_corr == "penalties":
+            stemmed.append("penalty")
+        elif w_corr == "workarounds":
+            stemmed.append("workaround")
+        elif w_corr == "hacks":
+            stemmed.append("hack")
+        else:
+            stemmed.append(w_corr)
+
+    q_str = " ".join(stemmed)
 
     # Check for churn / discontinuation intent
     is_churn_intent = any(
@@ -122,7 +144,7 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
         ]
     )
 
-    informative = [w for w in corrected if w not in STOPWORDS]
+    informative = [w for w in stemmed if w not in STOPWORDS]
 
     # If churn intent is present, boost core churn & failure terms
     if is_churn_intent:
@@ -130,7 +152,21 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
             if extra not in informative:
                 informative.append(extra)
 
-    return informative if informative else corrected, corrected
+    # If bank failure inquiry, enrich with mandate & failure rails
+    is_bank_query = any(w in q_str for w in ["bank", "hdfc", "sbi", "icici", "axis", "kotak"]) and any(w in q_str for w in ["fail", "failing", "failed", "reject", "rejection", "drop", "often", "specific", "which", "most"])
+    if is_bank_query:
+        for extra in ["mandate", "autopay", "deduction", "failed", "rejection", "account"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If workaround inquiry, enrich with community recovery mechanisms
+    is_workaround_query = any(w in q_str for w in ["workaround", "hack", "fix", "reddit", "solution", "alternative"])
+    if is_workaround_query:
+        for extra in ["pause", "skip", "snooze", "mandate", "autopay", "workaround"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    return informative if informative else stemmed, stemmed
 
 
 class HybridEvidenceRetriever:
