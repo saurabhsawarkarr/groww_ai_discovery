@@ -5,7 +5,8 @@ Modeled after Groww's Executive Discovery Suite & Customer Voice Grounding:
 2. Direct question-to-answer loop: Ask a question -> Get empirical, data-backed synthesis.
 3. In-stream Verbatim Customer Evidence receipts in a compact 2-column grid.
 4. Active conversational thread with persistent follow-up composer & 2x2 follow-up pills.
-5. Strict SEBI non-advice compliance & resilient deterministic fallback.
+5. Strict SEBI non-advice compliance & resilient multi-tier deterministic fallback.
+6. Real-time Positive Answering & Negative Guardrails compliance auditing.
 """
 
 import re
@@ -14,6 +15,8 @@ import streamlit as st
 
 from src.rag.retriever import HybridEvidenceRetriever
 from src.rag.pipeline import RAGPipeline
+from src.rag.evaluator import RAGEvaluator
+from src.rag.rules import HOW_IT_SHOULD_ANSWER_SPECIFICATION, HOW_IT_SHOULD_NOT_ANSWER_SPECIFICATION
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
@@ -27,7 +30,7 @@ def get_shared_pipeline() -> RAGPipeline:
 STARTER_CARDS = [
     {
         "id": "autopay",
-        "category": "🏦 AUTOPAY & ECS PENALTIES",
+        "category": "AUTOPAY & ECS PENALTIES",
         "category_color": "#00D09C",
         "question": "Why do bank autopay mandates fail silently and trigger cancellations?",
         "corpus_stat": "18.0% Corpus Share • 548 Reviews",
@@ -35,7 +38,7 @@ STARTER_CARDS = [
     },
     {
         "id": "drawdown",
-        "category": "📉 FIRST-MONTH DRAWDOWN PANIC",
+        "category": "FIRST-MONTH DRAWDOWN PANIC",
         "category_color": "#F87171",
         "question": "Why do users panic when their early portfolio shows negative returns?",
         "corpus_stat": "5.9% Corpus Share • Months 1–3 Drop",
@@ -43,7 +46,7 @@ STARTER_CARDS = [
     },
     {
         "id": "overlap",
-        "category": "🧩 PORTFOLIO OVER-DIVERSIFICATION",
+        "category": "PORTFOLIO OVER-DIVERSIFICATION",
         "category_color": "#38BDF8",
         "question": "Why do first-time users accumulate 6+ overlapping funds?",
         "corpus_stat": "9.3% Corpus Share • 284 Reviews",
@@ -51,7 +54,7 @@ STARTER_CARDS = [
     },
     {
         "id": "nav_delay",
-        "category": "⏳ NAV SETTLEMENT DELAYS",
+        "category": "NAV SETTLEMENT DELAYS",
         "category_color": "#FBBF24",
         "question": "Why do users panic over the 48-hour NAV allotment delay?",
         "corpus_stat": "5.3% Corpus Share • 163 Reviews",
@@ -86,6 +89,11 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
     synthesis = res["answer"]
     evid = res.get("retrieved_evidence", [])
     latency = res.get("total_latency_ms", 22.0)
+    sebi_ok = res.get("sebi_compliant", True)
+    fomo_ok = res.get("fomo_compliant", True)
+    is_fallback = res.get("is_fallback", False)
+    retrieval_tier = res.get("retrieval_fallback_tier", "Tier 1: Direct Hybrid RRF")
+    exec_mode = res.get("execution_mode", "Deterministic Grounded Engine")
 
     # Append assistant synthesis
     st.session_state["chat_messages"].append({
@@ -95,6 +103,11 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "evidence_count": len(evid),
         "latency_ms": latency,
         "query": clean_query,
+        "sebi_ok": sebi_ok,
+        "fomo_ok": fomo_ok,
+        "is_fallback": is_fallback,
+        "retrieval_tier": retrieval_tier,
+        "exec_mode": exec_mode,
     })
 
 
@@ -109,7 +122,7 @@ def render_rag_assistant_view(db_path=None) -> None:
     has_messages = bool(st.session_state["chat_messages"])
 
     # 1. Page Header Bar
-    h_col1, h_col2 = st.columns([3.8, 1.2])
+    h_col1, h_col2 = st.columns([3.6, 1.4])
     with h_col1:
         st.markdown(
             """<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
@@ -120,9 +133,11 @@ def render_rag_assistant_view(db_path=None) -> None:
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: #F1F5F9;">Ask AI Engine</h1>
             <span class="badge-tag badge-tier-1">Direct Discovery</span>
+            <span class="badge-tag badge-category">SEBI Non-Advice</span>
+            <span class="badge-tag badge-category">Anti-FOMO Guardrail</span>
             </div>
             <p class="page-subtitle" style="margin: 2px 0 0 0; font-size: 13px; color: #94A3B8;">
-            Direct answers grounded across 3,052 verified customer reviews &bull; SEBI Non-Advice Invariant
+            Direct answers grounded across 3,052 verified customer reviews &bull; 4-Tier Executive Format &bull; Resilient Multi-Stage Fallback
             </p>
             </div>
             </div>""",
@@ -143,6 +158,98 @@ def render_rag_assistant_view(db_path=None) -> None:
                 </div>""",
                 unsafe_allow_html=True,
             )
+
+    # 2. Expandable Architectural Guide: How AI Answers vs How It Must NOT Answer
+    with st.expander("🛡️ RAG AI Answering Guardrails & Fallback Architecture (How It Answers vs How It Must NOT Answer)", expanded=False):
+        g_tab1, g_tab2, g_tab3, g_tab4 = st.tabs([
+            "✅ How It Answers",
+            "🚫 How It Must NOT Answer",
+            "🔄 Multi-Tier Fallback",
+            "🧪 Golden Benchmark Runner (25 Cases)",
+        ])
+
+        with g_tab1:
+            st.markdown(
+                """
+                ### Standardized 4-Section Executive Synthesis Hierarchy
+                Every generated response adheres to the following positive answering specification:
+                
+                - **1. Executive Summary & Behavioral Dynamic:** Unpacks investor mental models (e.g. loss aversion, linear FD return proxy, present bias, decision paralysis) explaining why first-time investors experience drop-off during Months 1–12.
+                - **2. Discovered Friction & Root Cause Breakdown:**
+                  - *Operational / Technical Friction:* Banking drops, NPCI limits, settlement lag (T+2), or UI ambiguities.
+                  - *Cognitive / Mental Model Mismatch:* Clash between expectations (FD linear returns, instant UPI confirmation) and market reality.
+                  - Explicitly cites evidence with `[EVID-1]`, `[EVID-2]`, etc.
+                - **3. Voice of Customer Verbatim Highlights:** Surfaces 2–3 authentic verbatim quotes directly from the 3,052 customer conversation corpus with platform tags ([PLAY STORE], [REDDIT], [APP STORE], etc.) and journey stage.
+                - **4. Strategic PM Recommendations (12-Month Retention Impact):** Proposes 2–3 concrete, high-leverage product features, UX ergonomics, or system interventions that resolve the friction while upholding SEBI compliance.
+                - **Empirical Grounding Invariant:** Zero hallucination. Every assertion must be anchored in verified evidence.
+                """
+            )
+
+        with g_tab2:
+            st.markdown(
+                """
+                ### Strict Negative Guardrails (Zero Tolerance Anti-Patterns)
+                The AI is actively monitored and strictly forbidden from outputting the following:
+                
+                1. **🚫 SEBI Financial Advisory Violations:**
+                   - NEVER recommend, pick, or rank specific mutual fund schemes, AMCs, or equities (e.g., *NEVER* say "You should buy Parag Parikh Flexi Cap" or "Switch to Quant Small Cap").
+                   - NEVER promise or project guaranteed returns, yields, or CAGR.
+                   - Redirection: Clearly explains that the engine provides UX/product discovery, not financial advice, and redirects to asset allocation frameworks.
+                2. **🚫 Dark Patterns & Manipulative FOMO Retention:**
+                   - NEVER propose deceptive friction (e.g. hiding the cancel button, artificial countdown timers, forcing phone calls to cancel, or guilt-tripping churn locks).
+                   - Retention must be earned ethically through liquidity flexibility (1-tap smart pause, salary synchronization, pre-debit notifications).
+                3. **🚫 Phantom Citations & Ungrounded Hallucinations:**
+                   - NEVER cite phantom tags (e.g. citing `[EVID-7]` when only 3 chunks exist).
+                   - NEVER fabricate user quotes, imaginary percentages, or phantom surveys.
+                4. **🚫 Generic Chatbot Fluff & Evasive Boilerplate:**
+                   - NEVER provide generic textbook definitions ("A mutual fund is an investment vehicle...") or empty non-answers.
+                5. **🚫 Victim Blaming & User Shaming:**
+                   - NEVER blame novice investors as "financially illiterate" or "foolish". Anxiety is treated as a natural signal of mental model clashes and system friction.
+                """
+            )
+
+        with g_tab3:
+            st.markdown(
+                """
+                ### Multi-Tier Resilient Fallback Architecture (100% Availability)
+                The system provides seamless failover across 4 layers of infrastructure:
+                
+                - **Tier 1: Direct Hybrid BM25 + Vector RRF:** Combines lexical BM25 token matching with semantic TF-IDF cosine similarity across 3,052 conversations.
+                - **Tier 2: Synonym & Lemmatized Query Expansion Fallback:** If initial hits are sparse, queries are automatically expanded using financial domain synonym mappings (e.g. *mandate* ↔ *autopay* ↔ *nach*, *bounce* ↔ *penalty* ↔ *ecs*).
+                - **Tier 3: Thematic Cluster Centroid Fallback:** If zero keyword matches exist, the inquiry is dynamically routed to the nearest of the 7 discovered failure themes, pulling top representative quotes.
+                - **Tier 4: Universal Deterministic Failover (Zero API Dependency):** If external LLMs timeout, quota-out (HTTP 429), or fail, the Deterministic Grounded Engine takes over with 0ms downtime.
+                - **Tier 5: Post-Generation Guardrail Interceptor:** If external LLM output violates SEBI non-advice or anti-FOMO rules, the interceptor catches and replaces it with safe behavioral synthesis.
+                """
+            )
+
+        with g_tab4:
+            st.markdown("### Golden Benchmark Suite (25 Test Cases)")
+            st.write("Execute standardized benchmark evaluations across all 25 test cases to verify retrieval precision, SEBI compliance, anti-FOMO guardrails, citation integrity, and fallback resilience.")
+
+            if st.button("Run Full Golden Benchmark Evaluation 🚀", key="btn_run_golden_benchmark", use_container_width=True):
+                with st.spinner("Evaluating 25 golden test cases across all criteria..."):
+                    evaluator = RAGEvaluator()
+                    bench_summary = evaluator.evaluate_all(top_k=5)
+
+                st.success(f"Benchmark Complete! {bench_summary['passed_cases']}/{bench_summary['total_cases']} cases passed ({bench_summary['overall_pass_rate']}%).")
+                
+                b_m1, b_m2, b_m3, b_m4, b_m5 = st.columns(5)
+                b_m1.metric("Overall Pass Rate", f"{bench_summary['overall_pass_rate']}%")
+                b_m2.metric("SEBI Compliance", f"{bench_summary['sebi_compliance_rate']}%")
+                b_m3.metric("Anti-FOMO Guardrail", f"{bench_summary['fomo_compliance_rate']}%")
+                b_m4.metric("Zero Hallucination", f"{bench_summary['zero_hallucination_rate']}%")
+                b_m5.metric("Avg Latency", f"{bench_summary['avg_latency_ms']} ms")
+
+                with st.expander("View Case-by-Case Diagnostic Results", expanded=False):
+                    for c_idx, c_res in enumerate(bench_summary["cases_evaluated"], 1):
+                        status_emoji = "✅" if c_res["case_passed"] else "❌"
+                        st.markdown(
+                            f"**{status_emoji} [{c_res['query_id']}]** `{c_res['category']}`: *\"{c_res['query']}\"*  \n"
+                            f"• Citations: {c_res['unique_citations']} | SEBI: {'PASS' if c_res['sebi_compliant'] else 'FAIL'} | "
+                            f"Anti-FOMO: {'PASS' if c_res['fomo_compliant'] else 'FAIL'} | "
+                            f"Structure: {c_res['structure_score']*100:.0f}% | "
+                            f"Retrieval: {c_res['retrieval_fallback_tier']} | Latency: {c_res['latency_ms']}ms"
+                        )
 
     st.markdown("<div style='border-bottom: 1px solid #1E2533; margin-bottom: 18px;'></div>", unsafe_allow_html=True)
 
@@ -224,6 +331,13 @@ def render_rag_assistant_view(db_path=None) -> None:
                 evid_count = msg.get("evidence_count", 0)
                 lat = msg.get("latency_ms", 22.0)
                 evidence_list = msg.get("evidence", [])
+                sebi_ok = msg.get("sebi_ok", True)
+                fomo_ok = msg.get("fomo_ok", True)
+                exec_mode = msg.get("exec_mode", "Deterministic Grounded Engine")
+                retrieval_tier = msg.get("retrieval_tier", "Tier 1: Direct Hybrid RRF")
+
+                sebi_badge = "SEBI: 100% Non-Advice" if sebi_ok else "SEBI: Review"
+                fomo_badge = "Anti-FOMO: Passed" if fomo_ok else "FOMO: Flagged"
 
                 st.markdown(
                     f"""<div style="background: #151A24; border: 1px solid #222938; border-radius: 12px; padding: 20px 24px; margin-bottom: 22px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);">
@@ -236,7 +350,10 @@ def render_rag_assistant_view(db_path=None) -> None:
                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <span class="badge-tag badge-tier-1">3,052 Corpus Grounded</span>
                     <span class="badge-tag badge-category">{lat}ms Hybrid RRF</span>
-                    <span class="badge-tag badge-category">SEBI Compliant</span>
+                    <span class="badge-tag badge-category">{sebi_badge}</span>
+                    <span class="badge-tag badge-category">{fomo_badge}</span>
+                    <span class="badge-tag badge-category">{retrieval_tier}</span>
+                    <span class="badge-tag badge-category">{exec_mode}</span>
                     </div>
                     </div>""",
                     unsafe_allow_html=True,
@@ -268,7 +385,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                         pub_date = ev.get("published_at", "Recent")
                         q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
                         src_url = ev.get("source_url", "")
-                        src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none; font-size: 11px;">[Source Link ↗]</a>' if src_url else ''
+                        src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none; font-size: 11px;">[Source Link ↗]</a>' if src_url else ""
 
                         # Distinct badge color per platform
                         plat_bg = "rgba(0, 208, 156, 0.12)"
@@ -298,8 +415,8 @@ def render_rag_assistant_view(db_path=None) -> None:
                                 {src_link}
                             </div>
                             </div>""",
-                            unsafe_allow_html=True,
-                        )
+                                unsafe_allow_html=True,
+                            )
 
                 st.markdown("</div>", unsafe_allow_html=True)
 

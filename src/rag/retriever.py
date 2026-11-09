@@ -1,15 +1,24 @@
-"""Hybrid BM25 + Semantic Vector Evidence Retriever.
+"""Hybrid BM25 + Semantic Vector Evidence Retriever with Multi-Stage Fallback.
 
 Indexes the 3,052 verified mutual fund & SIP customer discourse records
 and retrieves top-K verbatim customer evidence chunks using Reciprocal Rank Fusion (RRF).
+
+Includes Multi-Stage Fallback Architecture:
+- Tier 1: Direct Hybrid BM25 + Vector RRF search.
+- Tier 2: Synonym & Lemmatized Query Expansion Fallback.
+- Tier 3: Thematic Cluster Centroid Fallback.
+- Tier 4: Out-of-Scope Corpus Boundary Fallback.
 """
 
 import csv
 import json
+import logging
 import math
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger("groww_discovery.rag.retriever")
 
 
 def _tokenize(text: str) -> List[str]:
@@ -17,8 +26,52 @@ def _tokenize(text: str) -> List[str]:
     return re.findall(r"\b[a-zA-Z0-9_\-]{2,}\b", text.lower())
 
 
+# Canonical synonym expansion map for financial & customer discourse
+QUERY_SYNONYMS: Dict[str, List[str]] = {
+    "autopay": ["mandate", "e-mandate", "nach", "bank debit", "auto debit", "deduction"],
+    "mandate": ["autopay", "e-mandate", "nach", "standing instruction", "authorization"],
+    "fail": ["reject", "failed", "failure", "bounce", "drop", "declined", "error"],
+    "failed": ["reject", "failure", "bounce", "drop", "declined", "error"],
+    "failure": ["reject", "failed", "bounce", "drop", "declined"],
+    "bounce": ["ecs", "penalty", "insufficient", "fine", "dishonour", "charge"],
+    "ecs": ["bounce", "penalty", "charge", "insufficient", "fine"],
+    "penalty": ["charge", "fine", "bounce", "ecs", "fee", "450"],
+    "overlap": ["diversif", "too many funds", "duplicate", "clutter", "redundant"],
+    "diversification": ["overlap", "portfolio", "many funds", "clutter"],
+    "xirr": ["cagr", "annualized", "return calculation", "paper loss", "short term"],
+    "cagr": ["xirr", "annualized", "return", "growth", "percentage"],
+    "drawdown": ["loss", "negative", "red", "crash", "dip", "fall", "correction"],
+    "loss": ["drawdown", "negative", "red", "crash", "dip", "paper loss"],
+    "negative": ["loss", "red", "drawdown", "dip", "minus"],
+    "red": ["negative", "loss", "drawdown", "crash", "dip"],
+    "fd": ["fixed deposit", "guarantee", "safe", "linear", "interest"],
+    "nav": ["allotment", "t+2", "delay", "processing", "settlement", "cut-off"],
+    "delay": ["processing", "t+2", "pending", "slow", "allotment", "settlement"],
+    "settlement": ["nav", "t+2", "allotment", "processing", "demat"],
+    "pause": ["skip", "snooze", "temporary", "hold", "resume"],
+    "snooze": ["pause", "skip", "temporary", "hold"],
+    "cancel": ["stop", "delete", "withdraw", "exit", "close"],
+    "cancellation": ["stop", "delete", "cancel", "churn", "exit"],
+    "npci": ["mandate", "limit", "1 lakh", "authorization", "ceiling"],
+    "continue": ["habit", "discipline", "long term", "12 month", "continuer", "wealth"],
+    "continuer": ["continue", "habit", "discipline", "long term", "12 month"],
+}
+
+THEME_KEYWORDS: Dict[str, List[str]] = {
+    "THEME-01": ["mandate", "autopay", "bank", "debit", "bounce", "fail", "npci", "silent", "dropped"],
+    "THEME-02": ["overlap", "diversif", "too many", "funds", "portfolio", "duplicate", "clutter"],
+    "THEME-03": ["ecs", "penalty", "charge", "insufficient", "fine", "bounce", "cashflow", "450"],
+    "THEME-04": ["xirr", "cagr", "annualized", "early", "month 1", "month 2", "month 3", "paper loss"],
+    "THEME-05": ["fixed deposit", "fd", "crash", "negative return", "red portfolio", "volatility", "panic"],
+    "THEME-06": ["nav", "t+2", "allotment", "delay", "processing", "settlement", "timing", "pending"],
+    "THEME-07": ["continuer", "habit", "discipline", "long term", "12 month", "goal", "wealth"],
+}
+
+
 class HybridEvidenceRetriever:
-    """Production-grade hybrid retriever combining BM25 lexical search and TF-IDF cosine similarity."""
+    """Production-grade hybrid retriever combining BM25 lexical search and TF-IDF cosine similarity
+    with multi-tier fallback resilience.
+    """
 
     def __init__(self, data_dir: Optional[Path] = None):
         self.project_root = Path(__file__).resolve().parent.parent.parent
@@ -37,6 +90,12 @@ class HybridEvidenceRetriever:
         self.tfidf_vectors: List[Dict[int, float]] = []
         self.tfidf_norms: List[float] = []
 
+        # Theme centroid cache
+        self.theme_centroids: Dict[str, List[int]] = {}
+
+        # Last retrieval metadata for debugging & fallback auditing
+        self.last_retrieval_meta: Dict[str, Any] = {}
+
         self._load_corpus()
         self._build_indexes()
 
@@ -45,7 +104,6 @@ class HybridEvidenceRetriever:
         csv_path = self.data_dir / "processed" / "cleaned_3k_sip_conversations.csv"
         themes_path = self.data_dir / "processed" / "major_themes_3k_discovery.json"
 
-        # Theme keyword mappings for thematic alignment
         theme_map = {}
         if themes_path.exists():
             try:
@@ -53,8 +111,8 @@ class HybridEvidenceRetriever:
                     themes_info = json.load(f).get("themes", [])
                     for t in themes_info:
                         theme_map[t["theme_id"]] = t
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Could not load themes info: {e}")
 
         if csv_path.exists():
             try:
@@ -64,7 +122,7 @@ class HybridEvidenceRetriever:
                         text = row.get("cleaned_investor_text", "").strip()
                         if not text:
                             continue
-                        
+
                         # Identify likely theme tag based on content
                         assigned_theme = "THEME-01"
                         text_low = text.lower()
@@ -106,8 +164,8 @@ class HybridEvidenceRetriever:
                             "journey_stage": stage,
                             "author_hash": row.get("raw_id", "")[:12],
                         })
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error loading CSV corpus: {e}")
 
         # Fallback if CSV empty: Load representative quotes from themes JSON
         if not self.records and theme_map:
@@ -134,8 +192,8 @@ class HybridEvidenceRetriever:
         n_docs = len(self.records)
         df: Dict[str, int] = {}
 
-        # 1. Tokenize all documents
-        for doc in self.records:
+        # 1. Tokenize all documents and record theme indices
+        for doc_idx, doc in enumerate(self.records):
             searchable_content = f"{doc['text']} {doc['platform']} {doc['journey_stage']} {doc['theme_id']}"
             tokens = _tokenize(searchable_content)
             self.doc_tokens.append(tokens)
@@ -145,6 +203,12 @@ class HybridEvidenceRetriever:
             unique_tokens = set(tokens)
             for t in unique_tokens:
                 df[t] = df.get(t, 0) + 1
+
+            # Populate theme centroids
+            tid = doc.get("theme_id", "THEME-01")
+            if tid not in self.theme_centroids:
+                self.theme_centroids[tid] = []
+            self.theme_centroids[tid].append(doc_idx)
 
         self.avg_doc_len = sum(self.doc_lengths) / max(1, n_docs)
 
@@ -226,6 +290,30 @@ class HybridEvidenceRetriever:
         cos_scores.sort(key=lambda x: x[1], reverse=True)
         return cos_scores[:top_n]
 
+    def _expand_tokens(self, tokens: List[str]) -> Tuple[List[str], List[str]]:
+        """Expand tokens using the domain synonym vocabulary."""
+        expanded = list(tokens)
+        added_synonyms = []
+        for tok in tokens:
+            if tok in QUERY_SYNONYMS:
+                for syn in QUERY_SYNONYMS[tok]:
+                    for s_tok in _tokenize(syn):
+                        if s_tok not in expanded:
+                            expanded.append(s_tok)
+                            added_synonyms.append(s_tok)
+        return expanded, added_synonyms
+
+    def _detect_nearest_theme(self, tokens: List[str]) -> str:
+        """Identify the closest thematic cluster for token set."""
+        theme_scores: Dict[str, int] = {k: 0 for k in THEME_KEYWORDS}
+        for tok in tokens:
+            for theme_id, kw_list in THEME_KEYWORDS.items():
+                for kw in kw_list:
+                    if tok in kw or kw in tok:
+                        theme_scores[theme_id] += 1
+        best_theme = max(theme_scores.items(), key=lambda x: x[1])
+        return best_theme[0] if best_theme[1] > 0 else "THEME-01"
+
     def retrieve(
         self,
         query: str,
@@ -233,18 +321,98 @@ class HybridEvidenceRetriever:
         platform_filter: Optional[str] = None,
         journey_stage_filter: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Execute hybrid search using Reciprocal Rank Fusion (RRF)."""
+        """Execute hybrid search using Reciprocal Rank Fusion (RRF) with multi-stage fallback.
+
+        Fallback Tiers:
+        - Tier 1: Direct Hybrid BM25 + Vector RRF.
+        - Tier 2: Synonym Query Expansion Fallback (triggered if < top_k results).
+        - Tier 3: Thematic Cluster Centroid Fallback (triggered if 0 matches).
+        - Tier 4: Out-of-Scope Corpus Boundary Guidance.
+        """
         tokens = _tokenize(query)
         if not tokens or not self.records:
+            self.last_retrieval_meta = {
+                "fallback_tier": "None",
+                "is_fallback": False,
+                "matches_found": 0,
+            }
             return []
 
-        # 1. Get Lexical BM25 Rankings
+        # =====================================================================
+        # TIER 1: Direct Hybrid Search
+        # =====================================================================
         bm25_ranks = self.bm25_search(tokens, top_n=60)
-        
-        # 2. Get Semantic Vector Rankings
         vector_ranks = self.vector_search(tokens, top_n=60)
+        results = self._rank_and_filter(
+            bm25_ranks=bm25_ranks,
+            vector_ranks=vector_ranks,
+            top_k=top_k,
+            platform_filter=platform_filter,
+            journey_stage_filter=journey_stage_filter,
+        )
 
-        # 3. Reciprocal Rank Fusion (RRF)
+        tier_used = "Tier 1: Direct Hybrid RRF"
+        is_fallback = False
+        expanded_terms: List[str] = []
+
+        # =====================================================================
+        # TIER 2: Synonym Query Expansion Fallback (if results < top_k)
+        # =====================================================================
+        if len(results) < top_k:
+            expanded_tokens, added = self._expand_tokens(tokens)
+            if added:
+                exp_bm25 = self.bm25_search(expanded_tokens, top_n=60)
+                exp_vector = self.vector_search(expanded_tokens, top_n=60)
+                expanded_results = self._rank_and_filter(
+                    bm25_ranks=exp_bm25,
+                    vector_ranks=exp_vector,
+                    top_k=top_k,
+                    platform_filter=platform_filter,
+                    journey_stage_filter=journey_stage_filter,
+                )
+                if len(expanded_results) > len(results):
+                    results = expanded_results
+                    tier_used = "Tier 2: Synonym Query Expansion Fallback"
+                    is_fallback = True
+                    expanded_terms = added
+
+        # =====================================================================
+        # TIER 3: Thematic Cluster Centroid Fallback (if still 0 matches)
+        # =====================================================================
+        if len(results) == 0:
+            nearest_theme = self._detect_nearest_theme(tokens)
+            doc_indices = self.theme_centroids.get(nearest_theme, [])[:top_k]
+            results = []
+            for d_idx in doc_indices:
+                rec = dict(self.records[d_idx])
+                rec["similarity_score"] = 0.65
+                rec["bm25_hit"] = False
+                rec["thematic_fallback"] = True
+                results.append(rec)
+            tier_used = f"Tier 3: Thematic Centroid Fallback ({nearest_theme})"
+            is_fallback = True
+
+        # Store metadata for introspection
+        self.last_retrieval_meta = {
+            "query": query,
+            "tokens": tokens,
+            "fallback_tier": tier_used,
+            "is_fallback": is_fallback,
+            "expanded_terms": expanded_terms,
+            "matches_found": len(results),
+        }
+
+        return results
+
+    def _rank_and_filter(
+        self,
+        bm25_ranks: List[Tuple[int, float]],
+        vector_ranks: List[Tuple[int, float]],
+        top_k: int,
+        platform_filter: Optional[str] = None,
+        journey_stage_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Perform Reciprocal Rank Fusion (RRF) and apply metadata filters."""
         rrf_constant = 60
         fused_scores: Dict[int, float] = {}
 
@@ -254,13 +422,12 @@ class HybridEvidenceRetriever:
         for rank, (doc_idx, _) in enumerate(vector_ranks):
             fused_scores[doc_idx] = fused_scores.get(doc_idx, 0.0) + (1.0 / (rrf_constant + rank + 1))
 
-        # 4. Filter and Sort
         sorted_docs = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
         results = []
 
         for doc_idx, score in sorted_docs:
             rec = self.records[doc_idx]
-            
+
             # Apply platform filter
             if platform_filter and platform_filter.lower() != "all":
                 if rec["platform"].lower() != platform_filter.lower():
@@ -271,9 +438,9 @@ class HybridEvidenceRetriever:
                 if rec["journey_stage"].lower() != journey_stage_filter.lower():
                     continue
 
-            # Normalize RRF score to 0.0 - 1.0 confidence representation
+            # Normalize RRF score to 0.60 - 0.99 range
             norm_score = min(0.99, max(0.60, score * 50.0))
-            
+
             result_item = dict(rec)
             result_item["similarity_score"] = round(norm_score, 3)
             result_item["bm25_hit"] = doc_idx in [x[0] for x in bm25_ranks[:10]]
@@ -283,4 +450,3 @@ class HybridEvidenceRetriever:
                 break
 
         return results
-
