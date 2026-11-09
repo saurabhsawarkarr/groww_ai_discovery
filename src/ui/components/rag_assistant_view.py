@@ -336,34 +336,10 @@ def render_rag_assistant_view(db_path=None) -> None:
                     unsafe_allow_html=True,
                 )
             else:
-                evid_count = msg.get("evidence_count", 0)
-                lat = msg.get("latency_ms", 22.0)
                 evidence_list = msg.get("evidence", [])
-                sebi_ok = msg.get("sebi_ok", True)
-                fomo_ok = msg.get("fomo_ok", True)
-                exec_mode = msg.get("exec_mode", "Deterministic Grounded Engine")
-                retrieval_tier = msg.get("retrieval_tier", "Tier 1: Direct Hybrid RRF")
-
-                sebi_badge = "SEBI: 100% Non-Advice" if sebi_ok else "SEBI: Review"
-                fomo_badge = "Anti-FOMO: Passed" if fomo_ok else "FOMO: Flagged"
 
                 st.markdown(
-                    f"""<div style="background: #151A24; border: 1px solid #222938; border-radius: 12px; padding: 20px 24px; margin-bottom: 22px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #1E2533; padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; font-weight: 700; color: #00D09C; text-transform: uppercase; letter-spacing: 0.04em;">
-                    📊 Qualitative Synthesis &bull; {evid_count} Verified Citations
-                    </span>
-                    </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <span class="badge-tag badge-tier-1">3,052 Corpus Grounded</span>
-                    <span class="badge-tag badge-category">{lat}ms Hybrid RRF</span>
-                    <span class="badge-tag badge-category">{sebi_badge}</span>
-                    <span class="badge-tag badge-category">{fomo_badge}</span>
-                    <span class="badge-tag badge-category">{retrieval_tier}</span>
-                    <span class="badge-tag badge-category">{exec_mode}</span>
-                    </div>
-                    </div>""",
+                    """<div style="background: #151A24; border: 1px solid #222938; border-radius: 12px; padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);">""",
                     unsafe_allow_html=True,
                 )
 
