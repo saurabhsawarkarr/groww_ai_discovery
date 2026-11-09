@@ -93,6 +93,7 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
     is_fallback = res.get("is_fallback", False)
     retrieval_tier = res.get("retrieval_fallback_tier", "Tier 1: Direct Hybrid RRF")
     exec_mode = res.get("execution_mode", "Deterministic Grounded Engine")
+    clarification_chips = res.get("clarification_chips", [])
 
     # Append assistant synthesis
     st.session_state["chat_messages"].append({
@@ -107,6 +108,7 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "is_fallback": is_fallback,
         "retrieval_tier": retrieval_tier,
         "exec_mode": exec_mode,
+        "clarification_chips": clarification_chips,
     })
 
 
@@ -352,6 +354,17 @@ def render_rag_assistant_view(db_path=None) -> None:
 
                 formatted_content = re.sub(r"\[EVID-(\d+)\]", r'<span class="evid-tag">[EVID-\1]</span>', content_to_render)
                 st.markdown(formatted_content, unsafe_allow_html=True)
+
+                # Render Interactive Clarification Chips if returned
+                chips = msg.get("clarification_chips", [])
+                if chips:
+                    st.markdown("<div style='margin-top: 14px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #00D09C; text-transform: uppercase; letter-spacing: 0.05em;'>👉 Suggested Research Pathways:</div>", unsafe_allow_html=True)
+                    chip_c1, chip_c2 = st.columns(2, gap="small")
+                    for c_idx, chip in enumerate(chips):
+                        target_chip_col = chip_c1 if c_idx % 2 == 0 else chip_c2
+                        with target_chip_col:
+                            if st.button(chip["label"], key=f"chip_msg_{idx}_{c_idx}", use_container_width=True):
+                                active_prompt_to_run = chip["query"]
 
                 # Verbatim Customer Evidence Receipts (in a compact 2-column grid to prevent scroll bloat)
                 if evidence_list:

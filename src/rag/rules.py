@@ -26,6 +26,7 @@ Comprehensive Specification:
 
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
+from src.rag.math_engine import DeterministicMathEngine
 
 __all__ = [
     "HOW_IT_SHOULD_ANSWER_SPECIFICATION",
@@ -471,3 +472,60 @@ class RAGRulesEngine:
             sanitized_text = re.sub(r"\[EVID-(?:" + "|".join(str(i) for i in cls.audit_citations(text, len(retrieved_evidence))["invalid_indices"]) + r")\]", "", sanitized_text)
 
         return sanitized_text, True, "Scrubbed phantom citation tags."
+
+    @classmethod
+    def validate_output_defense_gate(
+        cls, text: str, retrieved_evidence: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Multi-Layer Output Defense Gate (inspired by mission-critical financial RAG architectures).
+
+        Layer 1: Fast Regex Blocklist (SEBI Advisory + Dark Pattern Invariants).
+        Layer 2: Deterministic Number Verifier (Zero numerical hallucination).
+        Layer 3: Semantic Entailment & Groundedness Gate (Verification against evidence chunks).
+        """
+        # Layer 1: Fast Regex Blocklist
+        sebi_clean, sebi_viols = cls.validate_sebi_compliance(text)
+        fomo_clean, fomo_viols = cls.validate_anti_fomo_compliance(text)
+        layer1_pass = sebi_clean and fomo_clean
+
+        # Layer 2: Deterministic Number Verifier
+        layer2_pass, ungrounded_numbers, num_precision = DeterministicMathEngine.verify_numbers(
+            text, retrieved_evidence
+        )
+
+        # Layer 3: Semantic Entailment & Groundedness Score
+        cit_audit = cls.audit_citations(text, len(retrieved_evidence))
+        has_citations = cit_audit["has_citations"] and not cit_audit["has_phantom_citations"]
+
+        # Calculate word overlap ratio with retrieved evidence quotes
+        evidence_words = set()
+        for item in retrieved_evidence:
+            for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", (item.get("quote", "") + " " + item.get("text", "")).lower()):
+                evidence_words.add(w)
+
+        answer_words = set(re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", text.lower()))
+        common_words = answer_words.intersection(evidence_words)
+        lexical_entailment = len(common_words) / max(1, len(answer_words)) if answer_words else 1.0
+
+        # Groundedness combines citation integrity (50%), number precision (30%), and lexical overlap (20%)
+        groundedness_score = round(
+            (0.50 * (1.0 if has_citations else 0.0))
+            + (0.30 * num_precision)
+            + (0.20 * min(1.0, lexical_entailment * 2.0)),
+            2,
+        )
+        layer3_pass = groundedness_score >= 0.70
+
+        passed_all_layers = layer1_pass and layer2_pass and layer3_pass
+
+        return {
+            "passed_all_layers": passed_all_layers,
+            "layer1_regex_pass": layer1_pass,
+            "layer1_violations": sebi_viols + fomo_viols,
+            "layer2_number_pass": layer2_pass,
+            "ungrounded_numbers": ungrounded_numbers,
+            "numerical_precision": num_precision,
+            "layer3_entailment_pass": layer3_pass,
+            "groundedness_score": groundedness_score,
+            "lexical_entailment": round(lexical_entailment, 2),
+        }
