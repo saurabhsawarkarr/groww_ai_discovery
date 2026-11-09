@@ -507,6 +507,71 @@ class LLMAdapter:
         e2 = "[EVID-2]" if c_count >= 2 else e1
         e3 = "[EVID-3]" if c_count >= 3 else e2
 
+        # 5a. Actionable user intent: How to Stop / Cancel SIP vs Why people stop
+        is_asking_how_to_stop_or_cancel = (
+            any(
+                phrase in prompt_lower
+                for phrase in [
+                    "i want to stop",
+                    "how to stop",
+                    "want to stop",
+                    "how do i stop",
+                    "how can i stop",
+                    "how to cancel",
+                    "i want to cancel",
+                    "want to cancel",
+                    "how do i cancel",
+                    "how can i cancel",
+                    "stop my sip",
+                    "cancel my sip",
+                    "stop this sip",
+                    "cancel this sip",
+                    "stopping my sip",
+                    "cancelling my sip",
+                    "close my sip",
+                    "how to close",
+                    "steps to stop",
+                    "steps to cancel",
+                    "stop sip",
+                    "cancel sip",
+                ]
+            )
+            and not any(
+                w in prompt_lower
+                for w in [
+                    "why people stop",
+                    "why do people stop",
+                    "why stop sip",
+                    "why cancel sip",
+                    "why users cancel",
+                    "reasons for stopping",
+                    "why investors quit",
+                    "reasons for cancellation",
+                    "why are people stopping",
+                ]
+            )
+        )
+
+        if is_asking_how_to_stop_or_cancel:
+            summary = (
+                f"To stop an active Systematic Investment Plan on Groww, navigate to **Mutual Funds ➔ SIPs / Dashboard ➔ Select the Active SIP ➔ Cancel SIP / Mandate** {e1}. "
+                f"Crucially, empirical customer discourse reveals that **stopping an SIP merely halts future monthly deductions; it does NOT automatically redeem or withdraw your accumulated money** {e2}. "
+                "Your existing units remain invested and continue compounding until you place an explicit 'Redeem' order. "
+                "If you are stopping due to a temporary cashflow crunch, consider using **'Pause SIP'** (for 1 to 3 months) instead of full cancellation, "
+                f"which prevents the steep operational barrier of re-authenticating bank mandates later {e3 if e3 else e1}."
+            )
+            friction_op = (
+                f"**Mandate Cut-Off Timing & Bank Sync:** SIP cancellations must be requested at least **2 to 3 working days prior to the scheduled debit date** {e1}. "
+                "If cancelled too close to debit day, NPCI payment clearing instructions may already be locked with the bank, resulting in an unintended debit. "
+                f"Additionally, deleting the mandate directly on your banking app or UPI handle without cancelling inside Groww leaves the SIP active on the broker ledger, triggering repeated failed debit notices {e2}."
+            )
+            friction_cog = (
+                f"**Stopping SIP vs. Redeeming Money Confusion:** Novice investors frequently conflate stopping future monthly contributions with withdrawing their invested capital {e2}. "
+                "Users worry their money is locked or gone once the SIP is cancelled, failing to realize that cancelling only terminates the monthly recurring mandate while their portfolio remains intact."
+            )
+            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+
+        # 5b. Macro Churn & Discontinuation Query
         is_asking_why_people_stop_sip = any(
             phrase in prompt_lower
             for phrase in [
