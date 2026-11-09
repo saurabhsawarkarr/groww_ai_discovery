@@ -19,7 +19,7 @@ from src.rag.evaluator import RAGEvaluator
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline() -> RAGPipeline:
+def get_shared_pipeline(version: str = "v2.4_streamlined") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -117,6 +117,16 @@ def render_rag_assistant_view(db_path=None) -> None:
     # Initialize session state for conversation history
     if "chat_messages" not in st.session_state:
         st.session_state["chat_messages"] = []
+    else:
+        # Automatically clean any legacy cached messages in session state that still contain Sections 3 or 4
+        for msg in st.session_state["chat_messages"]:
+            if msg.get("role") == "assistant":
+                content = msg.get("content", "")
+                if "### 3. Voice of Customer" in content:
+                    content = content.split("### 3. Voice of Customer")[0].strip()
+                if "### 4. Strategic PM" in content:
+                    content = content.split("### 4. Strategic PM")[0].strip()
+                msg["content"] = content
 
     has_messages = bool(st.session_state["chat_messages"])
 
@@ -136,7 +146,7 @@ def render_rag_assistant_view(db_path=None) -> None:
             <span class="badge-tag badge-category">Anti-FOMO Guardrail</span>
             </div>
             <p class="page-subtitle" style="margin: 2px 0 0 0; font-size: 13px; color: #94A3B8;">
-            Direct answers grounded across 3,052 verified customer reviews &bull; 4-Tier Executive Format &bull; Resilient Multi-Stage Fallback
+            Direct answers grounded across 3,052 verified customer reviews &bull; Streamlined Behavioral & Root Cause Synthesis &bull; Resilient Multi-Stage Fallback
             </p>
             </div>
             </div>""",
@@ -170,16 +180,15 @@ def render_rag_assistant_view(db_path=None) -> None:
         with g_tab1:
             st.markdown(
                 """
-                ### Standardized 4-Section Executive Synthesis Hierarchy
+                ### Streamlined 2-Section Qualitative Synthesis Hierarchy (Token-Optimized)
                 Every generated response adheres to the following positive answering specification:
                 
-                - **1. Executive Summary & Behavioral Dynamic:** Unpacks investor mental models (e.g. loss aversion, linear FD return proxy, present bias, decision paralysis) explaining why first-time investors experience drop-off during Months 1–12.
+                - **1. Executive Summary & Behavioral Dynamic:** Unpacks investor mental models (e.g. loss aversion, linear FD return proxy, present bias, decision paralysis) explaining why first-time investors experience drop-off during Months 1–12. Must cite evidence with `[EVID-X]`.
                 - **2. Discovered Friction & Root Cause Breakdown:**
                   - *Operational / Technical Friction:* Banking drops, NPCI limits, settlement lag (T+2), or UI ambiguities.
                   - *Cognitive / Mental Model Mismatch:* Clash between expectations (FD linear returns, instant UPI confirmation) and market reality.
                   - Explicitly cites evidence with `[EVID-1]`, `[EVID-2]`, etc.
-                - **3. Voice of Customer Verbatim Highlights:** Surfaces 2–3 authentic verbatim quotes directly from the 3,052 customer conversation corpus with platform tags ([PLAY STORE], [REDDIT], [APP STORE], etc.) and journey stage.
-                - **4. Strategic PM Recommendations (12-Month Retention Impact):** Proposes 2–3 concrete, high-leverage product features, UX ergonomics, or system interventions that resolve the friction while upholding SEBI compliance.
+                - **Token-Efficient Grounding Design:** Customer quote receipts are rendered directly in the visual evidence cards below to eliminate quote duplication and minimize token consumption.
                 - **Empirical Grounding Invariant:** Zero hallucination. Every assertion must be anchored in verified evidence.
                 """
             )
@@ -359,7 +368,13 @@ def render_rag_assistant_view(db_path=None) -> None:
                 )
 
                 # Core Synthesized Executive Answer (with highlighted citation badges)
-                formatted_content = re.sub(r"\[EVID-(\d+)\]", r'<span class="evid-tag">[EVID-\1]</span>', msg["content"])
+                content_to_render = msg["content"]
+                if "### 3. Voice of Customer" in content_to_render:
+                    content_to_render = content_to_render.split("### 3. Voice of Customer")[0].strip()
+                if "### 4. Strategic PM" in content_to_render:
+                    content_to_render = content_to_render.split("### 4. Strategic PM")[0].strip()
+
+                formatted_content = re.sub(r"\[EVID-(\d+)\]", r'<span class="evid-tag">[EVID-\1]</span>', content_to_render)
                 st.markdown(formatted_content, unsafe_allow_html=True)
 
                 # Verbatim Customer Evidence Receipts (in a compact 2-column grid to prevent scroll bloat)
