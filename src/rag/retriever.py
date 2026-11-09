@@ -102,11 +102,11 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
     and enrich query terms based on explicit domain intents."""
     raw = _tokenize(query)
     
-    # Stem common financial plurals so they match singular tokens in corpus
+    # Stem common financial plurals and verbs so they match tokens in corpus
     stemmed = []
     for w in raw:
         w_corr = TYPO_CORRECTIONS.get(w, w)
-        if w_corr == "banks":
+        if w_corr in ("banks", "banking"):
             stemmed.append("bank")
         elif w_corr == "funds":
             stemmed.append("fund")
@@ -120,6 +120,30 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
             stemmed.append("workaround")
         elif w_corr == "hacks":
             stemmed.append("hack")
+        elif w_corr == "units":
+            stemmed.append("unit")
+        elif w_corr in ("debited", "debits"):
+            stemmed.append("debit")
+        elif w_corr in ("allocated", "allotment", "allotting"):
+            stemmed.append("allotment")
+        elif w_corr == "days":
+            stemmed.append("day")
+        elif w_corr == "months":
+            stemmed.append("month")
+        elif w_corr in ("strikes", "consecutively"):
+            stemmed.append("strike")
+        elif w_corr == "rejections":
+            stemmed.append("rejection")
+        elif w_corr == "reasons":
+            stemmed.append("reason")
+        elif w_corr == "beginners":
+            stemmed.append("beginner")
+        elif w_corr == "investors":
+            stemmed.append("investor")
+        elif w_corr == "differences":
+            stemmed.append("difference")
+        elif w_corr == "habits":
+            stemmed.append("habit")
         else:
             stemmed.append(w_corr)
 
@@ -163,6 +187,27 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
     is_workaround_query = any(w in q_str for w in ["workaround", "hack", "fix", "reddit", "solution", "alternative"])
     if is_workaround_query:
         for extra in ["pause", "skip", "snooze", "mandate", "autopay", "workaround"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If platform comparison inquiry, enrich with platform & clearing rails
+    is_platform_query = any(w in q_str for w in ["zerodha", "coin", "platform", "compare", "difference"])
+    if is_platform_query:
+        for extra in ["zerodha", "coin", "autopay", "mandate", "demat", "bse", "star"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If unit allocation or NAV inquiry, enrich with settlement rails
+    is_settlement_query = any(w in q_str for w in ["allotment", "nav", "unit", "debited", "settlement", "t+2", "delay"])
+    if is_settlement_query:
+        for extra in ["allotment", "nav", "unit", "processing", "settlement", "amc"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If scheme clutter / portfolio overlap inquiry, enrich with overlap rails
+    is_clutter_query = any(w in q_str for w in ["overlap", "clutter", "multi", "diversification", "different", "beginner"])
+    if is_clutter_query:
+        for extra in ["overlap", "clutter", "scheme", "portfolio", "diversification"]:
             if extra not in informative:
                 informative.append(extra)
 
