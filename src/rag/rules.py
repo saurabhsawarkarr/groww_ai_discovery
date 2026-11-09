@@ -69,24 +69,6 @@ HOW_IT_SHOULD_ANSWER_SPECIFICATION: Dict[str, Any] = {
                 "Must cite specific evidence chunks with [EVID-1], [EVID-2], etc."
             ),
         },
-        {
-            "section_number": 3,
-            "title": "### 3. Voice of Customer Verbatim Highlights",
-            "content_guidelines": (
-                "Surface 2-3 compelling verbatim customer quotes directly extracted from retrieved evidence chunks. "
-                "Must include platform badge (e.g., [PLAY STORE], [REDDIT], [APP STORE], [YOUTUBE], [FORUM]) "
-                "and investor journey stage."
-            ),
-        },
-        {
-            "section_number": 4,
-            "title": "### 4. Strategic PM Recommendations (12-Month Retention Impact)",
-            "content_guidelines": (
-                "Propose 2-3 concrete, high-leverage product features, UX ergonomics, or system interventions. "
-                "Each recommendation must explicitly address the identified root cause, maintain 100% SEBI compliance, "
-                "and clearly state the anticipated 12-month retention impact."
-            ),
-        },
     ],
     "grounding_invariants": [
         "Every claim must be attributed to retrieved evidence using [EVID-X] notation.",
@@ -225,21 +207,17 @@ RULE 3: ETHICAL GROWTH & ANTI-FOMO GUARDRAIL
 - Never propose manipulative dark patterns, artificial countdown timers, loss-framing panic alerts, or deceptive hurdles to stop SIP cancellations.
 - Retention must be earned through liquidity transparency, payment resilience, cognitive re-anchoring, and transparent settlement tracking.
 
-RULE 4: STANDARDIZED 4-SECTION EXECUTIVE SYNTHESIS FORMAT
-You must structure your answer into exactly 4 sections:
+RULE 4: STREAMLINED 2-SECTION QUALITATIVE SYNTHESIS FORMAT (TOKEN-EFFICIENT)
+You must structure your answer into exactly 2 focused sections:
 ### 1. Executive Summary & Behavioral Dynamic
-Analyze the underlying psychological mental model and behavioral heuristic explaining why first-time investors experience this specific issue.
+Analyze the underlying psychological mental model and behavioral heuristic explaining why first-time investors experience this specific issue. Must cite evidence using [EVID-X].
 
 ### 2. Discovered Friction & Root Cause Breakdown
 - **Operational / Technical Friction:** Banking drops, NPCI limits, settlement lag, or UI ambiguities.
 - **Cognitive / Mental Model Mismatch:** Clash between user mental models (e.g. FD linear returns, instant UPI delivery) and mutual fund realities.
 Cite specific quotes with [EVID-1], [EVID-2], etc.
 
-### 3. Voice of Customer Verbatim Highlights
-Extract the 2-3 most telling verbatim quotes from the retrieved evidence chunks with source platform attribution.
-
-### 4. Strategic PM Recommendations (12-Month Retention Impact)
-Propose 2-3 concrete, high-leverage product features or UX interventions that resolve the friction while upholding SEBI compliance.
+(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. Keep your answer focused on behavioral and root cause analysis to minimize token usage and maximize response speed).
 
 RULE 5: EMPIRICAL TRANSPARENCY & FALLBACK PROTOCOL
 - If the retrieved evidence is sparse or does not fully cover the query, explicitly state the empirical boundary rather than inventing generic AI commentary.
@@ -391,13 +369,18 @@ class RAGRulesEngine:
 
     @classmethod
     def audit_structure(cls, text: str) -> Dict[str, Any]:
-        """Verify presence of the 4 required executive sections."""
+        """Verify presence of the 2 required executive sections:
+        Section 1: Executive Summary & Behavioral Dynamic
+        Section 2: Discovered Friction & Root Cause Breakdown
+        (Note: Voice of Customer verbatim quotes and PM recommendations are omitted from text
+        generation to eliminate quote duplication with UI cards and reduce token usage).
+        """
         s1 = bool(re.search(r"###?\s*1[.\s]+Executive Summary", text, re.IGNORECASE))
         s2 = bool(re.search(r"###?\s*2[.\s]+.*Friction", text, re.IGNORECASE))
         s3 = bool(re.search(r"###?\s*3[.\s]+.*(Voice of Customer|Customer|Quotes|Verbatim)", text, re.IGNORECASE))
         s4 = bool(re.search(r"###?\s*4[.\s]+.*Recommendations", text, re.IGNORECASE))
 
-        score = sum([s1, s2, s3, s4]) / 4.0
+        score = sum([s1, s2]) / 2.0
         return {
             "section_1_executive_summary": s1,
             "section_2_friction_breakdown": s2,

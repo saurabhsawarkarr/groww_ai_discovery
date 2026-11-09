@@ -412,17 +412,7 @@ class LLMAdapter:
                 "- **Operational / Technical Friction:** Novice users get overwhelmed by 2,500+ scheme options on onboarding interfaces, "
                 "leading to abandoned registration flows or accidental creation of duplicate parallel SIPs.\n"
                 "- **Cognitive / Mental Model Mismatch:** Novice investors treat mutual funds like consumer e-commerce products (hunting for '5-star ratings'), "
-                f"rather than anchoring their choice to a 3-to-5 year time horizon and risk tolerance {evid_1_tag}.\n\n"
-                "### 3. Voice of Customer Verbatim Highlights\n"
-                f"- **{evid_1_tag} ({p1}):** *\"{q1}\"*\n"
-                f"- **{evid_2_tag} ({p2}):** *\"{q2}\"*\n\n"
-                "### 4. Strategic PM Recommendations (12-Month Retention Impact)\n"
-                "1. **Core Foundation Asset Allocation Framework:** Replace open scheme listings with an objective, compliance-approved 3-step asset allocation "
-                "wizard (Emergency Fund ➔ Broad Market Index Core ➔ Life Goal Milestone).\n"
-                "2. **Over-Choice Cognitive Reducer:** Provide plain-English category clarity tooltips (e.g., Index Funds = Broad Market Compounding, "
-                "Large Cap = Capital Stability) without proprietary ranking endorsement.\n"
-                "3. **Objective Factual Comparison Matrix:** Allow side-by-side objective metric comparisons (Expense Ratio, Tracking Error, 5-Year Rolling Volatility) "
-                "without speculative return forecasting."
+                f"rather than anchoring their choice to a 3-to-5 year time horizon and risk tolerance {evid_1_tag}."
             )
 
         # ---------------------------------------------------------------------
@@ -463,15 +453,7 @@ class LLMAdapter:
                 "- **Operational / Technical Friction:** Lack of flexible, temporary cashflow controls (e.g. 1-tap pause or skip) forces users into an "
                 f"all-or-nothing binary cancellation decision {evid_tag}.\n"
                 "- **Cognitive / Mental Model Mismatch:** Deceptive hurdles destroy institutional trust. Long-term wealth creation requires high user agency "
-                "and psychological safety, not coercive retention locks.\n\n"
-                "### 3. Voice of Customer Verbatim Highlights\n"
-                f"- **{evid_tag} ({p_tag}):** *\"{q_text}\"*\n\n"
-                "### 4. Strategic PM Recommendations (12-Month Retention Impact)\n"
-                "1. **1-Tap Flexible Snooze & Pause Control:** Provide a prominent 'Snooze SIP for 1 Month' button directly beside the cancel option, "
-                "allowing users experiencing cashflow crunches to pause without penalty.\n"
-                "2. **Transparent Exit & Resumption Paths:** Make SIP cancellation friction-free while displaying a clear 'Resume with 1 Tap' option "
-                "saved in the user's dashboard for when cashflow normalizes.\n"
-                "3. **Pre-Debit Cashflow Buffer Notifications:** Ping users 48 hours prior to debit to confirm liquidity, eliminating panic cancellations."
+                "and psychological safety, not coercive retention locks."
             )
 
         # ---------------------------------------------------------------------
@@ -500,13 +482,7 @@ class LLMAdapter:
                 "### 2. Discovered Friction & Root Cause Breakdown\n"
                 "- **Operational / Technical Friction:** The inquiry targets financial domains or topics outside our verified mutual fund SIP dataset.\n"
                 "- **Cognitive / Mental Model Mismatch:** Novice investors who confuse long-term passive SIP compounding with speculative get-rich-quick trading "
-                "suffer from severe hyper-volatility burnout and premature capital destruction.\n\n"
-                "### 3. Voice of Customer Verbatim Highlights\n"
-                "- *Corpus Scope Boundary: No verified mutual fund customer discourse matches speculative leverage or cryptocurrency inquiries.*\n\n"
-                "### 4. Strategic PM Recommendations (12-Month Retention Impact)\n"
-                "1. **Corpus Guidance:** Explore core mutual fund SIP retention challenges: Autopay mandate failure rates, Month 1–3 drawdown panic, or scheme overlap.\n"
-                "2. **Reset Filter Parameters:** Use the one-click inquiry cards above to examine empirical behavioral failure modes.\n"
-                "3. **Long-Term Compounding Focus:** Educate first-time investors on the structural difference between passive wealth accumulation and speculative trading."
+                "suffer from severe hyper-volatility burnout and premature capital destruction."
             )
 
         # ---------------------------------------------------------------------
@@ -519,32 +495,14 @@ class LLMAdapter:
                 "The corpus specifically covers first-time mutual fund SIP continuation, mandate drop-offs, return panic, and payment friction.\n\n"
                 "### 2. Discovered Friction & Root Cause Breakdown\n"
                 "- **Operational / Technical Friction:** The query parameters may be too narrow or filtered by a platform with zero matching discourse.\n"
-                "- **Cognitive / Mental Model Mismatch:** Inquiries outside mutual fund SIP lifecycle fall outside this research engine's verified qualitative index.\n\n"
-                "### 3. Voice of Customer Verbatim Highlights\n"
-                "- *No verbatim quotes matched the current query criteria.*\n\n"
-                "### 4. Strategic PM Recommendations (12-Month Retention Impact)\n"
-                "1. **Broaden Query Scope:** Try asking about bank autopay mandates, Month 1–3 return panic, scheme overlap, or T+2 settlement lag.\n"
-                "2. **Reset Platform Filters:** Clear the source platform or journey stage filters to search across all 3,052 conversations.\n"
-                "3. **Explore Suggested Themes:** Use the one-click inquiry cards above to analyze discovered behavioral failure modes."
+                "- **Cognitive / Mental Model Mismatch:** Inquiries outside mutual fund SIP lifecycle fall outside this research engine's verified qualitative index."
             )
 
         # ---------------------------------------------------------------------
         # 5. MACRO RETENTION & SIP CHURN QUERY SYNTHESIS
         # ---------------------------------------------------------------------
-        # Build dynamic citations from actual retrieved evidence (Max 3, no phantom citations)
-        citations = []
-        c_count = min(3, len(retrieved_evidence))
-        for i in range(c_count):
-            ev = retrieved_evidence[i]
-            plat = ev.get("platform", "source").upper()
-            quote = ev.get("quote", "").strip().replace("\n", " ")
-            if len(quote) > 220:
-                quote = quote[:217] + "..."
-            citations.append(f"- **[EVID-{i+1}] ({plat}):** *\"{quote}\"*")
-
-        quotes_block = "\n".join(citations)
-
         # Dynamic citations within text: strictly limited to available chunks
+        c_count = len(retrieved_evidence)
         e1 = "[EVID-1]" if c_count >= 1 else ""
         e2 = "[EVID-2]" if c_count >= 2 else e1
         e3 = "[EVID-3]" if c_count >= 3 else e2
@@ -589,25 +547,12 @@ class LLMAdapter:
                 f"**ECS Penalty Dread & Early Drawdown Shock:** Novice investors dread immediate bank penalties (₹450–₹590 per missed debit) far more than they value theoretical future compounding. "
                 f"When combined with Month 1–3 paper drawdowns (-2% to -5%) or distorted short-term XIRR metrics, investors experience panic and permanently discontinue their SIPs {e2}."
             )
-            rec_1 = "**1-Tap Smart Snooze & Granular Pause:** Replace the binary 'Cancel' flow with a flexible 'Snooze for 1–3 Months' control, preserving active bank mandates during temporary liquidity crunches."
-            rec_2 = "**Instant Zero-Penalty UPI Recovery Link:** When scheduled bank autopay fails, immediately dispatch an automated 48-hour manual UPI payment link via WhatsApp and push notification to maintain SIP continuity."
-            rec_3 = "**T-24h Liquidity Alert & Metric Shield:** Alert users 24 hours prior to debit to verify account balance (preventing ECS fines), and suppress annualized XIRR during the initial 180 days in favor of absolute units accumulated."
-
             response = f"""### 1. Executive Summary & Behavioral Dynamic
 {summary}
 
 ### 2. Discovered Friction & Root Cause Breakdown
 - **Operational / Technical Friction:** {friction_op}
-- **Cognitive / Mental Model Mismatch:** {friction_cog}
-
-### 3. Voice of Customer Verbatim Highlights
-{quotes_block}
-
-### 4. Strategic PM Recommendations (12-Month Retention Impact)
-1. {rec_1}
-2. {rec_2}
-3. {rec_3}
-"""
+- **Cognitive / Mental Model Mismatch:** {friction_cog}"""
             return response
 
         # ---------------------------------------------------------------------
@@ -726,14 +671,5 @@ class LLMAdapter:
 
 ### 2. Discovered Friction & Root Cause Breakdown
 - **Operational / Technical Friction:** {friction_op}
-- **Cognitive / Mental Model Mismatch:** {friction_cog}
-
-### 3. Voice of Customer Verbatim Highlights
-{quotes_block}
-
-### 4. Strategic PM Recommendations (12-Month Retention Impact)
-1. {rec_1}
-2. {rec_2}
-3. {rec_3}
-"""
+- **Cognitive / Mental Model Mismatch:** {friction_cog}"""
         return response

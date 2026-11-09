@@ -51,21 +51,17 @@ RETRIEVED EMPIRICAL EVIDENCE CHUNKS (Top {len(retrieved_evidence)}):
 {context_str}
 
 REQUIRED SYNTHESIS STRUCTURE (MANDATORY):
-Please synthesize a high-impact, executive-level qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence. Structure your response with the following markdown sections:
+Please synthesize a high-impact, token-efficient qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence. Structure your response into exactly 2 focused markdown sections:
 
 ### 1. Executive Summary & Behavioral Dynamic
-Synthesize the underlying investor psychology, heuristics, and mental models demonstrated in the quotes. Explain why this happens to first-time investors.
+Synthesize the underlying investor psychology, heuristics, and mental models demonstrated in the quotes. Explain why this happens to first-time investors. Must cite specific evidence using [EVID-1], [EVID-2], etc.
 
 ### 2. Discovered Friction & Root Cause Breakdown
 - **Operational / Technical Friction:** Breakdown of system drops, bank rejections, or delay ambiguities cited by users.
 - **Cognitive / Mental Model Mismatch:** How user expectations clash with mutual fund realities (e.g. FD proxy, T+2 delay anxiety).
 Cite specific evidence using [EVID-1], [EVID-2], etc.
 
-### 3. Voice of Customer Verbatim Highlights
-Highlight the 2-3 most compelling verbatim quotes from the retrieved evidence that reveal investor pain points, mentioning platform source.
-
-### 4. Strategic PM Recommendations (12-Month Retention Impact)
-Provide 2-3 concrete, high-leverage product features or UX ergonomics that resolve this friction without violating SEBI guidelines or using FOMO nudges.
+(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. Keep your answer focused on behavioral and root cause analysis to minimize token usage and maximize response speed).
 """
         return prompt
 

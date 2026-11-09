@@ -31,19 +31,21 @@ class TestHowItShouldProvideAnswers:
 
     def test_specifications_exist(self):
         assert "persona" in HOW_IT_SHOULD_ANSWER_SPECIFICATION
-        assert len(HOW_IT_SHOULD_ANSWER_SPECIFICATION["required_sections"]) == 4
+        assert len(HOW_IT_SHOULD_ANSWER_SPECIFICATION["required_sections"]) == 2
         assert "anti_patterns" in HOW_IT_SHOULD_NOT_ANSWER_SPECIFICATION
 
-    def test_standard_4_section_structure_present(self):
+    def test_streamlined_2_section_structure_present(self):
         pipeline = RAGPipeline()
         res = pipeline.query("Why do bank autopay mandates fail silently?", top_k=3)
         answer = res["answer"]
 
-        # 4 required section headers
+        # 2 core executive sections
         assert "### 1. Executive Summary & Behavioral Dynamic" in answer
         assert "### 2. Discovered Friction & Root Cause Breakdown" in answer
-        assert "### 3. Voice of Customer Verbatim Highlights" in answer
-        assert "### 4. Strategic PM Recommendations (12-Month Retention Impact)" in answer
+
+        # Sections 3 & 4 must NOT be in synthesized answer (reduces tokens & avoids quote duplication)
+        assert "### 3. Voice of Customer Verbatim Highlights" not in answer
+        assert "### 4. Strategic PM Recommendations" not in answer
 
         # Check sub-dimensions in section 2
         assert "Operational / Technical Friction" in answer
@@ -66,13 +68,15 @@ class TestHowItShouldProvideAnswers:
         for idx in cit_audit["cited_indices"]:
             assert 1 <= idx <= res["evidence_count"]
 
-    def test_pm_recommendations_actionable(self):
+    def test_friction_root_causes_grounded(self):
         pipeline = RAGPipeline()
         res = pipeline.query("How does the fear of ₹450 bank ECS bounce penalties push investors to cancel?", top_k=3)
         answer = res["answer"]
 
-        # Must propose actionable retention features
-        assert any(term in answer for term in ["Snooze", "Skip", "Bounce Guard", "Fallback", "Scheduling"])
+        # Must analyze operational friction and loss aversion
+        assert "Operational / Technical Friction" in answer
+        assert "Cognitive / Mental Model Mismatch" in answer
+        assert any(term in answer for term in ["penalty", "mandate", "bounce", "deduction", "fee"])
 
 
 # =============================================================================
