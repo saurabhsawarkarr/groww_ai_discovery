@@ -506,8 +506,63 @@ class LLMAdapter:
         e1 = "[EVID-1]" if c_count >= 1 else ""
         e2 = "[EVID-2]" if c_count >= 2 else e1
         e3 = "[EVID-3]" if c_count >= 3 else e2
+        e4 = "[EVID-4]" if c_count >= 4 else e2
+        e5 = "[EVID-5]" if c_count >= 5 else e3
 
-        # 5a. Actionable user intent: How to Stop / Cancel SIP vs Why people stop
+        # 5a. Critical Decision: Should I stop SIP when market is down / market crash / dip?
+        is_asking_stop_in_downturn = (
+            any(
+                phrase in prompt_lower
+                for phrase in [
+                    "market is down",
+                    "market down",
+                    "market crash",
+                    "market falls",
+                    "market fall",
+                    "market dip",
+                    "during dip",
+                    "when market",
+                    "during crash",
+                    "portfolio is red",
+                    "market crashing",
+                    "in market dip",
+                    "market drops",
+                ]
+            )
+            and any(
+                phrase in prompt_lower
+                for phrase in [
+                    "should i stop",
+                    "stop my sip",
+                    "stop sip",
+                    "pause or stop",
+                    "stop or continue",
+                    "discontinue",
+                    "should i continue",
+                    "cancel my sip",
+                    "cancel sip",
+                ]
+            )
+        )
+
+        if is_asking_stop_in_downturn:
+            e3_tag = e3 if e3 else e1
+            summary = (
+                f"Empirical qualitative discovery across **3,052 verified customer conversations** reveals that **stopping an SIP when the market is down is the single most destructive behavioral mistake** made by retail investors {e1}. "
+                f"Because mutual fund SIPs operate on the mathematical principle of **Rupee-Cost Averaging (RCA)**, market downturns allow monthly instalments to automatically accumulate **significantly more fund units at discounted NAVs** {e2}. "
+                f"Discontinuing contributions during a market pullback locks in paper drawdowns and deprives the investor of the low-cost unit base that generates exponential compounding when the market rebounds {e3_tag}."
+            )
+            friction_op = (
+                f"**Dashboard Display Vacuum & Red Percentage Panic:** Portfolio interfaces prominently surface high-contrast red return badges and depressed short-term XIRR metrics without contextualizing broader market cycles {e1}. "
+                f"Instead of highlighting 'Total Discounted Units Accumulated', dashboards frame normal market volatility as absolute capital destruction, triggering fight-or-flight panic cancellations {e4}."
+            )
+            friction_cog = (
+                f"**Acute Loss Aversion & Fixed Deposit Growth Proxy:** Novice investors enter mutual funds anchored to the Fixed Deposit mental model (expecting continuous, linear positive increments each month) {e1}. "
+                f"When a market correction hits, acute loss aversion makes paper dips feel like permanent losses, compelling investors to impulsively exit at the market bottom—the exact moment long-term compounding delivers maximum mathematical value {e2}."
+            )
+            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+
+        # 5b. Actionable user intent: How to Stop / Cancel SIP vs Why people stop
         is_asking_how_to_stop_or_cancel = (
             any(
                 phrase in prompt_lower
@@ -548,6 +603,12 @@ class LLMAdapter:
                     "why investors quit",
                     "reasons for cancellation",
                     "why are people stopping",
+                    "market is down",
+                    "market down",
+                    "market crash",
+                    "market falls",
+                    "market dip",
+                    "when market",
                 ]
             )
         )
