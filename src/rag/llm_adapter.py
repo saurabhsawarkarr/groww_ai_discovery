@@ -335,30 +335,54 @@ class LLMAdapter:
         """Dynamic, deterministic qualitative synthesis engine adhering 100% to positive answering rules
         and zero tolerance for negative guardrail violations.
         """
-        prompt_lower = prompt.lower()
+        # Extract the core user inquiry from prompt if wrapped in USER RESEARCH INQUIRY header
+        inquiry_text = prompt
+        if "USER RESEARCH INQUIRY:" in prompt:
+            try:
+                inquiry_text = prompt.split("USER RESEARCH INQUIRY:")[1].split("RETRIEVED EMPIRICAL EVIDENCE")[0].strip().strip('"').strip()
+            except Exception:
+                inquiry_text = prompt
+
+        prompt_lower = inquiry_text.lower()
         ev_count = len(retrieved_evidence)
 
         # ---------------------------------------------------------------------
         # 1. SEBI ADVISORY SOLICITATION PROBE (How It SHOULD & SHOULD NOT Answer)
         # ---------------------------------------------------------------------
-        is_asking_for_fund_recommendation = any(
-            phrase in prompt_lower
-            for phrase in [
-                "which fund should i buy",
-                "which specific mutual fund",
-                "best fund to invest",
-                "recommend a mutual fund",
-                "recommend a fund",
-                "give me top funds",
-                "should i buy parag parikh",
-                "which mutual fund is best",
-                "buy parag parikh or quant",
-                "which fund should i pick",
-                "top mutual fund for 2026",
-                "guaranteed 25% return",
-                "guaranteed return",
-                "sell my hdfc fund",
-            ]
+        is_asking_for_fund_recommendation = (
+            any(
+                phrase in prompt_lower
+                for phrase in [
+                    "which fund should i buy",
+                    "which specific mutual fund",
+                    "best fund to invest",
+                    "recommend a mutual fund",
+                    "recommend a fund",
+                    "give me top funds",
+                    "should i buy parag parikh",
+                    "which mutual fund is best",
+                    "buy parag parikh or quant",
+                    "which fund should i pick",
+                    "top mutual fund",
+                    "best mutual fund",
+                    "best small cap",
+                    "best mid cap",
+                    "best flexi cap",
+                    "best large cap",
+                    "top small cap",
+                    "top mid cap",
+                    "top flexi cap",
+                    "guaranteed 25% return",
+                    "guaranteed return",
+                    "sell my hdfc fund",
+                    "which fund to invest",
+                    "which fund to buy",
+                    "best fund to buy",
+                    "best fund to pick",
+                ]
+            )
+            or bool(re.search(r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|sip|scheme|stocks?|amc)\b", prompt_lower))
+            or bool(re.search(r"\b(best|top)\b.*\b(small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap)\b.*\b(fund|buy|invest)\b", prompt_lower))
         )
 
         if is_asking_for_fund_recommendation:
@@ -596,21 +620,21 @@ class LLMAdapter:
 
         dominant_theme = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "THEME-01"
 
-        # Query keywords refine theme
-        if any(w in prompt_lower for w in ["mandate", "autopay", "bank debit", "fail", "rejection", "npci"]):
-            dominant_theme = "THEME-01"
+        # Query keywords refine theme with specific intent priority
+        if any(w in prompt_lower for w in ["ecs", "bounce", "penalty", "fine", "insufficient balance", "insufficient"]):
+            dominant_theme = "THEME-03"
+        elif any(w in prompt_lower for w in ["xirr", "cagr", "annualized", "early", "month 1", "month 2", "month 3", "paper loss", "180 days", "drawdown"]):
+            dominant_theme = "THEME-04"
         elif any(w in prompt_lower for w in ["overlap", "diversif", "too many funds", "duplicate", "clutter"]):
             dominant_theme = "THEME-02"
-        elif any(w in prompt_lower for w in ["ecs", "bounce", "penalty", "fine", "insufficient", "pause", "snooze"]):
-            dominant_theme = "THEME-03"
-        elif any(w in prompt_lower for w in ["xirr", "cagr", "annualized", "early", "month 1", "month 2", "month 3", "paper loss", "180 days"]):
-            dominant_theme = "THEME-04"
         elif any(w in prompt_lower for w in ["fixed deposit", "fd", "crash", "negative return", "red portfolio", "volatility", "dip"]):
             dominant_theme = "THEME-05"
         elif any(w in prompt_lower for w in ["nav", "t+2", "allotment", "delay", "processing", "settlement"]):
             dominant_theme = "THEME-06"
         elif any(w in prompt_lower for w in ["continuer", "habit", "discipline", "long term", "12 month", "goal"]):
             dominant_theme = "THEME-07"
+        elif any(w in prompt_lower for w in ["mandate", "autopay", "bank debit", "npci", "rejection"]):
+            dominant_theme = "THEME-01"
 
         # Thematic synthesis bodies
         if "THEME-01" in dominant_theme:
