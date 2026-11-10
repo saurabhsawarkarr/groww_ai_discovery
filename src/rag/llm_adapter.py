@@ -173,6 +173,29 @@ class LLMAdapter:
         filtered = [s for s in suggestions if s.lower().strip("?") != q_lower.strip("?")]
         return (filtered + _THEME_FOLLOWUP_MAP["THEME-07"])[:4]
 
+    @staticmethod
+    def _pick_distinct_evid(
+        retrieved_evidence: List[Dict[str, Any]],
+        keywords: List[str],
+        used_tags: List[str],
+        default_tag: str,
+    ) -> str:
+        """Select the best matching [EVID-X] tag, preferring distinct unused sources."""
+        for idx, ev in enumerate(retrieved_evidence, 1):
+            tag = f"[EVID-{idx}]"
+            q_low = (ev.get("quote") or "").lower()
+            if tag not in used_tags and any(kw in q_low for kw in keywords):
+                used_tags.append(tag)
+                return tag
+        for idx, ev in enumerate(retrieved_evidence, 1):
+            tag = f"[EVID-{idx}]"
+            q_low = (ev.get("quote") or "").lower()
+            if any(kw in q_low for kw in keywords):
+                return tag
+        if default_tag and default_tag not in used_tags:
+            used_tags.append(default_tag)
+        return default_tag
+
     @classmethod
     def _synthesize_from_retrieved_evidence(
         cls, inquiry_text: str, retrieved_evidence: List[Dict[str, Any]]
@@ -545,11 +568,16 @@ class LLMAdapter:
         """Dynamic, deterministic qualitative synthesis engine adhering 100% to positive answering rules
         and zero tolerance for negative guardrail violations.
         """
-        # Extract the core user inquiry from prompt if wrapped in USER RESEARCH INQUIRY header
+        # Extract ONLY the core user inquiry from XML-wrapped prompts so injected tags
+        # (<groww_product_mechanics>, <untrusted_evidence_container>) never pollute intent detection.
         inquiry_text = prompt
         if "USER RESEARCH INQUIRY:" in prompt:
             try:
-                inquiry_text = prompt.split("USER RESEARCH INQUIRY:")[1].split("RETRIEVED EMPIRICAL EVIDENCE")[0].strip().strip('"').strip()
+                inquiry_text = prompt.split("USER RESEARCH INQUIRY:", 1)[1]
+                for delimiter in ("<groww_product_mechanics>", "RETRIEVED EMPIRICAL EVIDENCE"):
+                    if delimiter in inquiry_text:
+                        inquiry_text = inquiry_text.split(delimiter, 1)[0]
+                inquiry_text = inquiry_text.strip().strip('"').strip()
             except Exception:
                 inquiry_text = prompt
 
@@ -761,28 +789,9 @@ class LLMAdapter:
 
         if is_asking_stop_in_downturn:
             used_tags: List[str] = []
-
-            def _pick_tag(keywords: List[str], default_tag: str) -> str:
-                # Pass 1: find an unused matching receipt first so citations span multiple sources
-                for idx, ev in enumerate(retrieved_evidence, 1):
-                    tag = f"[EVID-{idx}]"
-                    q_low = (ev.get("quote") or "").lower()
-                    if tag not in used_tags and any(kw in q_low for kw in keywords):
-                        used_tags.append(tag)
-                        return tag
-                # Pass 2: allow reuse of a matching receipt if distinct matches are exhausted
-                for idx, ev in enumerate(retrieved_evidence, 1):
-                    tag = f"[EVID-{idx}]"
-                    q_low = (ev.get("quote") or "").lower()
-                    if any(kw in q_low for kw in keywords):
-                        return tag
-                if default_tag and default_tag not in used_tags:
-                    used_tags.append(default_tag)
-                return default_tag
-
-            e_dip = _pick_tag(["dip", "crash", "down", "xirr", "negative", "loss", "red"], e1)
-            e_units = _pick_tag(["cheap", "unit", "nav", "bear", "crash", "average", "correction"], e2)
-            e_horizon = _pick_tag(["long term", "year", "yrs", "continu", "discipline", "dip"], e3 if e3 else e1)
+            e_dip = cls._pick_distinct_evid(retrieved_evidence, ["dip", "crash", "down", "xirr", "negative", "loss", "red"], used_tags, e1)
+            e_units = cls._pick_distinct_evid(retrieved_evidence, ["cheap", "unit", "nav", "bear", "crash", "average", "correction"], used_tags, e2)
+            e_horizon = cls._pick_distinct_evid(retrieved_evidence, ["long term", "year", "yrs", "continu", "discipline", "dip"], used_tags, e3 if e3 else e1)
 
             summary = (
                 f"**SEBI Non-Advice Notice:** This engine cannot give personal buy, sell, or stop advice {e_dip}. "
@@ -809,11 +818,13 @@ class LLMAdapter:
                 ],
             )
 
-        # 5a-2. Investment Sizing / Step-Up / Market-Timing Inquiry ("Should I invest more?")
+        # 5a-2. Investment Sizing / Step-Up / Market-Timing Inquiry ("Should I invest more?" / "Check market trends should I invest in SIP")
         is_asking_should_i_invest_more = any(
             phrase in prompt_lower
             for phrase in [
                 "should i invest",
+                "invest in sip",
+                "invest money in sip",
                 "invest more",
                 "increase sip",
                 "increase my sip",
@@ -834,26 +845,41 @@ class LLMAdapter:
         )
 
         if is_asking_should_i_invest_more:
-            summary = (
-                f"**SEBI Non-Advice Notice:** This engine cannot tell you personally whether to invest more or time the market {e1}. "
-                f"However, customer investing patterns show that increasing contributions works best through **gradual SIP Step-Ups into existing core funds backed by an emergency cash buffer and multi-year horizon**, rather than timing headlines or opening duplicate funds {e2}, {e3}."
-            )
+            used_tags_inv: List[str] = []
+            e_mkt = cls._pick_distinct_evid(retrieved_evidence, ["market", "index", "sip", "invest", "stock", "time"], used_tags_inv, e1)
+            e_sip = cls._pick_distinct_evid(retrieved_evidence, ["sip", "mutual fund", "monthly", "buffer", "autopay", "groww"], used_tags_inv, e2)
+            e_hor = cls._pick_distinct_evid(retrieved_evidence, ["year", "long term", "overlap", "fd", "horizon", "small cap"], used_tags_inv, e3 if e3 else e2)
+
+            asks_market_trends = any(w in prompt_lower for w in ["trend", "trens", "nifty today", "sensex", "market outlook", "market condition", "check market", "chcek market"])
+            if asks_market_trends:
+                summary = (
+                    f"**SEBI Non-Advice & Empirical Scope Notice:** This offline Discovery Engine does **not** track live market trends or give personal buy/invest calls {e_mkt}. "
+                    f"Based on historical investor conversations, staggered monthly SIPs reduce market-timing pressure through Rupee-Cost Averaging when backed by an emergency cash buffer and a 5–7+ year horizon {e_sip}, {e_hor}."
+                )
+                first_row = ("Market Trends & SEBI", "Engine has no live index feed and gives no buy/sell advice", f"Historical qualitative scope {e_mkt}")
+            else:
+                summary = (
+                    f"**SEBI Non-Advice Notice:** This engine cannot tell you personally whether to invest more or time the market {e_mkt}. "
+                    f"However, customer investing patterns show that increasing contributions works best through **gradual SIP Step-Ups into existing core funds backed by an emergency cash buffer and multi-year horizon**, rather than timing headlines or opening duplicate funds {e_sip}, {e_hor}."
+                )
+                first_row = ("SEBI Guardrail", "Engine surfaces behavioral readiness, not buy/invest advice", f"Non-advisory boundary {e_mkt}")
+
             friction_op = (
-                f"**Cashflow & Overlap Risks:** Raising monthly SIP amounts without syncing debit dates to the **5th–7th** salary buffer raises ₹450–₹590 bank ECS bounce risk {e1}, "
-                f"while adding new schemes instead of stepping up existing SIPs creates 65%–75% underlying stock overlap and cluttered debits {e2}."
+                f"**Cashflow & Overlap Risks:** Starting or raising monthly SIPs without syncing debit dates to the **5th–7th** salary buffer raises ₹450–₹590 bank ECS bounce risk {e_sip}, "
+                f"while adding new schemes instead of simplifying core SIPs creates 65%–75% underlying stock overlap and cluttered debits {e_hor}."
             )
             friction_cog = (
-                f"**Market-Timing Paralysis & Short-Horizon Mismatch:** Investors often hesitate over whether to invest now or wait for dips {e1}, "
-                f"or underestimate the multi-year holding period (typically 5–7+ years for volatile equity categories) required for compounding {e3}."
+                f"**Market-Timing Paralysis & Short-Horizon Mismatch:** First-time investors frequently delay or chase market trends looking for a 'perfect entry point' {e_mkt}, "
+                f"or underestimate the multi-year holding period (typically 5–7+ years for equity funds) needed to ride out normal volatility {e_hor}."
             )
             return cls._format_gr1_synthesis(
                 summary,
                 friction_op,
                 friction_cog,
                 snapshot_rows=[
-                    ("SEBI Guardrail", "Engine surfaces behavioral readiness, not buy/invest advice", f"Non-advisory boundary {e1}"),
-                    ("Buffer Before Step-Up", "Keep emergency liquidity & salary-aligned 5th–7th debit date", f"Prevents ₹450–₹590 bounces {e2}"),
-                    ("Step-Up vs New Fund", "Increase existing core SIP instead of adding overlapping funds", f"Avoids 65%–75% overlap {e3}"),
+                    first_row,
+                    ("Buffer Before SIP", "Keep emergency liquidity & salary-aligned 5th–7th debit date", f"Prevents ₹450–₹590 bounces {e_sip}"),
+                    ("Timing vs Core SIP", "Stagger via automated SIP rather than chasing trends or overlapping funds", f"Avoids 65%–75% overlap {e_hor}"),
                 ],
             )
 
@@ -1562,7 +1588,7 @@ class LLMAdapter:
             dominant_theme = "THEME-02"
         elif any(w in prompt_lower for w in ["nav", "t+2", "allotment", "delay", "processing", "settlement", "48 hours"]):
             dominant_theme = "THEME-06"
-        elif any(w in prompt_lower for w in ["continuer", "habit", "discipline", "long term", "12 month", "goal", "differentiate"]):
+        elif any(w in prompt_lower for w in ["continuer", "habit", "discipline", "long term", "12 month", "goal", "differentiate", "notification", "alert", "daily market", "quiet"]):
             dominant_theme = "THEME-07"
         elif any(w in prompt_lower for w in ["mandate", "autopay", "bank debit", "npci", "rejection", "silently"]):
             dominant_theme = "THEME-01"

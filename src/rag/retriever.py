@@ -215,7 +215,11 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
         for extra in ["market", "down", "dip", "crash", "drawdown", "loss", "negative", "volatility", "xirr", "correction", "long", "term"]:
             if extra not in informative:
                 informative.append(extra)
-    # If churn intent is present (without downturn focus), boost core churn & failure terms
+    elif any(w in q_str for w in ["notification", "alert", "alerts", "daily market"]):
+        for extra in ["notification", "alert", "daily", "market", "panic", "noise", "long", "term"]:
+            if extra not in informative:
+                informative.append(extra)
+    # If churn intent is present (without downturn/notification focus), boost core churn & failure terms
     elif is_churn_intent:
         for extra in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused", "bounce", "drop", "drawdown", "penalty", "loss"]:
             if extra not in informative:

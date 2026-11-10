@@ -123,6 +123,12 @@ class TestHowItShouldProvideAnswers:
         assert "| Dimension | Observed Signal |" in res_more["answer"]
         assert len(res_more["follow_up_suggestions"]) == 4
 
+        res_trends = pipeline.query("chcek market trens should i invest money in SIP", top_k=5)
+        assert "SEBI Non-Advice & Empirical Scope Notice" in res_trends["answer"]
+        assert "does **not** track live market trends" in res_trends["answer"]
+        assert "pausing or cancelling an SIP solely due to a market downturn" not in res_trends["answer"]
+        assert "3,052" not in res_trends["answer"]
+
         res_start = pipeline.query("how to start sip", top_k=3)
         assert "silent partner bank mandate drops" not in res_start["answer"]
         assert "| Dimension | Observed Signal |" in res_start["answer"]
