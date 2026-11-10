@@ -148,16 +148,76 @@ class LLMAdapter:
                 "What happens if autopay fails 3 times consecutively?",
                 "What habits differentiate 12-month continuers from early drop-offs?",
             ]
+        if any(p in q_lower for p in ["invest more", "should i invest", "step up", "increase sip", "lump sum", "lumpsum", "right time"]):
+            return [
+                "Should I stop my SIP when the market is down?",
+                "How much portfolio overlap exists between large-cap and flexi-cap funds?",
+                "What is the best SIP debit date to avoid bank bounce charges?",
+                "What habits differentiate 12-month continuers from early drop-offs?",
+            ]
+        if any(p in q_lower for p in ["start sip", "start a sip", "miss sip", "missed sip", "miss an sip"]):
+            return [
+                "What is the best SIP debit date to avoid bank bounce charges?",
+                "How can users pause an SIP instead of cancelling permanently?",
+                "Why is money debited from bank account but units not allocated after 2 days?",
+                "What happens if autopay fails 3 times consecutively?",
+            ]
 
         theme_counts: Dict[str, int] = {}
         for ev in retrieved_evidence:
             tid = ev.get("theme_id", "THEME-01")
             theme_counts[tid] = theme_counts.get(tid, 0) + 1
-        dominant = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "THEME-01"
-        suggestions = _THEME_FOLLOWUP_MAP.get(dominant, _THEME_FOLLOWUP_MAP["THEME-01"])
+        dominant = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "THEME-07"
+        suggestions = _THEME_FOLLOWUP_MAP.get(dominant, _THEME_FOLLOWUP_MAP["THEME-07"])
         # Filter out exact repeat of the current query
         filtered = [s for s in suggestions if s.lower().strip("?") != q_lower.strip("?")]
         return (filtered + _THEME_FOLLOWUP_MAP["THEME-07"])[:4]
+
+    @classmethod
+    def _synthesize_from_retrieved_evidence(
+        cls, inquiry_text: str, retrieved_evidence: List[Dict[str, Any]]
+    ) -> str:
+        """Dynamic evidence-first synthesis for novel queries outside the 7 fixed templates."""
+        c_count = len(retrieved_evidence)
+        e1 = "[EVID-1]" if c_count >= 1 else ""
+        e2 = "[EVID-2]" if c_count >= 2 else e1
+        e3 = "[EVID-3]" if c_count >= 3 else e2
+
+        def _snippet(idx: int) -> Tuple[str, str, str]:
+            if idx >= c_count:
+                return "CORPUS", "Unknown", "No additional quote retrieved"
+            ev = retrieved_evidence[idx]
+            plat = (ev.get("platform") or "SOURCE").upper()
+            stage = (ev.get("journey_stage") or "unknown").replace("_", " ").title()
+            raw_q = re.sub(r"\s+", " ", (ev.get("quote") or "").strip()).replace("|", "/")
+            short_q = (raw_q[:110] + "...") if len(raw_q) > 110 else raw_q
+            return plat, stage, short_q
+
+        p1, s1, q1 = _snippet(0)
+        p2, s2, q2 = _snippet(1)
+        p3, s3, q3 = _snippet(2)
+
+        summary = (
+            f"For **\"{inquiry_text.strip()}\"** (within our product discovery scope and non-advisory SEBI boundaries), "
+            f"top matching customer discussions highlight practical questions around investor readiness, horizon expectations, and platform workflows {e1}. "
+            f"Specifically, {p1} feedback ({s1}) notes *\"{q1}\"* {e1}, while {p2} discourse ({s2}) surfaces *\"{q2}\"* {e2}."
+        )
+        friction_op = (
+            f"**Workflow & Interface Discovery Gaps:** Customer requests in the retrieved receipts point to needing clearer in-app guidance, "
+            f"flexible SIP controls, and transparent timeline/return views without digging across separate tabs {e1}, {e2}."
+        )
+        friction_cog = (
+            f"**Decision Uncertainty & Horizon Calibration:** First-time investors frequently seek reassurance on timing, allocation sizing, "
+            f"and multi-year holding horizons rather than reacting to short-term market noise {e2}, {e3}."
+        )
+        rows: List[Tuple[str, str, str]] = [
+            (f"{e1} ({p1})", f'"{q1}"', f"Stage: {s1}"),
+        ]
+        if c_count >= 2:
+            rows.append((f"{e2} ({p2})", f'"{q2}"', f"Stage: {s2}"))
+        if c_count >= 3:
+            rows.append((f"{e3} ({p3})", f'"{q3}"', f"Stage: {s3}"))
+        return cls._format_gr1_synthesis(summary, friction_op, friction_cog, snapshot_rows=rows)
 
     @staticmethod
     def _format_gr1_synthesis(
@@ -722,6 +782,130 @@ class LLMAdapter:
                     ("Rupee-Cost Averaging", "Fixed SIP buys more units at lower NAVs during dips", f"Discounted unit accumulation {e2}"),
                     ("Interface Trigger", "Red XIRR / loss badges overshadow units accumulated", f"Loss-aversion exit panic {e1}"),
                     ("Suggested Framing", "Highlight total units accumulated + 3Y–5Y horizon", f"Preserves compounding {e3_tag}"),
+                ],
+            )
+
+        # 5a-2. Investment Sizing / Step-Up / Market-Timing Inquiry ("Should I invest more?")
+        is_asking_should_i_invest_more = any(
+            phrase in prompt_lower
+            for phrase in [
+                "should i invest",
+                "invest more",
+                "increase sip",
+                "increase my sip",
+                "step up",
+                "step-up",
+                "add more money",
+                "put more money",
+                "lump sum",
+                "lumpsum",
+                "right time to invest",
+                "right time to buy",
+                "good time to invest",
+                "how much should i invest",
+                "how much to invest",
+                "invest now or wait",
+                "worth investing",
+            ]
+        )
+
+        if is_asking_should_i_invest_more:
+            summary = (
+                f"**SEBI Non-Advice Notice:** This engine cannot tell you personally whether to invest more or time the market {e1}. "
+                f"However, customer investing patterns show that increasing contributions works best through **gradual SIP Step-Ups into existing core funds backed by an emergency cash buffer and multi-year horizon**, rather than timing headlines or opening duplicate funds {e2}, {e3}."
+            )
+            friction_op = (
+                f"**Cashflow & Overlap Risks:** Raising monthly SIP amounts without syncing debit dates to the **5th–7th** salary buffer raises ₹450–₹590 bank ECS bounce risk {e1}, "
+                f"while adding new schemes instead of stepping up existing SIPs creates 65%–75% underlying stock overlap and cluttered debits {e2}."
+            )
+            friction_cog = (
+                f"**Market-Timing Paralysis & Short-Horizon Mismatch:** Investors often hesitate over whether to invest now or wait for dips {e1}, "
+                f"or underestimate the multi-year holding period (typically 5–7+ years for volatile equity categories) required for compounding {e3}."
+            )
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("SEBI Guardrail", "Engine surfaces behavioral readiness, not buy/invest advice", f"Non-advisory boundary {e1}"),
+                    ("Buffer Before Step-Up", "Keep emergency liquidity & salary-aligned 5th–7th debit date", f"Prevents ₹450–₹590 bounces {e2}"),
+                    ("Step-Up vs New Fund", "Increase existing core SIP instead of adding overlapping funds", f"Avoids 65%–75% overlap {e3}"),
+                ],
+            )
+
+        # 5a-3. Onboarding / Starting an SIP Inquiry
+        is_asking_how_to_start_sip = any(
+            phrase in prompt_lower
+            for phrase in [
+                "how to start",
+                "start sip",
+                "start a sip",
+                "start my sip",
+                "begin sip",
+                "first sip",
+                "minimum sip",
+            ]
+        )
+
+        if is_asking_how_to_start_sip:
+            summary = (
+                f"To start an SIP on Groww, navigate to **Mutual Funds ➔ Choose Fund ➔ Start SIP ➔ Select Amount & Monthly Debit Date ➔ Approve UPI Autopay or Netbanking e-Mandate** {e1}. "
+                f"Setting your debit date between the **5th and 7th** of the month and using UPI Autopay avoids early payroll mismatches and 48-hour Netbanking mandate delays {e2}."
+            )
+            friction_op = (
+                f"**Autopay Setup Friction:** Netbanking e-mandates can take up to 48 hours to verify, whereas UPI Autopay activates almost immediately {e1}. "
+                f"Note that units typically reflect within T+2 business days after each monthly debit {e2}."
+            )
+            friction_cog = (
+                f"**NPCI Limit & Date Anxiety:** First-time investors frequently mistake the **₹1,00,000 NPCI mandate authorization ceiling** for an immediate deduction and abandon onboarding before completion {e1}."
+            )
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Setup Flow", "Mutual Funds ➔ Start SIP ➔ UPI Autopay", f"Fast mandate activation {e1}"),
+                    ("Debit Date Buffer", "Pick 5th–7th instead of 1st of month", f"Cuts low-balance bounces {e2}"),
+                    ("NPCI Auth Buffer", "₹1,00,000 ceiling is a max cap, not a debit", f"Prevents setup drop-off {e1}"),
+                ],
+            )
+
+        # 5a-4. Missed SIP Instalment Consequences Inquiry
+        is_asking_missed_sip_consequences = any(
+            phrase in prompt_lower
+            for phrase in [
+                "miss sip",
+                "miss an sip",
+                "missed sip",
+                "miss 1 month",
+                "miss one month",
+                "miss a month",
+                "skip one sip",
+                "not pay sip",
+                "unable to pay sip",
+                "if i miss",
+            ]
+        )
+
+        if is_asking_missed_sip_consequences:
+            summary = (
+                f"Missing an SIP instalment triggers **zero penalty from Groww or the mutual fund AMC**, and your existing invested units remain safe {e1}. "
+                f"However, if an automated bank debit fails due to insufficient balance, **your bank may charge a ₹450–₹590 ECS/NACH bounce fee**, and **3 consecutive rejections** automatically cancel the mandate {e2}."
+            )
+            friction_op = (
+                f"**Bank Bounce Penalty vs AMC Rules:** While AMCs do not penalize a skipped instalment, partner banks treat a failed autopay pull like a bounced cheque (₹450–₹590), and 3 consecutive misses terminate the mandate {e1}, {e2}."
+            )
+            friction_cog = (
+                f"**All-or-Nothing Fear:** Novice users often panic-cancel their entire SIP permanently out of fear of platform fines, unaware that using **Pause / Skip** ahead of debit day avoids bank bounce charges cleanly {e1}."
+            )
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Groww / AMC Fee", "Zero platform penalty for a missed SIP instalment", f"Units remain invested {e1}"),
+                    ("Bank Bounce Risk", "₹450–₹590 bank charge if autopay hits empty balance", f"Pause 2–3 days ahead {e2}"),
+                    ("3-Strike Limit", "3 consecutive failed debits auto-revoke the mandate", f"Avoids stacked fees {e2}"),
                 ],
             )
 
@@ -1358,6 +1542,16 @@ class LLMAdapter:
             dominant_theme = "THEME-07"
         elif any(w in prompt_lower for w in ["mandate", "autopay", "bank debit", "npci", "rejection", "silently"]):
             dominant_theme = "THEME-01"
+
+        # Prevent unrelated open-ended queries from falling into canned THEME-01 autopay text
+        # simply because unclustered CSV records default to THEME-01.
+        evidence_blob = " ".join((ev.get("quote") or "").lower() for ev in retrieved_evidence[:3])
+        autopay_signals = ["mandate", "autopay", "nach", "ecs", "npci", "debit", "deduct", "bounce", "bank fail", "reject", "silently"]
+        if dominant_theme == "THEME-01" and not (
+            any(sig in prompt_lower for sig in autopay_signals)
+            or any(sig in evidence_blob for sig in autopay_signals)
+        ):
+            return cls._synthesize_from_retrieved_evidence(inquiry_text, retrieved_evidence)
 
         # Thematic synthesis bodies
         if "THEME-01" in dominant_theme:

@@ -115,6 +115,26 @@ class TestHowItShouldProvideAnswers:
         assert len(res_bank["follow_up_suggestions"]) == 4
         assert any("bank" in s.lower() or "autopay" in s.lower() for s in res_bank["follow_up_suggestions"])
 
+    def test_should_invest_more_and_evidence_fallback(self):
+        pipeline = RAGPipeline()
+        res_more = pipeline.query("should i invest more", top_k=3)
+        assert "SEBI Non-Advice Notice" in res_more["answer"]
+        assert "silent partner bank mandate drops" not in res_more["answer"]
+        assert "| Dimension | Observed Signal |" in res_more["answer"]
+        assert len(res_more["follow_up_suggestions"]) == 4
+
+        res_start = pipeline.query("how to start sip", top_k=3)
+        assert "silent partner bank mandate drops" not in res_start["answer"]
+        assert "| Dimension | Observed Signal |" in res_start["answer"]
+
+        res_missed = pipeline.query("what if i miss an sip", top_k=3)
+        assert "silent partner bank mandate drops" not in res_missed["answer"]
+        assert "| Dimension | Observed Signal |" in res_missed["answer"]
+
+        res_ui = pipeline.query("how is groww app ui for tracking returns", top_k=3)
+        assert "silent partner bank mandate drops" not in res_ui["answer"]
+        assert "| Dimension | Observed Signal |" in res_ui["answer"]
+
 
 # =============================================================================
 # 2. TESTS: HOW IT SHOULD NOT ANSWER (NEGATIVE GUARDRAILS)

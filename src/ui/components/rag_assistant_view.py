@@ -20,7 +20,7 @@ from src.rag.llm_adapter import LLMAdapter
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.0_gr1_hybrid") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.1_invest_more_fix") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
