@@ -9,6 +9,8 @@ Modeled after Groww's Executive Discovery Suite & Customer Voice Grounding:
 6. Real-time Positive Answering & Negative Guardrails compliance auditing.
 """
 
+import json
+from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional
 import streamlit as st
@@ -224,7 +226,7 @@ def render_rag_assistant_view(db_path=None) -> None:
             "✅ How It Answers",
             "🚫 How It Must NOT Answer",
             "🔄 Multi-Tier Fallback",
-            "🧪 Golden Benchmark Runner (25 Cases)",
+            "🧪 Golden Dataset & Benchmark (25 Cases)",
         ])
 
         with g_tab1:
@@ -281,8 +283,49 @@ def render_rag_assistant_view(db_path=None) -> None:
             )
 
         with g_tab4:
-            st.markdown("### Golden Benchmark Suite (25 Test Cases)")
-            st.write("Execute standardized benchmark evaluations across all 25 test cases to verify retrieval precision, SEBI compliance, anti-FOMO guardrails, citation integrity, and fallback resilience.")
+            st.markdown(
+                """
+                ### Golden Dataset Coverage (25 RAG Cases + 20 Extraction Ground-Truth Labels)
+                Evaluated automatically via `RAGEvaluator` against `data/golden_set/rag_golden_dataset.json`:
+
+                | Test Group | Cases | IDs | What Was Built & Verified |
+                |:---|:---:|:---|:---|
+                | **7 Retention Themes** | 18 | `GOLD-RAG-001`–`007`, `010`–`014`, `017`–`020`, `023`–`024` | Grounded synthesis + `[EVID-X]` citations for autopay drops, NPCI limit myth, ECS penalty, XIRR distortion, FD proxy, T+2 NAV lag, overlap clutter, 10% step-up & quiet mode |
+                | **SEBI Non-Advice Probes** | 3 | `GOLD-RAG-008`, `009`, `025` | Strict refusal on fund-picking, scheme comparison (*Parag Parikh vs Quant*), and "guaranteed 25% CAGR" claims |
+                | **Anti-FOMO / Dark Pattern** | 1 | `GOLD-RAG-016` | Blocks requests to hide cancel buttons or add 5-minute countdown locks |
+                | **Out-of-Scope Boundary** | 1 | `GOLD-RAG-015` | Rejects speculative crypto/100x leverage queries outside the SIP corpus |
+                | **Short / Ambiguous Edges** | 2 | `GOLD-RAG-021`, `022` | Disambiguates underspecified queries (`"SIP stopped"`, `"why negative return"`) via Tier 2 clarification |
+
+                *Paired with `golden_set_human_labels.json` (20 human-labeled reviews benchmarking extraction accuracy).*
+                """
+            )
+
+            if st.checkbox("Browse All 25 Golden Test Cases", key="chk_browse_golden_cases"):
+                golden_path = (
+                    Path(__file__).resolve().parent.parent.parent.parent
+                    / "data"
+                    / "golden_set"
+                    / "rag_golden_dataset.json"
+                )
+                if golden_path.exists():
+                    _cases = json.loads(golden_path.read_text(encoding="utf-8")).get("test_cases", [])
+                    rows_md = [
+                        "| ID | Category | Theme | Query | Guardrail / Target |",
+                        "|:---|:---|:---:|:---|:---|",
+                    ]
+                    for _c in _cases:
+                        _probe = (
+                            "SEBI Probe" if _c.get("sebi_advisory_probe")
+                            else "Anti-FOMO Probe" if _c.get("fomo_probe")
+                            else "Out-of-Scope" if _c.get("out_of_scope_probe")
+                            else f"Min {_c.get('minimum_citations', 1)} [EVID]"
+                        )
+                        _q_clean = (_c.get("query") or "").replace("|", "/")
+                        _cat_clean = (_c.get("category") or "").replace("|", "/")
+                        rows_md.append(
+                            f"| `{_c.get('query_id')}` | {_cat_clean} | `{_c.get('target_theme_id', '-')}` | {_q_clean} | {_probe} |"
+                        )
+                    st.markdown("\n".join(rows_md))
 
             if st.button("Run Full Golden Benchmark Evaluation 🚀", key="btn_run_golden_benchmark", use_container_width=True):
                 with st.spinner("Evaluating 25 golden test cases across all criteria..."):
@@ -290,7 +333,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                     bench_summary = evaluator.evaluate_all(top_k=5)
 
                 st.success(f"Benchmark Complete! {bench_summary['passed_cases']}/{bench_summary['total_cases']} cases passed ({bench_summary['overall_pass_rate']}%).")
-                
+
                 b_m1, b_m2, b_m3, b_m4, b_m5 = st.columns(5)
                 b_m1.metric("Overall Pass Rate", f"{bench_summary['overall_pass_rate']}%")
                 b_m2.metric("SEBI Compliance", f"{bench_summary['sebi_compliance_rate']}%")
@@ -298,8 +341,9 @@ def render_rag_assistant_view(db_path=None) -> None:
                 b_m4.metric("Zero Hallucination", f"{bench_summary['zero_hallucination_rate']}%")
                 b_m5.metric("Avg Latency", f"{bench_summary['avg_latency_ms']} ms")
 
-                with st.expander("View Case-by-Case Diagnostic Results", expanded=False):
-                    for c_idx, c_res in enumerate(bench_summary["cases_evaluated"], 1):
+                with st.container(border=True):
+                    st.markdown("**Case-by-Case Diagnostic Results**")
+                    for c_res in bench_summary["cases_evaluated"]:
                         status_emoji = "✅" if c_res["case_passed"] else "❌"
                         st.markdown(
                             f"**{status_emoji} [{c_res['query_id']}]** `{c_res['category']}`: *\"{c_res['query']}\"*  \n"
