@@ -86,18 +86,19 @@ class RAGPipeline:
 
         # STAGE 6: Multi-Layer Output Defense Gate (Regex + Number Verifier + Entailment Gate)
         output_defense = RAGRulesEngine.validate_output_defense_gate(synthesis, retrieved_evidence)
-        if not output_defense["passed_all_layers"] and not is_llm_fallback:
-            # If external LLM generation violated output defense, engage Tier 3 Grounded Engine
-            fallback_reason = f"Output Defense Gate intercept: {output_defense.get('layer1_violations') or output_defense.get('ungrounded_numbers')}"
+        structure_audit = RAGRulesEngine.audit_structure(synthesis)
+        if (not output_defense["passed_all_layers"] or not structure_audit["is_complete"]) and not is_llm_fallback and "Deterministic" not in llm_provider:
+            # If external LLM generation violated output defense or structure, engage Deterministic Grounded Engine
+            fallback_reason = f"Output Defense Gate intercept: {output_defense.get('layer1_violations') or output_defense.get('ungrounded_numbers') or 'incomplete structure'}"
             synthesis = LLMAdapter._deterministic_synthesis(query, retrieved_evidence)
             is_llm_fallback = True
-            # Re-run output defense on clean fallback
             output_defense = RAGRulesEngine.validate_output_defense_gate(synthesis, retrieved_evidence)
+            structure_audit = RAGRulesEngine.audit_structure(synthesis)
 
         # Compliance and Structural Audits
         negative_audit = RAGRulesEngine.validate_negative_guardrails(synthesis, len(retrieved_evidence))
         citation_audit = RAGRulesEngine.audit_citations(synthesis, len(retrieved_evidence))
-        structure_audit = RAGRulesEngine.audit_structure(synthesis)
+        follow_up_suggestions = LLMAdapter.get_contextual_followups(query, retrieved_evidence)
 
         is_overall_fallback = is_llm_fallback or retrieval_meta.get("is_fallback", False)
 
@@ -138,4 +139,5 @@ class RAGPipeline:
             "numerical_precision": output_defense.get("numerical_precision", 1.0),
             "groundedness_score": output_defense.get("groundedness_score", 1.0),
             "clarification_chips": clarification_chips,
+            "follow_up_suggestions": follow_up_suggestions,
         }

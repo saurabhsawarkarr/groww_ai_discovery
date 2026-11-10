@@ -16,10 +16,11 @@ import streamlit as st
 from src.rag.retriever import HybridEvidenceRetriever
 from src.rag.pipeline import RAGPipeline
 from src.rag.evaluator import RAGEvaluator
+from src.rag.llm_adapter import LLMAdapter
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v3.3_direct_openers") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.0_gr1_hybrid") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -70,6 +71,13 @@ FOLLOW_UP_SUGGESTIONS = [
 ]
 
 
+AI_DISCLAIMER_HTML = (
+    '<div style="text-align: center; font-size: 11.5px; color: #64748B; margin-top: 6px; margin-bottom: 4px;">'
+    'Ask AI Engine is grounded on 3,052 verified customer reviews and can make mistakes &bull; Research discovery only, not SEBI financial advice.'
+    '</div>'
+)
+
+
 def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
     """Execute inquiry immediately and record into conversation history."""
     clean_query = query_text.strip()
@@ -82,8 +90,26 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "content": clean_query,
     })
 
-    # Execute RAG query through pipeline
-    res = pipeline.query(query=clean_query, top_k=5)
+    # Resolve runtime hybrid LLM vs instant deterministic grounded mode
+    use_hybrid = st.session_state.get("rag_engine_mode", "Auto Hybrid (Live LLM + Fallback)") == "Auto Hybrid (Live LLM + Fallback)"
+    if use_hybrid:
+        llm_cfg = LLMAdapter.resolve_runtime_llm(getattr(st, "secrets", None))
+    else:
+        llm_cfg = {
+            "provider": "Deterministic Grounded Engine (No Key Required)",
+            "api_key": None,
+            "model": None,
+        }
+
+    # Execute RAG query through pipeline with GR-1-style Thinking state
+    with st.spinner("Thinking across 3,052 verified customer reviews..."):
+        res = pipeline.query(
+            query=clean_query,
+            top_k=5,
+            llm_provider=llm_cfg["provider"] or "Deterministic Grounded Engine (No Key Required)",
+            api_key=llm_cfg["api_key"],
+            model=llm_cfg["model"],
+        )
 
     synthesis = res["answer"]
     evid = res.get("retrieved_evidence", [])
@@ -94,6 +120,7 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
     retrieval_tier = res.get("retrieval_fallback_tier", "Tier 1: Direct Hybrid RRF")
     exec_mode = res.get("execution_mode", "Deterministic Grounded Engine")
     clarification_chips = res.get("clarification_chips", [])
+    follow_ups = res.get("follow_up_suggestions", FOLLOW_UP_SUGGESTIONS)
 
     # Append assistant synthesis
     st.session_state["chat_messages"].append({
@@ -109,6 +136,7 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "retrieval_tier": retrieval_tier,
         "exec_mode": exec_mode,
         "clarification_chips": clarification_chips,
+        "follow_up_suggestions": follow_ups,
     })
 
 
@@ -130,10 +158,18 @@ def render_rag_assistant_view(db_path=None) -> None:
                     content = content.split("### 4. Strategic PM")[0].strip()
                 msg["content"] = content
 
+    if "rag_engine_mode" not in st.session_state:
+        st.session_state["rag_engine_mode"] = "Auto Hybrid (Live LLM + Fallback)"
+
+    # Auto-execute contextual inquiry launched from Themes / Opportunity cards
+    pending_query = st.session_state.pop("pending_ai_query", None)
+    if pending_query and pending_query.strip():
+        execute_inquiry(pipeline, pending_query.strip())
+
     has_messages = bool(st.session_state["chat_messages"])
 
     # 1. Page Header Bar
-    h_col1, h_col2 = st.columns([3.6, 1.4])
+    h_col1, h_col2 = st.columns([3.4, 1.6])
     with h_col1:
         st.markdown(
             """<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
@@ -148,7 +184,7 @@ def render_rag_assistant_view(db_path=None) -> None:
             <span class="badge-tag badge-category">Anti-FOMO Guardrail</span>
             </div>
             <p class="page-subtitle" style="margin: 2px 0 0 0; font-size: 13px; color: #94A3B8;">
-            Direct answers grounded across 3,052 verified customer reviews &bull; Streamlined Behavioral & Root Cause Synthesis &bull; Resilient Multi-Stage Fallback
+            Direct answers grounded across 3,052 verified customer reviews &bull; Structured Behavioral Synthesis &bull; Hybrid Guarded Fallback
             </p>
             </div>
             </div>""",
@@ -174,6 +210,12 @@ def render_rag_assistant_view(db_path=None) -> None:
                 </div>""",
                 unsafe_allow_html=True,
             )
+        st.selectbox(
+            "Synthesis Mode",
+            ["Auto Hybrid (Live LLM + Fallback)", "Instant Grounded Engine"],
+            key="rag_engine_mode",
+            label_visibility="collapsed",
+        )
 
     # 2. Expandable Architectural Guide: How AI Answers vs How It Must NOT Answer
     with st.expander("🛡️ RAG AI Answering Guardrails & Fallback Architecture (How It Answers vs How It Must NOT Answer)", expanded=False):
@@ -290,6 +332,8 @@ def render_rag_assistant_view(db_path=None) -> None:
         if starter_ask_clicked and starter_query_input.strip():
             active_prompt_to_run = starter_query_input.strip()
 
+        st.markdown(AI_DISCLAIMER_HTML, unsafe_allow_html=True)
+
         # Section Label for Starter Cards with subtle gradient divider
         st.markdown(
             """<div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 18px 0;">
@@ -331,102 +375,109 @@ def render_rag_assistant_view(db_path=None) -> None:
     # STATE 2: ACTIVE CONVERSATION THREAD
     # =========================================================================
     else:
+        turn_to_delete = None
         for idx, msg in enumerate(st.session_state["chat_messages"]):
             if msg["role"] == "user":
-                st.markdown(
-                    f"""<div style="display: flex; justify-content: flex-end; margin-top: 18px; margin-bottom: 14px;">
-                    <div style="background: #1A2230; border: 1px solid #2B3548; border-left: 3.5px solid #00D09C; border-radius: 10px; padding: 14px 20px; max-width: 82%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
-                    <div style="font-size: 11px; font-weight: 700; color: #00D09C; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">YOUR INQUIRY</div>
-                    <div style="font-size: 16px; font-weight: 600; color: #F1F5F9; line-height: 1.45;">{msg['content']}</div>
-                    </div>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            else:
-                evidence_list = msg.get("evidence", [])
-
-                st.markdown(
-                    """<div style="background: #151A24; border: 1px solid #222938; border-radius: 12px; padding: 22px 26px; margin-bottom: 22px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);">""",
-                    unsafe_allow_html=True,
-                )
-
-                # Core Synthesized Executive Answer (with highlighted citation badges)
-                content_to_render = msg["content"]
-                if "### 3. Voice of Customer" in content_to_render:
-                    content_to_render = content_to_render.split("### 3. Voice of Customer")[0].strip()
-                if "### 4. Strategic PM" in content_to_render:
-                    content_to_render = content_to_render.split("### 4. Strategic PM")[0].strip()
-
-                formatted_content = re.sub(r"\[EVID-(\d+)\]", r'<span class="evid-tag">[EVID-\1]</span>', content_to_render)
-                st.markdown(formatted_content, unsafe_allow_html=True)
-
-                # Render Interactive Clarification Chips if returned
-                chips = msg.get("clarification_chips", [])
-                if chips:
-                    st.markdown("<div style='margin-top: 14px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #00D09C; text-transform: uppercase; letter-spacing: 0.05em;'>👉 Suggested Research Pathways:</div>", unsafe_allow_html=True)
-                    chip_c1, chip_c2 = st.columns(2, gap="small")
-                    for c_idx, chip in enumerate(chips):
-                        target_chip_col = chip_c1 if c_idx % 2 == 0 else chip_c2
-                        with target_chip_col:
-                            if st.button(chip["label"], key=f"chip_msg_{idx}_{c_idx}", use_container_width=True):
-                                active_prompt_to_run = chip["query"]
-
-                # Verbatim Customer Evidence Receipts (in a compact 2-column grid to prevent scroll bloat)
-                if evidence_list:
+                u_col1, u_col2 = st.columns([0.93, 0.07], gap="small")
+                with u_col1:
                     st.markdown(
-                        f"""<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #1E2533;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
-                        <span style="font-size: 12.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">
-                        💬 Verified Customer Evidence ({len(evidence_list)} Grounded Receipts):
-                        </span>
-                        <span style="font-size: 11.5px; color: #00D09C; font-weight: 600;">100% Verbatim Customer Reviews</span>
+                        f"""<div style="display: flex; justify-content: flex-end; margin-top: 18px; margin-bottom: 14px;">
+                        <div style="background: #1A2230; border: 1px solid #2B3548; border-left: 3.5px solid #00D09C; border-radius: 10px; padding: 14px 20px; max-width: 88%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
+                        <div style="font-size: 11px; font-weight: 700; color: #00D09C; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">YOUR INQUIRY</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #F1F5F9; line-height: 1.45;">{msg['content']}</div>
                         </div>
                         </div>""",
                         unsafe_allow_html=True,
                     )
+                with u_col2:
+                    st.markdown("<div style='height: 22px;'></div>", unsafe_allow_html=True)
+                    if st.button("✕", key=f"del_turn_{idx}", help="Remove this Q&A turn from history"):
+                        turn_to_delete = idx
+            else:
+                evidence_list = msg.get("evidence", [])
 
-                    ev_col1, ev_col2 = st.columns(2, gap="small")
-                    for e_idx, ev in enumerate(evidence_list, 1):
-                        target_ev_col = ev_col1 if (e_idx % 2 != 0) else ev_col2
-                        plat = ev.get("platform", "source").upper()
-                        stage = ev.get("journey_stage", "unknown").replace("_", " ").title()
-                        pub_date = ev.get("published_at", "Recent")
-                        q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
-                        src_url = ev.get("source_url", "")
-                        src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none; font-size: 11px;">[Source Link ↗]</a>' if src_url else ""
+                with st.container(border=True):
+                    # Core Synthesized Executive Answer (with highlighted citation badges)
+                    content_to_render = msg["content"]
+                    if "### 3. Voice of Customer" in content_to_render:
+                        content_to_render = content_to_render.split("### 3. Voice of Customer")[0].strip()
+                    if "### 4. Strategic PM" in content_to_render:
+                        content_to_render = content_to_render.split("### 4. Strategic PM")[0].strip()
 
-                        # Distinct badge color per platform
-                        plat_bg = "rgba(0, 208, 156, 0.12)"
-                        plat_color = "#00D09C"
-                        if "REDDIT" in plat:
-                            plat_bg = "rgba(251, 146, 60, 0.12)"
-                            plat_color = "#FB923C"
-                        elif "APP STORE" in plat or "IOS" in plat:
-                            plat_bg = "rgba(56, 189, 248, 0.12)"
-                            plat_color = "#38BDF8"
-                        elif "YOUTUBE" in plat:
-                            plat_bg = "rgba(248, 113, 113, 0.12)"
-                            plat_color = "#F87171"
+                    formatted_content = re.sub(r"\[EVID-(\d+)\]", r'<span class="evid-tag">[EVID-\1]</span>', content_to_render)
+                    st.markdown(formatted_content, unsafe_allow_html=True)
 
-                        with target_ev_col:
-                            st.markdown(
-                                f"""<div style="background: #1A2230; border: 1px solid #2B3548; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; min-height: 125px; display: flex; flex-direction: column; justify-content: space-between;">
-                                <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 6px;">
-                                <div><strong style="color: #00D09C;">[EVID-{e_idx}]</strong> &bull; <span style="background: {plat_bg}; color: {plat_color}; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">{plat}</span></div>
-                                <span style="color: #64748B; font-size: 11px;">{pub_date}</span>
-                                </div>
-                                <div style="font-size: 13px; font-style: italic; color: #E2E8F0; line-height: 1.45; margin: 4px 0;">"{q_text}"</div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 4px;">
-                                <span style="color: #94A3B8;">Stage: {stage}</span>
-                                {src_link}
+                    # Render Interactive Clarification Chips if returned
+                    chips = msg.get("clarification_chips", [])
+                    if chips:
+                        st.markdown("<div style='margin-top: 14px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #00D09C; text-transform: uppercase; letter-spacing: 0.05em;'>👉 Suggested Research Pathways:</div>", unsafe_allow_html=True)
+                        chip_c1, chip_c2 = st.columns(2, gap="small")
+                        for c_idx, chip in enumerate(chips):
+                            target_chip_col = chip_c1 if c_idx % 2 == 0 else chip_c2
+                            with target_chip_col:
+                                if st.button(chip["label"], key=f"chip_msg_{idx}_{c_idx}", use_container_width=True):
+                                    active_prompt_to_run = chip["query"]
+
+                    # Verbatim Customer Evidence Receipts (in a compact 2-column grid to prevent scroll bloat)
+                    if evidence_list:
+                        st.markdown(
+                            f"""<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #1E2533;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
+                            <span style="font-size: 12.5px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">
+                            💬 Verified Customer Evidence ({len(evidence_list)} Grounded Receipts):
+                            </span>
+                            <span style="font-size: 11.5px; color: #00D09C; font-weight: 600;">100% Verbatim Customer Reviews</span>
                             </div>
                             </div>""",
-                                unsafe_allow_html=True,
-                            )
+                            unsafe_allow_html=True,
+                        )
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                        ev_col1, ev_col2 = st.columns(2, gap="small")
+                        for e_idx, ev in enumerate(evidence_list, 1):
+                            target_ev_col = ev_col1 if (e_idx % 2 != 0) else ev_col2
+                            plat = ev.get("platform", "source").upper()
+                            stage = ev.get("journey_stage", "unknown").replace("_", " ").title()
+                            pub_date = ev.get("published_at", "Recent")
+                            q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
+                            src_url = ev.get("source_url", "")
+                            src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none; font-size: 11px;">[Source Link ↗]</a>' if src_url else ""
+
+                            # Distinct badge color per platform
+                            plat_bg = "rgba(0, 208, 156, 0.12)"
+                            plat_color = "#00D09C"
+                            if "REDDIT" in plat:
+                                plat_bg = "rgba(251, 146, 60, 0.12)"
+                                plat_color = "#FB923C"
+                            elif "APP STORE" in plat or "IOS" in plat:
+                                plat_bg = "rgba(56, 189, 248, 0.12)"
+                                plat_color = "#38BDF8"
+                            elif "YOUTUBE" in plat:
+                                plat_bg = "rgba(248, 113, 113, 0.12)"
+                                plat_color = "#F87171"
+
+                            with target_ev_col:
+                                st.markdown(
+                                    f"""<div style="background: #1A2230; border: 1px solid #2B3548; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; min-height: 125px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 6px;">
+                                    <div><strong style="color: #00D09C;">[EVID-{e_idx}]</strong> &bull; <span style="background: {plat_bg}; color: {plat_color}; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">{plat}</span></div>
+                                    <span style="color: #64748B; font-size: 11px;">{pub_date}</span>
+                                    </div>
+                                    <div style="font-size: 13px; font-style: italic; color: #E2E8F0; line-height: 1.45; margin: 4px 0;">"{q_text}"</div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 4px;">
+                                    <span style="color: #94A3B8;">Stage: {stage}</span>
+                                    {src_link}
+                                </div>
+                                </div>""",
+                                    unsafe_allow_html=True,
+                                )
+
+        if turn_to_delete is not None:
+            msgs = st.session_state["chat_messages"]
+            end_idx = turn_to_delete + 2 if (turn_to_delete + 1 < len(msgs) and msgs[turn_to_delete + 1].get("role") == "assistant") else turn_to_delete + 1
+            del msgs[turn_to_delete:end_idx]
+            st.rerun()
 
         # Persistent Follow-up Chat Composer
         st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -445,7 +496,15 @@ def render_rag_assistant_view(db_path=None) -> None:
         if followup_ask_clicked and followup_query_input.strip():
             active_prompt_to_run = followup_query_input.strip()
 
-        # Follow-Up Question Chips in 2x2 Grid (Eliminating the 4-column squeeze)
+        st.markdown(AI_DISCLAIMER_HTML, unsafe_allow_html=True)
+
+        # Dynamic GR-1-style Follow-Up Question Chips aligned with the last reply
+        dynamic_followups = FOLLOW_UP_SUGGESTIONS
+        for m in reversed(st.session_state["chat_messages"]):
+            if m.get("role") == "assistant" and m.get("follow_up_suggestions"):
+                dynamic_followups = m["follow_up_suggestions"]
+                break
+
         st.markdown(
             """<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; margin-bottom: 8px;">
             <span style="font-size: 11.5px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">
@@ -454,21 +513,17 @@ def render_rag_assistant_view(db_path=None) -> None:
             </div>""",
             unsafe_allow_html=True,
         )
-        f_r1_c1, f_r1_c2 = st.columns(2, gap="small")
-        with f_r1_c1:
-            if st.button(f'"{FOLLOW_UP_SUGGESTIONS[0]}"', key="fup_chip_0", use_container_width=True):
-                active_prompt_to_run = FOLLOW_UP_SUGGESTIONS[0]
-        with f_r1_c2:
-            if st.button(f'"{FOLLOW_UP_SUGGESTIONS[1]}"', key="fup_chip_1", use_container_width=True):
-                active_prompt_to_run = FOLLOW_UP_SUGGESTIONS[1]
-
-        f_r2_c1, f_r2_c2 = st.columns(2, gap="small")
-        with f_r2_c1:
-            if st.button(f'"{FOLLOW_UP_SUGGESTIONS[2]}"', key="fup_chip_2", use_container_width=True):
-                active_prompt_to_run = FOLLOW_UP_SUGGESTIONS[2]
-        with f_r2_c2:
-            if st.button(f'"{FOLLOW_UP_SUGGESTIONS[3]}"', key="fup_chip_3", use_container_width=True):
-                active_prompt_to_run = FOLLOW_UP_SUGGESTIONS[3]
+        for row_start in range(0, min(4, len(dynamic_followups)), 2):
+            f_c1, f_c2 = st.columns(2, gap="small")
+            with f_c1:
+                q_item = dynamic_followups[row_start]
+                if st.button(f"↳ {q_item}", key=f"fup_chip_{row_start}", use_container_width=True):
+                    active_prompt_to_run = q_item
+            if row_start + 1 < len(dynamic_followups):
+                with f_c2:
+                    q_item_2 = dynamic_followups[row_start + 1]
+                    if st.button(f"↳ {q_item_2}", key=f"fup_chip_{row_start + 1}", use_container_width=True):
+                        active_prompt_to_run = q_item_2
 
     # Execute inquiry if submitted from form or buttons
     if active_prompt_to_run:

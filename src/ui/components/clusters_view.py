@@ -18,6 +18,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-01": {
         "root_trigger": "Salary delay of 2–3 days leaves bank account empty on auto-debit day, causing silent mandate cancellation with zero fallback recovery link.",
         "critical_window": "Month 3–6 • Early Mandate Phase",
+        "ask_ai_prompt": "Why do bank autopay mandates fail silently and trigger cancellations?",
         "product_levers": [
             "1-Click Fallback UPI Retry",
             "WhatsApp T-24h Pre-Debit Ping",
@@ -27,6 +28,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-02": {
         "root_trigger": "Chasing trending YouTube fund picks leads to 6+ overlapping funds with >70% stock redundancy, causing decision fatigue and premature liquidation.",
         "critical_window": "Month 4–8 • Portfolio Clutter Phase",
+        "ask_ai_prompt": "Why do first-time users accumulate 6+ overlapping funds?",
         "product_levers": [
             "1-Click Portfolio Overlap Cleaner",
             "3-Fund Core Foundation Bundle",
@@ -36,6 +38,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-03": {
         "root_trigger": "Retail bank ₹450–₹590 auto-debit bounce penalty scares first-time investors into permanently cancelling their mandate to avoid recurring bank charges.",
         "critical_window": "Month 2–5 • Early Cash Crunch",
+        "ask_ai_prompt": "How does fear of ₹450 bank bounce fines trigger cancellations?",
         "product_levers": [
             "Pre-Flight Bank Balance Verification",
             "1-Click 7-Day Auto-Pause / Skip",
@@ -45,6 +48,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-04": {
         "root_trigger": "Normal 2–5% short-term market corrections trigger loss aversion and red-portfolio shock, prompting panic cancellations at the bottom of the cycle.",
         "critical_window": "Month 1–3 • First Correction Shock",
+        "ask_ai_prompt": "Why do users panic when their early portfolio shows negative returns?",
         "product_levers": [
             "Accumulation Lens (Unit Growth View)",
             "Volatility Reassurance Crash Context",
@@ -54,6 +58,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-05": {
         "root_trigger": "Anchored to 15–20% bull-run marketing calculators, users interpret normal Year 1 flat/low XIRR as fund failure and prematurely stop disciplined investing.",
         "critical_window": "Month 6–12 • Horizon Mismatch",
+        "ask_ai_prompt": "Why does XIRR show -18% on a tiny 30 rupees dip?",
         "product_levers": [
             "Hide <1Y Annualized XIRR by Default",
             "Absolute Rupee Wealth Accumulated",
@@ -63,6 +68,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-06": {
         "root_trigger": "2-to-3 business day lag between bank debit and mutual fund unit allotment causes anxiety that money is lost or debited at unfavorable NAV rates.",
         "critical_window": "Month 1–4 • Settlement Anxiety",
+        "ask_ai_prompt": "Why do users panic over the 48-hour NAV allotment delay?",
         "product_levers": [
             "Real-Time In-App Settlement Tracker",
             "NAV Cutoff Lock-In Guarantee Badge",
@@ -72,6 +78,7 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-07": {
         "root_trigger": "Investing without a concrete life milestone makes SIP deductions feel like discretionary monthly costs rather than disciplined wealth building.",
         "critical_window": "Month 6–12 • Habit Erosion",
+        "ask_ai_prompt": "What habits differentiate 12-month continuers from early drop-offs?",
         "product_levers": [
             "Mandatory Goal-Anchored SIP Setup",
             "Milestone Progress Bar (e.g. 15% to Car)",
@@ -183,7 +190,7 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
             return "Investor Forum"
         return p.capitalize() if p else "Customer Verbatim"
 
-    cards_html_list = []
+    cards_entries = []
 
     for i, t in enumerate(themes_data, 1):
         cid = t.get("theme_id", f"THEME-0{i}")
@@ -191,11 +198,11 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
         item_count = t.get("prevalence_count", 0)
         prevalence_pct = t.get("prevalence_percentage", 0.0)
         quotes = t.get("representative_quotes", [])
-        platform_breakdown = t.get("platform_breakdown", {})
 
         meta = THEME_METADATA_MAP.get(cid, {
             "root_trigger": t.get("core_problem", ""),
             "critical_window": "First-Year Journey",
+            "ask_ai_prompt": f"What drives drop-off in {title}?",
             "product_levers": [
                 "Product Intervention"
             ],
@@ -252,7 +259,7 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
         )
 
         card_html = (
-            f'<div style="background: #151A24; border: 1.5px solid #222938; border-top: 4px solid #00D09C; border-radius: 12px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: space-between; min-height: 340px; transition: transform 0.15s ease, box-shadow 0.15s ease;">'
+            f'<div style="background: #151A24; border: 1.5px solid #222938; border-top: 4px solid #00D09C; border-bottom: none; border-radius: 12px 12px 0 0; padding: 20px 22px 14px 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: space-between; min-height: 330px;">'
             f'<div>'
             f'<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">'
             f'<span class="badge-tag badge-tier-1">{cid}</span>'
@@ -282,9 +289,9 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
             f'{footer_html}'
             f'</div>'
         )
-        cards_html_list.append(card_html)
+        cards_entries.append((cid, meta.get("ask_ai_prompt", f"Why do users churn in {title}?"), card_html))
 
-    # Styles for details summary and responsive grid
+    # Styles for details summary
     style_block = """<style>
 details.evidence-details summary {
     list-style: none;
@@ -329,12 +336,20 @@ details.evidence-details summary:focus {
 }
 </style>"""
 
-    # Render entire grid in responsive multi-column layout
-    grid_container_html = (
-        f'{style_block}'
-        f'<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 18px; align-items: stretch; margin-top: 18px; margin-bottom: 24px;">'
-        f'{"".join(cards_html_list)}'
-        f'</div>'
-    )
+    st.markdown(style_block, unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
-    st.markdown(grid_container_html, unsafe_allow_html=True)
+    for row_start in range(0, len(cards_entries), 2):
+        col_a, col_b = st.columns(2, gap="medium")
+        for offset, target_col in enumerate([col_a, col_b]):
+            idx = row_start + offset
+            if idx >= len(cards_entries):
+                break
+            cid, ask_prompt, c_html = cards_entries[idx]
+            with target_col:
+                st.markdown(c_html, unsafe_allow_html=True)
+                if st.button(f"Ask AI about {cid} ➔", key=f"btn_theme_ask_{cid}", use_container_width=True):
+                    st.session_state["pending_ai_query"] = ask_prompt
+                    st.session_state["nav_target_page"] = "Ask AI Engine"
+                    st.rerun()
+                st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)

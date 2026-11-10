@@ -103,10 +103,15 @@ def main():
             "Engine Info",
         ]
 
+        if "sidebar_nav_radio" not in st.session_state:
+            st.session_state["sidebar_nav_radio"] = "Overview"
+        if st.session_state.get("nav_target_page") in nav_options:
+            st.session_state["sidebar_nav_radio"] = st.session_state.pop("nav_target_page")
+
         selected_page = st.radio(
             "Navigation Menu",
             nav_options,
-            index=0,
+            key="sidebar_nav_radio",
             label_visibility="collapsed",
         )
 

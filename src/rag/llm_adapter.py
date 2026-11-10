@@ -11,6 +11,7 @@ Enables seamless execution across:
 - Pre- and Post-Generation Guardrail Interceptor (SEBI, Anti-FOMO, Zero Hallucination)
 """
 
+from pathlib import Path
 import json
 import logging
 import os
@@ -19,9 +20,63 @@ import urllib.request
 import urllib.error
 from typing import Any, Dict, List, Optional, Tuple
 
+from dotenv import load_dotenv
+
 from src.rag.rules import RAGRulesEngine, RAG_SYSTEM_RULES_PROMPT
 
 logger = logging.getLogger("groww_discovery.rag.llm_adapter")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+load_dotenv(_PROJECT_ROOT / ".env")
+
+_DEFAULT_HEADERS = {
+    "Content-Type": "application/json",
+    "User-Agent": "GrowwDiscoveryEngine/1.0",
+}
+
+_THEME_FOLLOWUP_MAP: Dict[str, List[str]] = {
+    "THEME-01": [
+        "Which specific banks (HDFC, SBI, etc.) fail most often?",
+        "What happens if autopay fails 3 times consecutively?",
+        "What is the best SIP debit date to avoid bank bounce charges?",
+        "What workarounds do users discuss on Reddit?",
+    ],
+    "THEME-02": [
+        "How much portfolio overlap exists between large-cap and flexi-cap funds?",
+        "Why do beginners buy 7 or 8 mutual funds at once?",
+        "Why do beginners struggle so much to choose their first mutual fund?",
+        "What habits differentiate 12-month continuers from early drop-offs?",
+    ],
+    "THEME-03": [
+        "How can users pause an SIP instead of cancelling permanently?",
+        "What is the best SIP debit date to avoid bank bounce charges?",
+        "What workarounds do users discuss on Reddit?",
+        "What happens if autopay fails 3 times consecutively?",
+    ],
+    "THEME-04": [
+        "Why does XIRR show -18% on a tiny 30 rupees dip?",
+        "Should I stop my SIP when the market is down?",
+        "Why do users panic when their early portfolio shows negative returns?",
+        "What habits differentiate 12-month continuers from early drop-offs?",
+    ],
+    "THEME-05": [
+        "Should I stop my SIP when the market is down?",
+        "Why does XIRR show -18% on a tiny 30 rupees dip?",
+        "What habits differentiate 12-month continuers from early drop-offs?",
+        "Why do users panic over the 48-hour NAV allotment delay?",
+    ],
+    "THEME-06": [
+        "Why is money debited from bank account but units not allocated after 2 days?",
+        "Why do users panic when their early portfolio shows negative returns?",
+        "How does fear of ₹450 bank bounce fines trigger cancellations?",
+        "How does Groww autopay compare to Zerodha Coin?",
+    ],
+    "THEME-07": [
+        "What habits differentiate 12-month continuers from early drop-offs?",
+        "Why do beginners struggle so much to choose their first mutual fund?",
+        "Should I stop my SIP when the market is down?",
+        "How can users pause an SIP instead of cancelling permanently?",
+    ],
+}
 
 
 class LLMAdapter:
@@ -30,14 +85,104 @@ class LLMAdapter:
     """
 
     PROVIDERS = [
-        "Google Gemini (Gemini 3.5 Flash)",
+        "Groq (GPT-OSS 20B)",
+        "Google Gemini (Gemini 3 Flash)",
         "Deterministic Grounded Engine (No Key Required)",
         "OpenAI (GPT-4o / GPT-4o-mini)",
         "Anthropic Claude (Claude 3.5 Sonnet)",
-        "Groq (Llama 3.3 70B)",
         "Ollama / Local vLLM (OpenAI Compatible)",
         "Custom REST API Endpoint",
     ]
+
+    @staticmethod
+    def resolve_runtime_llm(st_secrets: Any = None) -> Dict[str, Optional[str]]:
+        """Resolve an available external LLM provider from env or Streamlit secrets,
+        defaulting gracefully to the Deterministic Grounded Engine.
+        """
+        def _get_secret(key: str) -> str:
+            val = os.getenv(key, "")
+            if not val and st_secrets is not None:
+                try:
+                    val = str(st_secrets.get(key, "") or "")
+                except Exception:
+                    val = ""
+            if val and "your_" not in val and len(val.strip()) > 10:
+                return val.strip()
+            return ""
+
+        groq_key = _get_secret("GROQ_API_KEY")
+        if groq_key:
+            return {
+                "provider": "Groq (GPT-OSS 20B)",
+                "api_key": groq_key,
+                "model": "openai/gpt-oss-20b",
+            }
+        openai_key = _get_secret("OPENAI_API_KEY")
+        if openai_key:
+            return {
+                "provider": "OpenAI (GPT-4o / GPT-4o-mini)",
+                "api_key": openai_key,
+                "model": "gpt-4o-mini",
+            }
+        gemini_key = _get_secret("GEMINI_API_KEY")
+        if gemini_key:
+            return {
+                "provider": "Google Gemini (Gemini 3 Flash)",
+                "api_key": gemini_key,
+                "model": "gemini-3-flash-preview",
+            }
+        return {
+            "provider": "Deterministic Grounded Engine (No Key Required)",
+            "api_key": None,
+            "model": None,
+        }
+
+    @staticmethod
+    def get_contextual_followups(query: str, retrieved_evidence: List[Dict[str, Any]]) -> List[str]:
+        """Select 4 context-locked follow-up prompts aligned with the query and dominant theme."""
+        q_lower = (query or "").lower()
+        if any(p in q_lower for p in ["stop sip", "cancel sip", "i want to stop", "how to stop", "how to cancel"]):
+            return [
+                "How can users pause an SIP instead of cancelling permanently?",
+                "Should I stop my SIP when the market is down?",
+                "What happens if autopay fails 3 times consecutively?",
+                "What habits differentiate 12-month continuers from early drop-offs?",
+            ]
+
+        theme_counts: Dict[str, int] = {}
+        for ev in retrieved_evidence:
+            tid = ev.get("theme_id", "THEME-01")
+            theme_counts[tid] = theme_counts.get(tid, 0) + 1
+        dominant = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "THEME-01"
+        suggestions = _THEME_FOLLOWUP_MAP.get(dominant, _THEME_FOLLOWUP_MAP["THEME-01"])
+        # Filter out exact repeat of the current query
+        filtered = [s for s in suggestions if s.lower().strip("?") != q_lower.strip("?")]
+        return (filtered + _THEME_FOLLOWUP_MAP["THEME-07"])[:4]
+
+    @staticmethod
+    def _format_gr1_synthesis(
+        summary: str,
+        friction_op: str,
+        friction_cog: str,
+        snapshot_rows: Optional[List[Tuple[str, str, str]]] = None,
+    ) -> str:
+        """Render the 2-section response with a GR-1-style scannable table."""
+        body = (
+            f"### 1. Executive Summary & Behavioral Dynamic\n"
+            f"{summary}\n\n"
+            f"### 2. Discovered Friction & Root Cause Breakdown\n"
+            f"- **Operational / Technical Friction:** {friction_op}\n"
+            f"- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+        )
+        if snapshot_rows:
+            table_lines = [
+                "\n| Dimension | Observed Signal | Grounding / Lever |",
+                "|:---|:---|:---|",
+            ]
+            for dim, signal, lever in snapshot_rows:
+                table_lines.append(f"| {dim} | {signal} | {lever} |")
+            body += "\n" + "\n".join(table_lines)
+        return body
 
     @classmethod
     def test_connection(
@@ -57,10 +202,25 @@ class LLMAdapter:
         try:
             test_prompt = "Say 'Groww RAG Connection Active' in 5 words or less."
 
-            if "OpenAI" in provider:
+            if "Groq" in provider:
+                model_id = model or "openai/gpt-oss-20b"
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
+                data = json.dumps({
+                    "model": model_id,
+                    "messages": [{"role": "user", "content": test_prompt}],
+                    "max_tokens": 15,
+                }).encode("utf-8")
+                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    res_json = json.loads(resp.read().decode("utf-8"))
+                    msg = res_json["choices"][0]["message"]["content"]
+                    return True, f"Connected to Groq ({model_id}): {msg.strip()}"
+
+            elif "OpenAI" in provider:
                 model_id = model or "gpt-4o-mini"
                 url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
-                headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
                 data = json.dumps({
                     "model": model_id,
                     "messages": [{"role": "user", "content": test_prompt}],
@@ -73,9 +233,9 @@ class LLMAdapter:
                     return True, f"Connected to OpenAI ({model_id}): {msg.strip()}"
 
             elif "Google Gemini" in provider:
-                model_id = model or "gemini-1.5-flash"
+                model_id = model or "gemini-3-flash-preview"
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
-                headers = {"Content-Type": "application/json"}
+                headers = dict(_DEFAULT_HEADERS)
                 data = json.dumps({
                     "contents": [{"parts": [{"text": test_prompt}]}]
                 }).encode("utf-8")
@@ -84,21 +244,6 @@ class LLMAdapter:
                     res_json = json.loads(resp.read().decode("utf-8"))
                     msg = res_json["candidates"][0]["content"]["parts"][0]["text"]
                     return True, f"Connected to Gemini ({model_id}): {msg.strip()}"
-
-            elif "Groq" in provider:
-                model_id = model or "llama-3.3-70b-versatile"
-                url = "https://api.groq.com/openai/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-                data = json.dumps({
-                    "model": model_id,
-                    "messages": [{"role": "user", "content": test_prompt}],
-                    "max_tokens": 15,
-                }).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=8) as resp:
-                    res_json = json.loads(resp.read().decode("utf-8"))
-                    msg = res_json["choices"][0]["message"]["content"]
-                    return True, f"Connected to Groq ({model_id}): {msg.strip()}"
 
             elif "Anthropic" in provider:
                 model_id = model or "claude-3-5-sonnet-20241022"
@@ -188,25 +333,10 @@ class LLMAdapter:
 
         # Attempt External LLM Call
         try:
-            if "Google Gemini" in provider:
-                model_id = model or "gemini-1.5-flash"
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "system_instruction": {"parts": [{"text": system_prompt}]},
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"temperature": temperature, "maxOutputTokens": 1500},
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["candidates"][0]["content"]["parts"][0]["text"]
-
-            elif "OpenAI" in provider:
-                model_id = model or "gpt-4o-mini"
-                url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
-                headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            if "Groq" in provider:
+                model_id = model or "openai/gpt-oss-20b"
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
                 payload = {
                     "model": model_id,
                     "messages": [
@@ -222,10 +352,25 @@ class LLMAdapter:
                     res = json.loads(resp.read().decode("utf-8"))
                     raw_text = res["choices"][0]["message"]["content"]
 
-            elif "Groq" in provider:
-                model_id = model or "llama-3.3-70b-versatile"
-                url = "https://api.groq.com/openai/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            elif "Google Gemini" in provider:
+                model_id = model or "gemini-3-flash-preview"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+                headers = dict(_DEFAULT_HEADERS)
+                payload = {
+                    "system_instruction": {"parts": [{"text": system_prompt}]},
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": temperature, "maxOutputTokens": 1500},
+                }
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    res = json.loads(resp.read().decode("utf-8"))
+                    raw_text = res["candidates"][0]["content"]["parts"][0]["text"]
+
+            elif "OpenAI" in provider:
+                model_id = model or "gpt-4o-mini"
+                url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
+                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
                 payload = {
                     "model": model_id,
                     "messages": [
@@ -292,6 +437,11 @@ class LLMAdapter:
 
         # Post-Generation Negative Guardrail Interceptor
         if raw_text:
+            raw_text = re.sub(
+                r"</?(?:anchor|fact|frozen_domain_anchors|groww_product_mechanics|untrusted_evidence|customer_quote|defense_instructions)[^>]*>",
+                "",
+                raw_text,
+            ).strip()
             sanitized_text, was_intercepted, intercept_reason = RAGRulesEngine.sanitize_or_reject(
                 text=raw_text,
                 retrieved_evidence=retrieved_evidence,
@@ -489,13 +639,17 @@ class LLMAdapter:
         # 4. EMPTY EVIDENCE FALLBACK
         # ---------------------------------------------------------------------
         if not retrieved_evidence:
-            return (
-                "### 1. Executive Summary & Behavioral Dynamic\n"
-                "No direct customer evidence was retrieved for this inquiry in the 3,052 verified conversation corpus. "
-                "The corpus specifically covers first-time mutual fund SIP continuation, mandate drop-offs, return panic, and payment friction.\n\n"
-                "### 2. Discovered Friction & Root Cause Breakdown\n"
-                "- **Operational / Technical Friction:** The query parameters may be too narrow or filtered by a platform with zero matching discourse.\n"
-                "- **Cognitive / Mental Model Mismatch:** Inquiries outside mutual fund SIP lifecycle fall outside this research engine's verified qualitative index."
+            return cls._format_gr1_synthesis(
+                summary=(
+                    "No direct customer evidence matched this specific query inside our 3,052-conversation mutual fund SIP corpus. "
+                    "Rather than guessing, the verified scope and coverage boundaries are listed below."
+                ),
+                friction_op="The query keywords or platform filter returned zero matching discourse records.",
+                friction_cog="Topics outside the first-time mutual fund SIP lifecycle (autopay, drawdown panic, NAV lag, fund clutter) lie outside this qualitative index.",
+                snapshot_rows=[
+                    ("Available Coverage", "Mutual fund SIP setup, autopay drops, ₹450 bounce dread, T+2 NAV lag", "Indexed across 5 platforms"),
+                    ("Outside Scope", "Live intraday stock prices, tax filing, or specific fund picks", "SEBI non-advice guardrail"),
+                ],
             )
 
         # ---------------------------------------------------------------------
@@ -560,7 +714,16 @@ class LLMAdapter:
                 f"**Acute Loss Aversion & Fixed Deposit Growth Proxy:** Novice investors enter mutual funds anchored to the Fixed Deposit mental model (expecting continuous, linear positive increments each month) {e1}. "
                 f"When a market correction hits, acute loss aversion makes paper dips feel like permanent losses, compelling investors to impulsively exit at the market bottom—the exact moment long-term compounding delivers maximum mathematical value {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Rupee-Cost Averaging", "Fixed SIP buys more units at lower NAVs during dips", f"Discounted unit accumulation {e2}"),
+                    ("Interface Trigger", "Red XIRR / loss badges overshadow units accumulated", f"Loss-aversion exit panic {e1}"),
+                    ("Suggested Framing", "Highlight total units accumulated + 3Y–5Y horizon", f"Preserves compounding {e3_tag}"),
+                ],
+            )
 
         # 5b. Actionable user intent: How to Stop / Cancel SIP vs Why people stop
         is_asking_how_to_stop_or_cancel = (
@@ -643,8 +806,16 @@ class LLMAdapter:
                 f"**Stopping SIP vs. Redeeming Money Confusion:** Novice investors frequently conflate stopping future monthly contributions with withdrawing their invested capital {e2}. "
                 "Users worry their money is locked or gone once the SIP is cancelled, failing to realize that cancelling only terminates the monthly recurring mandate while their portfolio remains intact."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
-
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Cancel Path", "Mutual Funds ➔ SIPs ➔ Select Active SIP ➔ Cancel SIP", f"Halts future debits {e1}"),
+                    ("Existing Money", "Accumulated units stay invested until explicit Redeem", f"No auto-withdrawal {e2}"),
+                    ("Cut-Off & Alternative", "Cancel 2–3 working days early, or Pause for 1–3 months", f"Avoids mandate re-KYC {e3 if e3 else e1}"),
+                ],
+            )
         # 5b. Macro Churn & Discontinuation Query
         is_asking_why_people_stop_sip = any(
             phrase in prompt_lower
@@ -690,13 +861,16 @@ class LLMAdapter:
                 f"**ECS Penalty Dread & Early Drawdown Shock:** Novice investors dread immediate bank penalties (₹450–₹590 per missed debit) far more than they value theoretical future compounding. "
                 f"When combined with Month 1–3 paper drawdowns (-2% to -5%) or distorted short-term XIRR metrics, investors experience panic and permanently discontinue their SIPs {e2}."
             )
-            response = f"""### 1. Executive Summary & Behavioral Dynamic
-{summary}
-
-### 2. Discovered Friction & Root Cause Breakdown
-- **Operational / Technical Friction:** {friction_op}
-- **Cognitive / Mental Model Mismatch:** {friction_cog}"""
-            return response
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Involuntary Churn", "Silent partner bank mandate drops & 48h retry gaps", f"1-Click UPI fallback link {e1}"),
+                    ("Penalty Avoidance", "₹450–₹590 ECS bounce fine dread pushes full deletion", f"1-Tap Pause / Skip control {e2}"),
+                    ("Early Shock", "Month 1–3 drawdowns and distorted short-term XIRR", f"Units accumulated lens {e3 if e3 else e1}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5b. BANK-SPECIFIC FAILURE PROFILE SYNTHESIS
@@ -736,7 +910,16 @@ class LLMAdapter:
                 f"**Attribution Mismatch:** Novice investors misattribute bank-side partner network errors or clearing house timeouts to Groww app malfunction, "
                 f"leading them to abandon the platform entirely rather than re-attempting mandate registration with a secondary bank account {e3 if e3 else e1}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("HDFC Bank", "Silent Netbanking e-mandate drops without push alerts", f"Proactive debit alerts {e1}"),
+                    ("SBI (State Bank)", "48-hour validation delays & rigid NPCI approval queues", f"UPI Autopay primary rail {e2}"),
+                    ("Recovery Lever", "Instant secondary bank failover & 1-click UPI link", f"Curbs attribution churn {e3 if e3 else e1}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5c. REDDIT & COMMUNITY WORKAROUNDS SYNTHESIS
@@ -776,7 +959,16 @@ class LLMAdapter:
                 f"**Information Asymmetry:** First-time investors are unaware of these workarounds and assume cancellation is the only option when cashflow is tight, "
                 f"whereas experienced continuers treat SIPs as flexible and actively buffer against bank-side failure modes."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("UPI Autopay Shift", "Replaces Netbanking mandates with instant UPI confirmation", f"Cuts validation drops {e1}"),
+                    ("5th–7th Debit Buffer", "Aligns auto-debit 3–5 days past salary credit", f"Prevents ₹450 bounce fines {e2}"),
+                    ("Zero-Balance Account", "Isolates SIP debits from primary salary spending", f"Protects primary bank {e3 if e3 else e1}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5d. PAUSE VS CANCELLATION CONTROLS SYNTHESIS
@@ -810,7 +1002,16 @@ class LLMAdapter:
                 f"**Psychological Reactance & Reactivation Barrier:** Once a user cancels an active mandate, restarting requires re-submitting bank authentication, "
                 f"NPCI validation, and OTP verification—an inertia barrier that results in permanent investor churn."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Binary Exit UX", "Only 'Cancel' visible; 30-day pause is hidden", f"Triggers permanent churn {e1}"),
+                    ("Liquidity Defense", "Users cancel to avoid ₹450–₹590 bank bounce fees", f"1-Tap Snooze solves this {e2}"),
+                    ("Reactivation Friction", "Restarting requires fresh mandate & 48h NPCI verification", f"Preserves mandate state {e1}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5e. PLATFORM COMPARISON SYNTHESIS (GROWW VS ZERODHA COIN)
@@ -835,7 +1036,16 @@ class LLMAdapter:
                 f"**Demat vs Folio Mental Model Confusion:** First-time investors often do not understand why transferring investments between Groww and Zerodha "
                 f"requires formal demat rematerialization or registrar (CAMS/KFintech) transfers, misinterpreting structural depository constraints as platform-level retention lock-in {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Zerodha Coin Rail", "Demat-mode execution via BSE StAR MF ledger", f"Margin-linked debits {e1}"),
+                    ("Groww Mandate Rail", "NPCI e-mandates & UPI Autopay across AMC folios", f"Async bank drops {e1}"),
+                    ("Transfer Friction", "CAMS/KFintech vs Demat portability confusion", f"Perceived lock-in {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5f. CONSECUTIVE MANDATE REJECTIONS (3-STRIKE TERMINATION)
@@ -860,7 +1070,16 @@ class LLMAdapter:
                 f"**Friction of Reactivation:** Once cancelled after 3 rejections, the mandate cannot be 'un-paused'; the user is forced to recreate the SIP from scratch, "
                 f"re-authenticating Netbanking or debit card credentials with 48-hour NPCI validation—a steep behavioral barrier that ends compounding habits permanently {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("3-Strike Threshold", "3 consecutive failed debits trigger automatic revocation", f"Mandate killed by rail {e1}"),
+                    ("Bounce Penalty Risk", "Repeated ₹450–₹590 bank bounce fees accumulate fast", f"Strike 1 & 2 silent {e1}"),
+                    ("Recovery Lever", "Early Strike-1 warning + 1-click UPI manual payment", f"Prevents permanent churn {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5g. FIRST-FUND DECISION PARALYSIS SYNTHESIS
@@ -895,7 +1114,15 @@ class LLMAdapter:
                 f"**Regret Aversion & Star-Rating Bias:** Novice investors treat mutual funds like consumer electronics, hunting for '5-star rated' schemes. "
                 f"They fear that an imperfect initial choice will permanently destroy their wealth, failing to recognize that consistent automated habit formation outweighs marginal fund selection differences {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Over-Choice Friction", "2,500+ schemes presented without progressive filtering", f"3–6 month onboarding delay {e1}"),
+                    ("Star-Rating Bias", "Chasing top past-return badges induces regret anxiety", f"Goal-based scaffolding {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5h. SALARY SYNCHRONIZATION & BEST DEBIT DATE SYNTHESIS
@@ -928,7 +1155,15 @@ class LLMAdapter:
                 f"**Discipline Misalignment:** Users believe earlier debit dates demonstrate financial maturity, unaware that a 3-to-5 day liquidity buffer "
                 f"protects their primary savings account from punitive bank penalties without sacrificing compounding returns {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Risk Window (1st–3rd)", "Payroll delays & weekend clearing leave low balances", f"Triggers ₹450+ bounce fine {e1}"),
+                    ("Optimal Buffer (5th–7th)", "3–5 day cushion post-salary ensures smooth debit", f"Prevents involuntary churn {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5i. SCHEME CLUTTER / MULTI-FUND ACCUMULATION SYNTHESIS
@@ -963,7 +1198,15 @@ class LLMAdapter:
                 f"**Naive Diversification Illusion:** Novice investors treat mutual funds like individual stocks, mistaking fund logos for uncorrelated assets. "
                 f"When a market correction occurs, all 8 equity funds drop in lockstep, inducing panic and impulsive mass cancellations {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Clutter Count", "6–9 funds accumulated within initial 90 days", f"Social tip FOMO {e1}"),
+                    ("Calendar Shock", "Scattered monthly debit dates amplify bounce risk", f"Payday date sync lever {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5j. QUANTITATIVE PORTFOLIO OVERLAP SYNTHESIS
@@ -995,7 +1238,15 @@ class LLMAdapter:
                 f"**False Security Trap:** Investors believe they have mitigated downside risk by holding both Large Cap and Flexi Cap schemes, "
                 f"only to discover that both funds exhibit near-identical drawdown patterns during market contractions {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Stock Overlap", "65%–75% identical blue-chip holdings across schemes", f"Overlap X-Ray reveals redundancy {e1}"),
+                    ("Cost Drag", "Duplicate expense ratios paid for correlated returns", f"Consolidate future SIPs {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5k. MONEY DEBITED BUT UNITS NOT ALLOCATED SYNTHESIS
@@ -1030,7 +1281,15 @@ class LLMAdapter:
                 f"**Loss of Control & Distrust:** During the multi-day lag, novice investors fear their money has been lost or intercepted, "
                 f"inundating customer support tickets and occasionally attempting to cancel active mandates out of suspicion {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Clearing Window", "T+2 business days (24–48 hrs) across bank, BSE StAR MF & RTA", f"Normal AMC pipeline {e1}"),
+                    ("Expectation Clash", "Instant UPI e-commerce receipts vs asynchronous NAV allocation", f"Triggers support panic {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 5l. XIRR MATHEMATICAL DISTORTION SYNTHESIS
@@ -1064,7 +1323,15 @@ class LLMAdapter:
                 f"**Annualized Compounding vs Rupee Return Confusion:** Investors lack mathematical familiarity with annualized metrics, "
                 f"failing to recognize that ₹30 on ₹1,000 is merely a normal 3% market fluctuation, not an existential collapse of capital {e2}."
             )
-            return f"### 1. Executive Summary & Behavioral Dynamic\n{summary}\n\n### 2. Discovered Friction & Root Cause Breakdown\n- **Operational / Technical Friction:** {friction_op}\n- **Cognitive / Mental Model Mismatch:** {friction_cog}"
+            return cls._format_gr1_synthesis(
+                summary,
+                friction_op,
+                friction_cog,
+                snapshot_rows=[
+                    ("Math Distortion", "₹30 dip on ₹1,000 over short tenure displays as -18.5% XIRR", f"Denominator amplification {e1}"),
+                    ("Tenor Safeguard", "Suppress annualized XIRR below 180 days; show rupee gains", f"Prevents panic exits {e2}"),
+                ],
+            )
 
         # ---------------------------------------------------------------------
         # 6. CORE 7 THEMES DETERMINISTIC SYNTHESIS
@@ -1102,21 +1369,23 @@ class LLMAdapter:
             )
             friction_op = f"Silent partner bank drops, 48-hour Netbanking e-mandate validation delays, and lack of automated secondary payment retries {e1}."
             friction_cog = f"Novice investors confuse the ₹1,00,000 NPCI mandate authorization limit with an immediate account debit, triggering panic and abandoned setups {e2}."
-            rec_1 = "**1-Click Zero-Penalty UPI Fallback Link:** When automated bank debit rejects, instantly send a 48-hour manual UPI payment link via WhatsApp and push notification to maintain SIP continuity without penalties."
-            rec_2 = "**T-24h Pre-Debit Liquidity Ping:** Notify the user 24 hours prior to scheduled debit to verify sufficient bank balance, preventing involuntary mandate rejection."
-            rec_3 = "**NPCI Authorization Ceiling Demystifier:** Add clear visual micro-copy explaining that the mandate ceiling is a regulatory buffer, not a deduction."
+            snapshot_rows = [
+                ("Failure Vector", "Silent partner bank drops & 48h validation delays", f"1-Click UPI fallback link {e1}"),
+                ("NPCI Auth Myth", "₹1,00,000 buffer limit mistaken for instant debit", f"Pre-flow limit explainer {e2}"),
+            ]
 
         elif "THEME-02" in dominant_theme:
             summary = (
                 f"Novice investors accumulate 6 to 9 disparate mutual funds within their first 90 days, driven by social media hype and fear of missing out {e1}. "
-                f"This results in acute **scheme overlap burnout**, where more than 68% of the underlying portfolio stocks are identical duplicates across funds {e2}. "
+                f"This results in acute **scheme overlap burnout**, where 65% to 75% of the underlying portfolio stocks are identical duplicates across funds {e2}. "
                 "Rather than reducing risk, having multiple overlapping SIPs creates cognitive exhaustion, scattered debit dates, and eventual portfolio liquidation."
             )
             friction_op = f"Managing 6 to 8 separate SIP deduction dates across the calendar month creates recurring micro-cashflow shocks {e1}."
             friction_cog = f"Investors mistakenly equate holding multiple fund names with true risk diversification, triggering decision fatigue during market dips {e2}."
-            rec_1 = "**Passive Portfolio Overlap X-Ray:** In-app visual scanner illustrating underlying stock redundancy across existing mutual fund holdings."
-            rec_2 = "**Unified Payday Debit Synchronization:** 1-click feature aggregating multiple active SIP deductions into a single monthly salary-aligned date."
-            rec_3 = "**Frictionless Scheme Consolidation Flow:** Seamless in-app path to merge future contributions from duplicate schemes into primary core funds without tax friction."
+            snapshot_rows = [
+                ("Portfolio Overlap", "6–9 funds holding 65%–75% identical underlying stocks", f"Passive Overlap X-Ray {e1}"),
+                ("Debit Fatigue", "Multiple deduction dates strain monthly liquidity", f"Unified payday sync {e2}"),
+            ]
 
         elif "THEME-03" in dominant_theme:
             summary = (
@@ -1126,21 +1395,23 @@ class LLMAdapter:
             )
             friction_op = f"Rigid 30-day mandate cycles that trigger automated bank debit attempts even when account balance is insufficient {e1}."
             friction_cog = f"Acute loss aversion: The certainty of an immediate ₹450 bank fine overwhelmingly overshadows the theoretical future benefit of long-term compounding {e2}."
-            rec_1 = "**1-Tap Smart Snooze / Skip:** Allow investors to skip or postpone the upcoming instalment by up to 10 days with a single tap 24 hours before debit."
-            rec_2 = "**Automated Bounce Guard:** Automatically suppress subsequent debit retries if the initial deduction fails, protecting the user from stacked bank penalties."
-            rec_3 = "**Salary-Aligned Flexible Scheduling:** Proactively recommend debit dates 2–3 days post-salary credit to prevent cashflow timing clashes."
+            snapshot_rows = [
+                ("Penalty Dread", "₹450–₹590 bank bounce fee drives permanent deletion", f"1-Tap Smart Snooze {e1}"),
+                ("Payroll Timing", "Debits hitting before 5th–7th salary credit bounce", f"Salary-aligned buffer {e2}"),
+            ]
 
         elif "THEME-04" in dominant_theme:
             summary = (
                 f"During Months 1 to 3, beginner investors are traumatized by **distorted annualized XIRR calculations** {e1}. "
-                f"A minor ₹30 paper dip on a 45-day tenure displays as an alarming '-18.5% XIRR', leading first-time investors to believe their capital is permanently evaporating {e2}. "
-                "This mathematical distortion triggers immediate panic cancellations at the exact moment dollar-cost averaging delivers maximum value."
+                f"A minor ₹30 paper dip on a short tenure displays as an alarming '-18.5% XIRR', leading first-time investors to believe their capital is permanently evaporating {e2}. "
+                "This mathematical distortion triggers immediate panic cancellations at the exact moment rupee-cost averaging delivers maximum value."
             )
             friction_op = f"Premature surfacing of annualized XIRR metrics on short tenures where small time denominators mathematically exaggerate percentage swings {e1}."
             friction_cog = f"Investors lack mathematical intuition for annualized compounding versus simple rupee return, interpreting short-term dips as capital loss {e2}."
-            rec_1 = "**Tenor-Sensitive Metric Masking:** Suppress annualized XIRR display during the first 180 days, prioritizing absolute rupee return and units accumulated."
-            rec_2 = "**Unit Accumulation Counter:** Emphasize 'Total Units Purchased at Discounted NAV' as the primary hero metric during market corrections."
-            rec_3 = "**Rupee-Cost Averaging Interactive Primer:** Interactive visual explainer showing how market corrections allow monthly SIPs to accumulate more units."
+            snapshot_rows = [
+                ("Metric Distortion", "₹30 dip on ₹1,000 amplifies into -18.5% XIRR", f"Suppress <180d XIRR {e1}"),
+                ("Reframing Lever", "Highlight discounted units bought during dips", f"Accumulation Lens {e2}"),
+            ]
 
         elif "THEME-05" in dominant_theme:
             summary = (
@@ -1150,9 +1421,10 @@ class LLMAdapter:
             )
             friction_op = f"Dominant high-contrast red percentage styling on portfolio home screen triggering visceral fight-or-flight reactions {e1}."
             friction_cog = f"Treating market-linked investments as high-interest guaranteed savings accounts; expecting daily linear increments {e2}."
-            rec_1 = "**First-Drawdown Reassurance Modal:** Contextual non-alarmist banner triggered on the user's first red portfolio milestone explaining historical rebound cycles."
-            rec_2 = "**Long-Term Horizon Focus Toggle:** Allow users to default their dashboard view to 3-year and 5-year rolling trajectories rather than 1-day fluctuations."
-            rec_3 = "**Goal Progress vs Daily P&L:** Frame progress toward the investor's designated life goal rather than daily market volatility."
+            snapshot_rows = [
+                ("Mental Proxy", "FD linear return expectation clashes with market dips", f"Reassurance modal {e1}"),
+                ("UI Panic Trigger", "Red 1D badges eclipse 3Y–5Y horizon context", f"Long-term focus toggle {e2}"),
+            ]
 
         elif "THEME-06" in dominant_theme:
             summary = (
@@ -1161,9 +1433,10 @@ class LLMAdapter:
             )
             friction_op = f"Asynchronous banking-to-AMC clearing house settlement taking 24 to 48 hours for NAV confirmation and unit ledger entry {e1}."
             friction_cog = f"Clash between real-time consumer UPI expectations and legacy multi-party mutual fund clearing house settlement cycles {e2}."
-            rec_1 = "**Visual Domino Settlement Tracker:** 4-stage visual stepper (Payment Received ➔ AMC Verification ➔ NAV Allotment ➔ Demat Credit) with estimated completion timestamps."
-            rec_2 = "**NAV Cut-Off Transparency Banner:** Explicit countdown timer clarifying exact cut-off timings (e.g. 'Debited before 2:00 PM locks today's NAV')."
-            rec_3 = "**Automated Status Push Notification:** Immediate reassuring push ping upon unit allocation, eliminating customer support anxiety tickets."
+            snapshot_rows = [
+                ("Settlement Lag", "T+2 business days (24–48 hrs) from debit to units", f"4-node Domino tracker {e1}"),
+                ("Cut-Off Opacity", "Users unsure which NAV applies after debit", f"Live NAV cutoff timer {e2}"),
+            ]
 
         else:  # THEME-07: Habit Formation & Continuer Mindset
             summary = (
@@ -1172,14 +1445,9 @@ class LLMAdapter:
             )
             friction_op = f"Intrusive daily push notifications highlighting minor market moves that distract long-term passive investors {e1}."
             friction_cog = f"Hyperactivity bias and frequent portfolio checking counteracting the passive ethos of monthly SIP investing {e2}."
-            rec_1 = "**Quiet Mode / Passive Investor Setting:** Option to mute daily market volatility alerts while maintaining essential payment and debit reminders."
-            rec_2 = "**Annual Discipline Milestone Celebration:** Celebrate the 12-month milestone with a personalized infographic detailing instalments completed and compounding velocity."
-            rec_3 = "**Annual Step-Up Nudge:** Contextual annual top-up recommendation (+10% on salary anniversary) to accelerate goal achievement."
+            snapshot_rows = [
+                ("Habit Anchor", "Goal-linked SIPs survive beyond 12 months", f"Milestone horizon shield {e1}"),
+                ("Noise Hygiene", "Reducing daily alert overload curbs panic churn", f"Quiet Mode & Step-Up {e2}"),
+            ]
 
-        response = f"""### 1. Executive Summary & Behavioral Dynamic
-{summary}
-
-### 2. Discovered Friction & Root Cause Breakdown
-- **Operational / Technical Friction:** {friction_op}
-- **Cognitive / Mental Model Mismatch:** {friction_cog}"""
-        return response
+        return cls._format_gr1_synthesis(summary, friction_op, friction_cog, snapshot_rows)

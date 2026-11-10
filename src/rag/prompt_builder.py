@@ -52,31 +52,49 @@ class RAGPromptBuilder:
         chunks.append("</untrusted_evidence_container>")
         return "\n".join(chunks)
 
+    @staticmethod
+    def build_product_mechanics_xml(query: str) -> str:
+        """Attach verified Groww SIP workflow mechanics when query touches cancellation, pause, or dips."""
+        q_lower = query.lower()
+        if any(w in q_lower for w in ["stop", "cancel", "pause", "snooze", "skip", "market", "dip", "crash", "redeem", "withdraw"]):
+            return (
+                "<groww_product_mechanics>\n"
+                "  <fact name=\"STOP_SIP_FLOW\">Mutual Funds -> SIPs -> Select Active SIP -> Cancel SIP / Mandate (must be done 2 to 3 working days before debit date).</fact>\n"
+                "  <fact name=\"STOP_VS_REDEEM\">Stopping an SIP only halts future monthly debits; accumulated units remain invested until an explicit Redeem order.</fact>\n"
+                "  <fact name=\"PAUSE_ALTERNATIVE\">Pausing or skipping an SIP for 1 to 3 months avoids re-authenticating bank mandates later.</fact>\n"
+                "  <fact name=\"MARKET_DIP_RCA\">Continuing SIPs during market downturns buys more units at lower NAVs via Rupee-Cost Averaging.</fact>\n"
+                "</groww_product_mechanics>\n"
+            )
+        return ""
+
     @classmethod
     def build_user_prompt(cls, query: str, retrieved_evidence: List[Dict[str, Any]]) -> str:
         """Construct the complete user prompt incorporating query, XML-sandboxed evidence, and frozen anchors."""
         context_str = cls.build_evidence_context(retrieved_evidence)
+        mechanics_xml = cls.build_product_mechanics_xml(query)
 
         prompt = f"""USER RESEARCH INQUIRY:
 "{query}"
 
-RETRIEVED EMPIRICAL EVIDENCE SANDBOX (Top {len(retrieved_evidence)} Grounded Receipts):
+{mechanics_xml}RETRIEVED EMPIRICAL EVIDENCE SANDBOX (Top {len(retrieved_evidence)} Grounded Receipts):
 {context_str}
 
 REQUIRED SYNTHESIS STRUCTURE (MANDATORY):
-Synthesize a high-impact, token-efficient qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence and frozen domain anchors. Structure your response into exactly 2 focused markdown sections:
+Synthesize a sharp, scannable qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence, verified product mechanics, and frozen domain anchors. Structure your response into exactly 2 focused markdown sections:
 
 ### 1. Executive Summary & Behavioral Dynamic
-Synthesize the underlying investor psychology, heuristics, and mental models demonstrated in the quotes. Explain why this happens to first-time investors. Cite specific evidence using [EVID-1], [EVID-2], etc.
+Start directly with the answer/insight (2-3 crisp sentences, NO boilerplate intro about "3,052 conversations"). If the user asks how to stop/pause or whether to stop during a market dip, answer that directly using <groww_product_mechanics> and cite [EVID-1], [EVID-2], etc.
 
 ### 2. Discovered Friction & Root Cause Breakdown
-- **Operational / Technical Friction:** Breakdown of system drops, bank rejections, or delay ambiguities cited by users.
-- **Cognitive / Mental Model Mismatch:** How user expectations clash with mutual fund realities (e.g. FD proxy, T+2 delay anxiety).
-Cite specific evidence using [EVID-1], [EVID-2], etc.
+- **Operational / Technical Friction:** Breakdown of system drops, bank rejections, cut-off timing, or delay ambiguities cited by users [EVID-X].
+- **Cognitive / Mental Model Mismatch:** How user expectations clash with mutual fund realities (e.g. stopping vs redeeming, FD proxy, T+2 delay anxiety) [EVID-X].
+
+Include a compact 3-column Markdown table (`| Dimension | Observed Signal | Grounding |`) right below the two bullets.
 
 (CRITICAL RULES:
-1. Cite ONLY verified numbers from <frozen_domain_anchors> or the retrieved evidence. Never fabricate numbers.
-2. Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. Keep your answer focused on behavioral and root cause analysis).
+1. Cite ONLY verified numbers from <frozen_domain_anchors>, <groww_product_mechanics>, or retrieved evidence. Never fabricate numbers.
+2. NEVER output raw XML tags like <anchor...>, <fact...>, or <frozen_domain_anchors> in your response—use [EVID-X] or plain labels.
+3. Do NOT output separate verbatim quote blocks or PM recommendations; customer quote receipts are rendered automatically by the UI).
 """
         return prompt
 

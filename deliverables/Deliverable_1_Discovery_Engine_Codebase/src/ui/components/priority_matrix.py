@@ -21,6 +21,23 @@ JSON_EXPORT_PATH = (
 )
 
 
+def _render_opportunity_ask_bar(opp_num: int, prompts: List[str]) -> None:
+    """Render GR-1-style contextual prompt bar below an opportunity card."""
+    cols = st.columns([1.2, 1.2, 0.9], gap="small")
+    for idx, p_text in enumerate(prompts[:2]):
+        with cols[idx]:
+            if st.button(f"↳ {p_text}", key=f"opp_{opp_num}_ask_{idx}", use_container_width=True):
+                st.session_state["pending_ai_query"] = p_text
+                st.session_state["nav_target_page"] = "Ask AI Engine"
+                st.rerun()
+    with cols[2]:
+        if st.button(f"Ask AI (Opp {opp_num}) ➔", key=f"opp_{opp_num}_ask_main", use_container_width=True):
+            st.session_state["pending_ai_query"] = prompts[0]
+            st.session_state["nav_target_page"] = "Ask AI Engine"
+            st.rerun()
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
+
 def render_llm_opportunity_section(themes: Optional[List[Dict[str, Any]]] = None) -> None:
     """Render 3 Core Product Opportunities in an executive horizontal row layout."""
     synthesizer = LLMOpportunitySynthesizer()
@@ -105,6 +122,13 @@ Lifecycle Window: <strong style="color: #F1F5F9;">Month 1–3 (Setup & Early Deb
 </div>""",
         unsafe_allow_html=True,
     )
+    _render_opportunity_ask_bar(
+        1,
+        [
+            "Why do bank autopay mandates fail silently?",
+            "How does fear of ₹450 bank bounce fines trigger cancellations?",
+        ],
+    )
 
     # Opportunity 2: Horizontal Card
     st.markdown(
@@ -161,6 +185,13 @@ Lifecycle Window: <strong style="color: #F1F5F9;">Month 1–4 (Correction Shock)
 </div>""",
         unsafe_allow_html=True,
     )
+    _render_opportunity_ask_bar(
+        2,
+        [
+            "Why does XIRR show -18% on a tiny 30 rupees dip?",
+            "Why do users panic over the 48-hour NAV allotment delay?",
+        ],
+    )
 
     # Opportunity 3: Horizontal Card
     st.markdown(
@@ -216,6 +247,13 @@ Lifecycle Window: <strong style="color: #F1F5F9;">Month 4–12 (Clutter & Habit 
 </div>
 </div>""",
         unsafe_allow_html=True,
+    )
+    _render_opportunity_ask_bar(
+        3,
+        [
+            "Why do first-time users accumulate 6+ overlapping funds?",
+            "What habits differentiate 12-month continuers from early drop-offs?",
+        ],
     )
 
     # Interactive Custom LLM Discovery Expander (Tucked away, no scrolling impact)

@@ -15,14 +15,13 @@ import streamlit as st
 
 from src.ui.components.common_ui import get_kpi_card_html
 from src.rag.pipeline import RAGPipeline
-from src.rag.retriever import HybridEvidenceRetriever
+from src.rag.llm_adapter import LLMAdapter
+from src.ui.components.rag_assistant_view import get_shared_pipeline
 
 
-@st.cache_resource(show_spinner="Initializing Qualitative Evidence Index...")
 def get_overview_pipeline() -> RAGPipeline:
-    """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
-    retriever = HybridEvidenceRetriever()
-    return RAGPipeline(retriever=retriever)
+    """Share the unified cached hybrid BM25 + Vector retriever pipeline."""
+    return get_shared_pipeline()
 
 
 HEADER_HTML = """<div class="page-header-container">
@@ -258,8 +257,15 @@ def render_overview_view(db_path=None) -> None:
     # Process Inquiry from either Quick Button or Text Input
     active_inquiry = chip_clicked_query or (typed_ov_query.strip() if ov_ask_clicked else None)
     if active_inquiry:
-        with st.spinner("Analyzing 3,052 customer conversations and synthesizing qualitative analysis..."):
-            res = pipeline.query(query=active_inquiry, top_k=5)
+        llm_cfg = LLMAdapter.resolve_runtime_llm(getattr(st, "secrets", None))
+        with st.spinner("Thinking across 3,052 verified customer reviews..."):
+            res = pipeline.query(
+                query=active_inquiry,
+                top_k=5,
+                llm_provider=llm_cfg["provider"] or "Deterministic Grounded Engine (No Key Required)",
+                api_key=llm_cfg["api_key"],
+                model=llm_cfg["model"],
+            )
             st.session_state["overview_chat_history"].insert(0, res)
 
     # Render Results on Overview

@@ -103,6 +103,18 @@ class TestHowItShouldProvideAnswers:
         red_panic_answer = pipeline.query("why users panic when portfolio is red?", top_k=3)["answer"]
         assert "Fixed Deposit linear growth proxy" in red_panic_answer
 
+    def test_gr1_table_and_dynamic_followups(self):
+        pipeline = RAGPipeline()
+        res_stop = pipeline.query("i want to stop SIP", top_k=3)
+        assert "| Dimension | Observed Signal |" in res_stop["answer"]
+        assert len(res_stop["follow_up_suggestions"]) == 4
+        assert any("pause" in s.lower() for s in res_stop["follow_up_suggestions"])
+
+        res_bank = pipeline.query("Why do bank autopay mandates fail silently?", top_k=3)
+        assert "| Dimension | Observed Signal |" in res_bank["answer"]
+        assert len(res_bank["follow_up_suggestions"]) == 4
+        assert any("bank" in s.lower() or "autopay" in s.lower() for s in res_bank["follow_up_suggestions"])
+
 
 # =============================================================================
 # 2. TESTS: HOW IT SHOULD NOT ANSWER (NEGATIVE GUARDRAILS)
