@@ -138,9 +138,18 @@ def main():
         importlib.reload(pm)
         pm.render_priority_matrix(db_file)
     elif selected_page == "Ask AI Engine":
-        # Force reload all RAG modules in sys.modules to prevent stale module caching on Streamlit Cloud
-        for mod_name in list(sys.modules.keys()):
-            if mod_name.startswith("src.rag") or "rag_assistant_view" in mod_name:
+        # Reload RAG modules in dependency order so Streamlit Cloud picks up latest synthesis changes
+        for mod_name in [
+            "src.rag.math_engine",
+            "src.rag.rules",
+            "src.rag.guardrails",
+            "src.rag.prompt_builder",
+            "src.rag.retriever",
+            "src.rag.llm_adapter",
+            "src.rag.pipeline",
+            "src.rag.evaluator",
+        ]:
+            if mod_name in sys.modules:
                 try:
                     importlib.reload(sys.modules[mod_name])
                 except Exception:

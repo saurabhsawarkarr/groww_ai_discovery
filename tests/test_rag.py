@@ -78,6 +78,31 @@ class TestHowItShouldProvideAnswers:
         assert "Cognitive / Mental Model Mismatch" in answer
         assert any(term in answer for term in ["penalty", "mandate", "bounce", "deduction", "fee"])
 
+    def test_no_repetitive_corpus_boilerplate_opener(self):
+        pipeline = RAGPipeline()
+        queries = [
+            "when market is down should i stop sip",
+            "why do people stop sip?",
+            "why investors stop sip",
+            "Which specific banks (HDFC, SBI, etc.) fail most often?",
+            "What habits differentiate 12-month continuers from early drop-offs?",
+            "best debit date for sip",
+        ]
+        for q in queries:
+            answer = pipeline.query(q, top_k=3)["answer"]
+            assert "Empirical qualitative discovery across" not in answer
+            assert "Empirical qualitative analysis across" not in answer
+            assert "Qualitative analysis across 3,052" not in answer
+            assert "Empirical analysis across 3,052" not in answer
+
+        # Verify why-stop questions don't mistakenly return cancel navigation steps
+        why_stop_answer = pipeline.query("why investors stop sip", top_k=3)["answer"]
+        assert "navigate to **Mutual Funds" not in why_stop_answer
+
+        # Verify red-portfolio panic routes to drawdown theme instead of scheme overlap
+        red_panic_answer = pipeline.query("why users panic when portfolio is red?", top_k=3)["answer"]
+        assert "Fixed Deposit linear growth proxy" in red_panic_answer
+
 
 # =============================================================================
 # 2. TESTS: HOW IT SHOULD NOT ANSWER (NEGATIVE GUARDRAILS)

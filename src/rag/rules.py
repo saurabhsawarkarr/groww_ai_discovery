@@ -218,7 +218,7 @@ Analyze the underlying psychological mental model and behavioral heuristic expla
 - **Cognitive / Mental Model Mismatch:** Clash between user mental models (e.g. FD linear returns, instant UPI delivery) and mutual fund realities.
 Cite specific quotes with [EVID-1], [EVID-2], etc.
 
-(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. Keep your answer focused on behavioral and root cause analysis to minimize token usage and maximize response speed).
+(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. Start directly with the behavioral insight—do NOT open with meta-preambles like "Empirical qualitative discovery across 3,052 verified customer conversations reveals...", as the corpus scope is already displayed in the page header).
 
 RULE 5: EMPIRICAL TRANSPARENCY & FALLBACK PROTOCOL
 - If the retrieved evidence is sparse or does not fully cover the query, explicitly state the empirical boundary rather than inventing generic AI commentary.

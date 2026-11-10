@@ -406,7 +406,7 @@ class LLMAdapter:
                 "**SEBI Regulatory Non-Advice Boundary Notice:** In strict compliance with **SEBI regulations**, the Groww Qualitative "
                 f"Discovery Engine **does not recommend, rate, rank, or pick specific mutual fund schemes, AMCs, or individual equities** {evid_1_tag}. "
                 "First-time investors frequently seek 'the single star fund' due to decision paralysis and acute loss aversion. "
-                "Empirical qualitative research reveals that 12-month retention is determined by automated payment reliability and realistic "
+                "Long-term 12-month retention is determined by automated payment reliability and realistic "
                 f"compounding horizons, not by chasing top-quartile past performers {evid_2_tag}.\n\n"
                 "### 2. Discovered Friction & Root Cause Breakdown\n"
                 "- **Operational / Technical Friction:** Novice users get overwhelmed by 2,500+ scheme options on onboarding interfaces, "
@@ -548,8 +548,8 @@ class LLMAdapter:
         if is_asking_stop_in_downturn:
             e3_tag = e3 if e3 else e1
             summary = (
-                f"Empirical qualitative discovery across **3,052 verified customer conversations** reveals that **stopping an SIP when the market is down is the single most destructive behavioral mistake** made by retail investors {e1}. "
-                f"Because mutual fund SIPs operate on the mathematical principle of **Rupee-Cost Averaging (RCA)**, market downturns allow monthly instalments to automatically accumulate **significantly more fund units at discounted NAVs** {e2}. "
+                f"**Stopping an SIP when the market is down is the single most destructive behavioral mistake** made by retail investors {e1}. "
+                f"Because mutual fund SIPs operate on **Rupee-Cost Averaging (RCA)**, market downturns allow monthly instalments to automatically accumulate **significantly more fund units at discounted NAVs** {e2}. "
                 f"Discontinuing contributions during a market pullback locks in paper drawdowns and deprives the investor of the low-cost unit base that generates exponential compounding when the market rebounds {e3_tag}."
             )
             friction_op = (
@@ -603,6 +603,12 @@ class LLMAdapter:
                 for w in [
                     "why people stop",
                     "why do people stop",
+                    "why investors stop",
+                    "why do investors stop",
+                    "why users stop",
+                    "why do users stop",
+                    "why sip stop",
+                    "why sips stop",
                     "why stop sip",
                     "why cancel sip",
                     "why users cancel",
@@ -623,7 +629,7 @@ class LLMAdapter:
         if is_asking_how_to_stop_or_cancel:
             summary = (
                 f"To stop an active Systematic Investment Plan on Groww, navigate to **Mutual Funds ➔ SIPs / Dashboard ➔ Select the Active SIP ➔ Cancel SIP / Mandate** {e1}. "
-                f"Crucially, empirical customer discourse reveals that **stopping an SIP merely halts future monthly deductions; it does NOT automatically redeem or withdraw your accumulated money** {e2}. "
+                f"Crucially, **stopping an SIP merely halts future monthly deductions; it does NOT automatically redeem or withdraw your accumulated money** {e2}. "
                 "Your existing units remain invested and continue compounding until you place an explicit 'Redeem' order. "
                 "If you are stopping due to a temporary cashflow crunch, consider using **'Pause SIP'** (for 1 to 3 months) instead of full cancellation, "
                 f"which prevents the steep operational barrier of re-authenticating bank mandates later {e3 if e3 else e1}."
@@ -647,6 +653,12 @@ class LLMAdapter:
                 "not contuning",
                 "why people stop",
                 "why do people stop",
+                "why investors stop",
+                "why do investors stop",
+                "why users stop",
+                "why do users stop",
+                "why sip stop",
+                "why sips stop",
                 "why stop sip",
                 "why cancel sip",
                 "why users cancel",
@@ -655,7 +667,6 @@ class LLMAdapter:
                 "reasons for stopping",
                 "reasons for cancellation",
                 "why investors quit",
-                "why do investors stop",
                 "why are people stopping",
                 "churn reason",
                 "retention failure",
@@ -667,8 +678,7 @@ class LLMAdapter:
 
         if is_asking_why_people_stop_sip:
             summary = (
-                f"Empirical qualitative discovery across **3,052 verified customer conversations** reveals that first-time mutual fund SIP continuation "
-                f"drops steeply within the first 12 months due to a combination of **involuntary operational failures** and **behavioral panic triggers** {e1}. "
+                f"First-time mutual fund SIP continuation drops steeply within the first 12 months due to a combination of **involuntary operational failures** and **behavioral panic triggers** {e1}. "
                 f"Contrary to the assumption that investors simply lose interest, the majority of drop-offs are friction-driven: silent autopay mandate drops, "
                 f"dread of punitive ₹450+ bank ECS bounce penalties, and the absence of intuitive 'Pause/Skip' mechanisms force users into binary SIP cancellations {e2}."
             )
@@ -713,8 +723,7 @@ class LLMAdapter:
 
         if is_asking_about_banks:
             summary = (
-                f"Empirical qualitative analysis across 3,052 verified customer conversations indicates that partner bank reliability "
-                f"varies significantly across major Indian banking rails {e1}. "
+                f"Partner bank reliability varies significantly across major Indian banking rails, driving a disproportionate share of silent SIP failures {e1}. "
                 f"**HDFC Bank** accounts for the highest volume of silent Netbanking e-mandate validation drop-offs and unnotified debit failures, "
                 f"while **SBI (State Bank of India)** accounts generate the most friction regarding rigid mandate approval windows and the lack of in-app pause controls {e2}."
             )
@@ -752,8 +761,8 @@ class LLMAdapter:
 
         if is_asking_about_workarounds:
             summary = (
-                f"Qualitative discourse analysis across Reddit (`r/IndiaInvestments`) and financial forums reveals several community-tested workarounds "
-                f"that experienced investors adopt to prevent premature SIP cancellations and bypass rigid banking rails {e1}. "
+                f"Experienced investors on Reddit (`r/IndiaInvestments`) and financial forums adopt several community-tested workarounds "
+                f"to prevent premature SIP cancellations and bypass rigid banking rails {e1}. "
                 f"Continuers actively circumvent friction by adopting flexible payment protocols and strategically buffering deduction dates {e2}."
             )
             friction_op = (
@@ -813,7 +822,7 @@ class LLMAdapter:
 
         if is_asking_about_platform_comparison:
             summary = (
-                f"Qualitative discourse comparing Groww with Zerodha Coin highlights fundamental differences in **clearing architecture and mandate UX** {e1}. "
+                f"Investor comparisons between Groww and Zerodha Coin center on fundamental differences in **clearing architecture and mandate UX** {e1}. "
                 "Zerodha Coin executes mutual fund investments in **Demat mode** via the BSE StAR MF exchange clearing rail, requiring Demat account synchronization, "
                 f"whereas Groww historically leveraged a hybrid model supporting direct AMC non-Demat folios as well as Demat holdings {e2}. "
                 "Users report friction during bank mandate migration, as mandate approval cycles and automated deduction reliability differ across these execution pathways."
@@ -874,7 +883,7 @@ class LLMAdapter:
 
         if is_asking_about_decision_paralysis:
             summary = (
-                f"Empirical discovery indicates that novice investors face severe **first-fund decision paralysis** when confronting over 2,500 active mutual fund schemes in India {e1}. "
+                f"Novice investors face severe **first-fund decision paralysis** when confronting over 2,500 active mutual fund schemes in India {e1}. "
                 "Bombarded by conflicting finfluencer recommendations, complex asset taxonomy (Large vs Flexi vs Thematic), and high-contrast past-return tables, "
                 f"prospective investors experience intense anxiety over picking 'the wrong fund,' often delaying their investment journey by 3 to 6 months or abandoning onboarding entirely {e2}."
             )
@@ -907,8 +916,7 @@ class LLMAdapter:
 
         if is_asking_about_debit_date:
             summary = (
-                f"Qualitative analysis across 3,052 verified customer conversations indicates that setting the SIP debit date between the **5th and 7th of the month** "
-                f"reduces involuntary low-balance ECS bounce charges by over 80% {e1}. "
+                f"Setting the SIP debit date between the **5th and 7th of the month** prevents salary-timing clashes and avoids involuntary low-balance ECS bounce charges {e1}. "
                 "Novice investors intuitively pick the 1st of the month believing it instills immediate discipline, but corporate payroll disbursement delays "
                 f"and weekend banking holidays routinely push actual salary credits to the 2nd–4th, triggering catastrophic ₹450+ bank bounce fines {e2}."
             )
@@ -942,8 +950,8 @@ class LLMAdapter:
 
         if is_asking_about_scheme_clutter:
             summary = (
-                f"Empirical qualitative research reveals that first-time investors accumulate **6 to 9 disparate mutual funds** within their initial 90 days "
-                f"due to social media tips and a psychological phenomenon known as **'naive diversification'** {e1}. "
+                f"First-time investors accumulate **6 to 9 disparate mutual funds** within their initial 90 days, "
+                f"driven by social media tips and a psychological phenomenon known as **'naive diversification'** {e1}. "
                 "Beginners believe that spreading ₹5,000 across 8 different ₹500 SIPs is inherently safer than holding 1 or 2 well-diversified index or flexi-cap funds, "
                 f"failing to realize this creates extreme operational clutter and high underlying portfolio redundancy {e2}."
             )
@@ -975,8 +983,7 @@ class LLMAdapter:
 
         if is_asking_about_portfolio_overlap:
             summary = (
-                f"Quantitative portfolio analysis grounded in customer discourse reveals that large-cap and flexi-cap mutual funds in India typically share "
-                f"between **65% and 75% identical underlying stock holdings** {e1}. "
+                f"Large-cap and flexi-cap mutual funds in India typically share between **65% and 75% identical underlying stock holdings**, creating heavy hidden overlap for novice portfolios {e1}. "
                 "Because major mutual funds benchmark against the Nifty 50 or Nifty 500, fund managers disproportionately concentrate capital into the same blue-chip equities "
                 f"(such as HDFC Bank, Reliance Industries, ICICI Bank, Infosys, and TCS), leaving investors paying multiple management expense ratios for the exact same underlying portfolio {e2}."
             )
@@ -1074,7 +1081,7 @@ class LLMAdapter:
             dominant_theme = "THEME-03"
         elif any(w in prompt_lower for w in ["xirr", "cagr", "annualized", "annualised", "-18%"]):
             dominant_theme = "THEME-04"
-        elif any(w in prompt_lower for w in ["negative return", "red portfolio", "fixed deposit", "fd", "crash", "loss", "month 1", "first month", "first-time users panic"]):
+        elif any(w in prompt_lower for w in ["negative return", "red portfolio", "portfolio is red", "fixed deposit", "fd", "crash", "loss", "month 1", "first month", "first-time users panic"]):
             dominant_theme = "THEME-05"
         elif any(w in prompt_lower for w in ["overlap", "diversif", "too many funds", "duplicate", "clutter", "multi fund"]):
             dominant_theme = "THEME-02"
@@ -1160,8 +1167,7 @@ class LLMAdapter:
 
         else:  # THEME-07: Habit Formation & Continuer Mindset
             summary = (
-                f"Empirical analysis across 3,052 verified customer discourse records reveals that investors who continue past 12 months exhibit "
-                f"**disciplined automation and goal-anchored psychology** {e1}. "
+                f"Investors who continue past 12 months consistently exhibit **disciplined automation and goal-anchored psychology** {e1}. "
                 f"Continuers treat their SIP as non-negotiable wealth accumulation and insulate themselves from short-term market noise {e2}."
             )
             friction_op = f"Intrusive daily push notifications highlighting minor market moves that distract long-term passive investors {e1}."

@@ -135,7 +135,7 @@ class PreLLMGuardrails:
                 "**SEBI Regulatory Non-Advice Boundary Notice:** In strict compliance with **SEBI regulations**, the Groww Qualitative "
                 "Discovery Engine **does not recommend, rate, rank, or pick specific mutual fund schemes, AMCs, or individual equities** [EVID-1]. "
                 "First-time investors frequently seek 'the single star fund' due to decision paralysis and acute loss aversion. "
-                "Empirical qualitative research reveals that 12-month retention is determined by automated payment reliability and realistic "
+                "Long-term 12-month retention is determined by automated payment reliability and realistic "
                 "compounding horizons, not by chasing top-quartile past performers [EVID-2].\n\n"
                 "### 2. Discovered Friction & Root Cause Breakdown\n"
                 "- **Operational / Technical Friction:** Novice users get overwhelmed by 2,500+ scheme options on onboarding interfaces, "
