@@ -91,6 +91,29 @@ MF_SIP_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+_SYNTHETIC_SOURCE_RE = re.compile(
+    r"(?:pilot|_exp_|golden|/comments/(?:\d{3}_|exp_|g\d+_)|watch\?v=(?:vid\d+|tax_sip|sip_xirr|groww_sip)|reviewId=gp_|apps\.apple\.com/in/app/groww-stocks-mutual-fund/id)",
+    re.IGNORECASE,
+)
+
+_VALID_PLATFORM_URL_RES = (
+    re.compile(r"^https://play\.google\.com/store/apps/details\?id=com\.nextbillion\.groww&reviewId=[0-9a-f\-]{20,}$", re.I),
+    re.compile(r"^https://apps\.apple\.com/in/app/[^/]+/id1404871703#review-\d+$", re.I),
+    re.compile(r"^https://www\.youtube\.com/watch\?v=[A-Za-z0-9_-]{11}(?:&lc=[A-Za-z0-9_.\-]+)?$"),
+    re.compile(r"^https://(?:www\.)?reddit\.com/r/[^/]+/comments/[a-z0-9]{5,8}/", re.I),
+    re.compile(r"^https://(?:tradingqna\.com|forum\.valuepickr\.com)/t/.+/\d+(?:/\d+)?$", re.I),
+)
+
+
+def is_verifiable_source_url(raw_id: str, source_url: str) -> bool:
+    """Return True only when a record carries a genuine, clickable source permalink."""
+    url = (source_url or "").strip()
+    if not url.startswith("https://"):
+        return False
+    if _SYNTHETIC_SOURCE_RE.search(f"{raw_id or ''} {url}"):
+        return False
+    return any(pat.match(url) for pat in _VALID_PLATFORM_URL_RES)
+
 
 def _tokenize(text: str) -> List[str]:
     """Tokenize text into lowercase alphanumeric words."""
@@ -149,6 +172,24 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
 
     q_str = " ".join(stemmed)
 
+    is_downturn_query = any(
+        p in q_str
+        for p in [
+            "market is down",
+            "market down",
+            "market crash",
+            "market dip",
+            "market fall",
+            "during crash",
+            "during dip",
+            "portfolio is red",
+            "red portfolio",
+            "negative return",
+            "drawdown",
+            "xirr",
+        ]
+    ) or ("market" in stemmed and any(w in stemmed for w in ["down", "dip", "crash", "fall", "drop", "loss", "negative", "red"]))
+
     # Check for churn / discontinuation intent
     is_churn_intent = any(
         p in q_str
@@ -170,8 +211,12 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
 
     informative = [w for w in stemmed if w not in STOPWORDS]
 
-    # If churn intent is present, boost core churn & failure terms
-    if is_churn_intent:
+    if is_downturn_query:
+        for extra in ["market", "down", "dip", "crash", "drawdown", "loss", "negative", "volatility", "xirr", "correction", "long", "term"]:
+            if extra not in informative:
+                informative.append(extra)
+    # If churn intent is present (without downturn focus), boost core churn & failure terms
+    elif is_churn_intent:
         for extra in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused", "bounce", "drop", "drawdown", "penalty", "loss"]:
             if extra not in informative:
                 informative.append(extra)
@@ -266,7 +311,9 @@ class HybridEvidenceRetriever:
                     reader = csv.DictReader(f)
                     for row in reader:
                         raw_text = row.get("cleaned_investor_text", "").strip()
-                        if len(raw_text) < 35:
+                        raw_id = (row.get("raw_id") or "").strip()
+                        source_url = (row.get("source_url") or "").strip()
+                        if len(raw_text) < 35 or not is_verifiable_source_url(raw_id, source_url):
                             continue
 
                         # Clean noise: strip trailing [removed] / [deleted]
@@ -329,6 +376,10 @@ class HybridEvidenceRetriever:
         if not self.records and theme_map:
             for t_id, t in theme_map.items():
                 for q in t.get("representative_quotes", []):
+                    q_rid = q.get("raw_id", "")
+                    q_url = q.get("source_url", "")
+                    if not is_verifiable_source_url(q_rid, q_url):
+                        continue
                     self.records.append({
                         "doc_id": q.get("raw_id", f"quote_{len(self.records)+1}"),
                         "platform": q.get("platform", "forum"),
@@ -412,9 +463,11 @@ class HybridEvidenceRetriever:
             boost = 1.0
             if token in ["sip", "sips", "mutual", "mandate", "autopay"]:
                 boost = 2.5
+            elif token in ["market", "crash", "dip", "correction", "volatility", "drawdown", "xirr"]:
+                boost = 2.5
             elif token in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused"]:
-                boost = 3.0
-            elif token in ["bounce", "penalty", "loss", "drawdown", "negative"]:
+                boost = 1.0 if any(w in query_tokens for w in ["market", "crash", "dip", "drawdown", "negative", "xirr"]) else 3.0
+            elif token in ["bounce", "penalty", "loss", "negative"]:
                 boost = 2.0
 
             for doc_idx, tf in self.inverted_index[token]:

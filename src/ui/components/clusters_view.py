@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 import streamlit as st
 
 from src.database.connection import get_connection
-from src.ui.components.common_ui import MISSION_BANNER_HTML, get_kpi_card_html
+from src.ui.components.common_ui import MISSION_BANNER_HTML, format_source_link_html, get_kpi_card_html
 
 
 THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
@@ -225,9 +225,13 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
                 q_text = q.get("quote", "").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
                 q_platform = format_platform_name(q.get("platform", ""))
                 q_url = q.get("source_url", "")
-                q_link = (
-                    f'<a href="{q_url}" target="_blank" style="color: #38BDF8; font-weight: 600; text-decoration: underline; font-size: 12px; display: inline-flex; align-items: center; gap: 3px;">Original Source Link ↗</a>'
-                    if q_url else ""
+                q_link = format_source_link_html(
+                    q_url,
+                    label="Original Source Link ↗",
+                    color="#38BDF8",
+                    font_size="12px",
+                    text_decoration="underline",
+                    extra_style="display: inline-flex; align-items: center; gap: 3px;",
                 )
 
                 quote_cards.append(

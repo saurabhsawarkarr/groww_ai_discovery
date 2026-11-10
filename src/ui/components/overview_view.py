@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import streamlit as st
 
-from src.ui.components.common_ui import get_kpi_card_html
+from src.ui.components.common_ui import format_source_link_html, get_kpi_card_html
 from src.rag.pipeline import RAGPipeline
 from src.rag.llm_adapter import LLMAdapter
 from src.ui.components.rag_assistant_view import get_shared_pipeline
@@ -314,7 +314,7 @@ def render_overview_view(db_path=None) -> None:
                         pub_date = ev.get("published_at", "Recent")
                         q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
                         src_url = ev.get("source_url", "")
-                        src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none;">[Original Source Link ↗]</a>' if src_url else ''
+                        src_link = format_source_link_html(src_url, label="[Original Source Link ↗]", color="#00D09C", font_size="12px")
 
                         st.markdown(
                             f"""<div style="background: #1A2230; border: 1px solid #2B3548; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">

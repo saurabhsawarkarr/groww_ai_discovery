@@ -10,7 +10,7 @@ Verifies:
 from pathlib import Path
 import pytest
 
-from src.rag.retriever import HybridEvidenceRetriever
+from src.rag.retriever import HybridEvidenceRetriever, is_verifiable_source_url
 from src.rag.rules import (
     RAGRulesEngine,
     HOW_IT_SHOULD_ANSWER_SPECIFICATION,
@@ -134,6 +134,36 @@ class TestHowItShouldProvideAnswers:
         res_ui = pipeline.query("how is groww app ui for tracking returns", top_k=3)
         assert "silent partner bank mandate drops" not in res_ui["answer"]
         assert "| Dimension | Observed Signal |" in res_ui["answer"]
+
+    def test_all_quote_source_links_verified_and_market_dip_grounded(self):
+        import json
+
+        retriever = HybridEvidenceRetriever()
+        assert len(retriever.records) >= 2500
+        bad_records = [
+            r for r in retriever.records if not is_verifiable_source_url(r.get("doc_id", ""), r.get("source_url", ""))
+        ]
+        assert bad_records == []
+
+        themes_path = Path(__file__).resolve().parent.parent / "data" / "processed" / "major_themes_3k_discovery.json"
+        themes_doc = json.loads(themes_path.read_text(encoding="utf-8"))
+        theme_quotes = [q for t in themes_doc.get("themes", []) for q in t.get("representative_quotes", [])]
+        assert len(theme_quotes) == 56
+        bad_theme_quotes = [
+            q for q in theme_quotes if not is_verifiable_source_url(q.get("raw_id", ""), q.get("source_url", ""))
+        ]
+        assert bad_theme_quotes == []
+
+        pipeline = RAGPipeline(retriever=retriever)
+        res_dip = pipeline.query("Should I stop my SIP when the market is down?", top_k=5)
+        assert "SEBI Non-Advice Notice" in res_dip["answer"]
+        assert "Rupee-Cost Averaging" in res_dip["answer"]
+        assert "single most destructive" not in res_dip["answer"].lower()
+        assert all(is_verifiable_source_url(ev.get("doc_id", ""), ev.get("source_url", "")) for ev in res_dip["retrieved_evidence"])
+        assert any(
+            any(w in ev.get("quote", "").lower() for w in ["dip", "crash", "bear", "market", "xirr", "correction"])
+            for ev in res_dip["retrieved_evidence"][:2]
+        )
 
 
 # =============================================================================

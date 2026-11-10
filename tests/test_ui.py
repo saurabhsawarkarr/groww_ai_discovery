@@ -103,3 +103,15 @@ class TestUIDashboard:
         conn.close()
 
         assert status == "rejected"
+
+    def test_format_source_link_html_safety_and_external_target(self):
+        from src.ui.components.common_ui import format_source_link_html
+
+        valid_html = format_source_link_html("https://tradingqna.com/t/penalty-over-missed-sip/120657")
+        assert 'href="https://tradingqna.com/t/penalty-over-missed-sip/120657"' in valid_html
+        assert 'target="_blank"' in valid_html
+        assert 'rel="noopener noreferrer"' in valid_html
+
+        assert format_source_link_html("https://www.reddit.com/r/mutualfunds/comments/142_pause_feature_missing_in_amc") == ""
+        assert format_source_link_html("javascript:alert(1)") == ""
+        assert format_source_link_html("") == ""

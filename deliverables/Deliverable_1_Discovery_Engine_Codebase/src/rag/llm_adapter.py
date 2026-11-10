@@ -760,28 +760,52 @@ class LLMAdapter:
         )
 
         if is_asking_stop_in_downturn:
-            e3_tag = e3 if e3 else e1
+            used_tags: List[str] = []
+
+            def _pick_tag(keywords: List[str], default_tag: str) -> str:
+                # Pass 1: find an unused matching receipt first so citations span multiple sources
+                for idx, ev in enumerate(retrieved_evidence, 1):
+                    tag = f"[EVID-{idx}]"
+                    q_low = (ev.get("quote") or "").lower()
+                    if tag not in used_tags and any(kw in q_low for kw in keywords):
+                        used_tags.append(tag)
+                        return tag
+                # Pass 2: allow reuse of a matching receipt if distinct matches are exhausted
+                for idx, ev in enumerate(retrieved_evidence, 1):
+                    tag = f"[EVID-{idx}]"
+                    q_low = (ev.get("quote") or "").lower()
+                    if any(kw in q_low for kw in keywords):
+                        return tag
+                if default_tag and default_tag not in used_tags:
+                    used_tags.append(default_tag)
+                return default_tag
+
+            e_dip = _pick_tag(["dip", "crash", "down", "xirr", "negative", "loss", "red"], e1)
+            e_units = _pick_tag(["cheap", "unit", "nav", "bear", "crash", "average", "correction"], e2)
+            e_horizon = _pick_tag(["long term", "year", "yrs", "continu", "discipline", "dip"], e3 if e3 else e1)
+
             summary = (
-                f"**Stopping an SIP when the market is down is the single most destructive behavioral mistake** made by retail investors {e1}. "
-                f"Because mutual fund SIPs operate on **Rupee-Cost Averaging (RCA)**, market downturns allow monthly instalments to automatically accumulate **significantly more fund units at discounted NAVs** {e2}. "
-                f"Discontinuing contributions during a market pullback locks in paper drawdowns and deprives the investor of the low-cost unit base that generates exponential compounding when the market rebounds {e3_tag}."
+                f"**SEBI Non-Advice Notice:** This engine cannot give personal buy, sell, or stop advice {e_dip}. "
+                f"Behaviorally, pausing or cancelling an SIP solely due to a market downturn locks in temporary volatility as permanent exit: "
+                f"because mutual fund SIPs operate on **Rupee-Cost Averaging (RCA)**, fixed instalments during market dips buy **more fund units at lower NAVs** {e_units}, "
+                f"supporting multi-year compounding across market cycles rather than timing short-term drops {e_horizon}."
             )
             friction_op = (
-                f"**Dashboard Display Vacuum & Red Percentage Panic:** Portfolio interfaces prominently surface high-contrast red return badges and depressed short-term XIRR metrics without contextualizing broader market cycles {e1}. "
-                f"Instead of highlighting 'Total Discounted Units Accumulated', dashboards frame normal market volatility as absolute capital destruction, triggering fight-or-flight panic cancellations {e4}."
+                f"**Dashboard Display Vacuum & Short-Term XIRR Panic:** Portfolio interfaces highlight red percentage returns and sharp short-term XIRR swings during dips without market-cycle context {e_dip}. "
+                f"Instead of surfacing discounted units accumulated across instalments, dashboards amplify short-term volatility anxiety and drive impulsive exit clicks {e_units}."
             )
             friction_cog = (
-                f"**Acute Loss Aversion & Fixed Deposit Growth Proxy:** Novice investors enter mutual funds anchored to the Fixed Deposit mental model (expecting continuous, linear positive increments each month) {e1}. "
-                f"When a market correction hits, acute loss aversion makes paper dips feel like permanent losses, compelling investors to impulsively exit at the market bottom—the exact moment long-term compounding delivers maximum mathematical value {e2}."
+                f"**Acute Loss Aversion & Fixed Deposit Growth Proxy:** First-time investors often benchmark mutual funds against a Fixed Deposit linear growth expectation {e_dip}. "
+                f"When corrections hit, paper dips feel like permanent capital erosion—prompting exits just as lower NAVs let ongoing SIPs accumulate more units {e_units}, {e_horizon}."
             )
             return cls._format_gr1_synthesis(
                 summary,
                 friction_op,
                 friction_cog,
                 snapshot_rows=[
-                    ("Rupee-Cost Averaging", "Fixed SIP buys more units at lower NAVs during dips", f"Discounted unit accumulation {e2}"),
-                    ("Interface Trigger", "Red XIRR / loss badges overshadow units accumulated", f"Loss-aversion exit panic {e1}"),
-                    ("Suggested Framing", "Highlight total units accumulated + 3Y–5Y horizon", f"Preserves compounding {e3_tag}"),
+                    ("SEBI Guardrail", "Explains RCA product mechanics, not personal stop advice", f"Observed dip anxiety {e_dip}"),
+                    ("Rupee-Cost Averaging", "Fixed SIP buys more units at lower NAVs during dips", f"Discounted unit accumulation {e_units}"),
+                    ("Suggested Framing", "Highlight total units accumulated + multi-year horizon", f"Supports continuation {e_horizon}"),
                 ],
             )
 

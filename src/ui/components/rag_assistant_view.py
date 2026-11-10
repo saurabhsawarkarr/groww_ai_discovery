@@ -17,10 +17,11 @@ from src.rag.retriever import HybridEvidenceRetriever
 from src.rag.pipeline import RAGPipeline
 from src.rag.evaluator import RAGEvaluator
 from src.rag.llm_adapter import LLMAdapter
+from src.ui.components.common_ui import format_source_link_html
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.1_invest_more_fix") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.2_verified_links_and_downturn") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -440,7 +441,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                             pub_date = ev.get("published_at", "Recent")
                             q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
                             src_url = ev.get("source_url", "")
-                            src_link = f'<a href="{src_url}" target="_blank" style="color: #00D09C; font-weight: 600; text-decoration: none; font-size: 11px;">[Source Link ↗]</a>' if src_url else ""
+                            src_link = format_source_link_html(src_url, label="[Source Link ↗]", color="#00D09C", font_size="11px")
 
                             # Distinct badge color per platform
                             plat_bg = "rgba(0, 208, 156, 0.12)"

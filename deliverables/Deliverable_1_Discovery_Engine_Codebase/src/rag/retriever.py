@@ -1,15 +1,118 @@
-"""Hybrid BM25 + Semantic Vector Evidence Retriever.
+"""Hybrid BM25 + Semantic Vector Evidence Retriever with Multi-Stage Fallback.
 
 Indexes the 3,052 verified mutual fund & SIP customer discourse records
 and retrieves top-K verbatim customer evidence chunks using Reciprocal Rank Fusion (RRF).
+
+Includes:
+- Intelligent stopword filtering and domain typo correction (e.g. contuning -> continuing).
+- Churn intent expansion (not continuing / stop / cancel / drop).
+- Strict corpus noise cleaning (filters [removed], [deleted], and off-topic stock trading rants).
+- Multi-Stage Fallback Architecture (Direct RRF -> Synonym Expansion -> Thematic Centroids).
 """
 
 import csv
 import json
+import logging
 import math
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Set
+
+logger = logging.getLogger("groww_discovery.rag.retriever")
+
+# Low-signal stopwords that should not dominate search scoring
+STOPWORDS: Set[str] = {
+    "a", "an", "the", "and", "or", "of", "to", "in", "for", "with", "on", "at", "by", "from",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "their", "there", "they", "them", "these", "those", "this", "that", "it", "its",
+    "what", "which", "who", "whom", "whose", "why", "how", "when", "where",
+    "people", "user", "users", "app", "apps", "groww", "show", "shows", "trading"
+}
+
+# Domain typo corrections for common search queries
+TYPO_CORRECTIONS: Dict[str, str] = {
+    "contuning": "continuing",
+    "continuning": "continuing",
+    "canceling": "cancelling",
+    "cancelation": "cancellation",
+    "withdrawl": "withdrawal",
+    "drawdow": "drawdown",
+    "retun": "return",
+    "retuns": "returns",
+    "mandat": "mandate",
+    "autopaye": "autopay",
+}
+
+# Domain synonym expansion map for financial & customer discourse
+QUERY_SYNONYMS: Dict[str, List[str]] = {
+    "autopay": ["mandate", "e-mandate", "nach", "bank debit", "auto debit", "deduction"],
+    "mandate": ["autopay", "e-mandate", "nach", "standing instruction", "authorization"],
+    "fail": ["reject", "failed", "failure", "bounce", "drop", "declined", "error"],
+    "failed": ["reject", "failure", "bounce", "drop", "declined", "error"],
+    "failure": ["reject", "failed", "bounce", "drop", "declined"],
+    "bounce": ["ecs", "penalty", "insufficient", "fine", "dishonour", "charge"],
+    "ecs": ["bounce", "penalty", "charge", "insufficient", "fine"],
+    "penalty": ["charge", "fine", "bounce", "ecs", "fee", "450"],
+    "overlap": ["diversif", "too many funds", "duplicate", "clutter", "redundant"],
+    "diversification": ["overlap", "portfolio", "many funds", "clutter"],
+    "xirr": ["cagr", "annualized", "return calculation", "paper loss", "short term"],
+    "cagr": ["xirr", "annualized", "return", "growth", "percentage"],
+    "drawdown": ["loss", "negative", "red", "crash", "dip", "fall", "correction"],
+    "loss": ["drawdown", "negative", "red", "crash", "dip", "paper loss"],
+    "negative": ["loss", "red", "drawdown", "dip", "minus"],
+    "red": ["negative", "loss", "drawdown", "crash", "dip"],
+    "fd": ["fixed deposit", "guarantee", "safe", "linear", "interest"],
+    "nav": ["allotment", "t+2", "delay", "processing", "settlement", "cut-off"],
+    "delay": ["processing", "t+2", "pending", "slow", "allotment", "settlement"],
+    "settlement": ["nav", "t+2", "allotment", "processing", "demat"],
+    "pause": ["skip", "snooze", "temporary", "hold", "resume"],
+    "snooze": ["pause", "skip", "temporary", "hold"],
+    "cancel": ["stop", "delete", "withdraw", "exit", "close", "discontinue"],
+    "cancellation": ["stop", "delete", "cancel", "churn", "exit", "discontinue"],
+    "npci": ["mandate", "limit", "1 lakh", "authorization", "ceiling"],
+    "continue": ["habit", "discipline", "long term", "12 month", "continuer", "wealth"],
+    "continuing": ["habit", "discipline", "long term", "12 month", "continuer"],
+    "continuer": ["continue", "habit", "discipline", "long term", "12 month"],
+}
+
+THEME_KEYWORDS: Dict[str, List[str]] = {
+    "THEME-01": ["mandate", "autopay", "bank", "debit", "bounce", "fail", "npci", "silent", "dropped"],
+    "THEME-02": ["overlap", "diversif", "too many", "funds", "portfolio", "duplicate", "clutter"],
+    "THEME-03": ["ecs", "penalty", "charge", "insufficient", "fine", "bounce", "cashflow", "450", "pause", "snooze"],
+    "THEME-04": ["xirr", "cagr", "annualized", "early", "month 1", "month 2", "month 3", "paper loss"],
+    "THEME-05": ["fixed deposit", "fd", "crash", "negative return", "red portfolio", "volatility", "panic", "drawdown", "loss"],
+    "THEME-06": ["nav", "t+2", "allotment", "delay", "processing", "settlement", "timing", "pending"],
+    "THEME-07": ["continuer", "habit", "discipline", "long term", "12 month", "goal", "wealth"],
+}
+
+# Regex to identify genuine mutual fund and SIP conversations
+MF_SIP_PATTERN = re.compile(
+    r"\b(sips?|mutual\s+funds?|mandates?|autopay|nav|xirr|cagr|folio|instalments?|amc|demat|portfolio|redemption|units)\b",
+    re.IGNORECASE,
+)
+
+_SYNTHETIC_SOURCE_RE = re.compile(
+    r"(?:pilot|_exp_|golden|/comments/(?:\d{3}_|exp_|g\d+_)|watch\?v=(?:vid\d+|tax_sip|sip_xirr|groww_sip)|reviewId=gp_|apps\.apple\.com/in/app/groww-stocks-mutual-fund/id)",
+    re.IGNORECASE,
+)
+
+_VALID_PLATFORM_URL_RES = (
+    re.compile(r"^https://play\.google\.com/store/apps/details\?id=com\.nextbillion\.groww&reviewId=[0-9a-f\-]{20,}$", re.I),
+    re.compile(r"^https://apps\.apple\.com/in/app/[^/]+/id1404871703#review-\d+$", re.I),
+    re.compile(r"^https://www\.youtube\.com/watch\?v=[A-Za-z0-9_-]{11}(?:&lc=[A-Za-z0-9_.\-]+)?$"),
+    re.compile(r"^https://(?:www\.)?reddit\.com/r/[^/]+/comments/[a-z0-9]{5,8}/", re.I),
+    re.compile(r"^https://(?:tradingqna\.com|forum\.valuepickr\.com)/t/.+/\d+(?:/\d+)?$", re.I),
+)
+
+
+def is_verifiable_source_url(raw_id: str, source_url: str) -> bool:
+    """Return True only when a record carries a genuine, clickable source permalink."""
+    url = (source_url or "").strip()
+    if not url.startswith("https://"):
+        return False
+    if _SYNTHETIC_SOURCE_RE.search(f"{raw_id or ''} {url}"):
+        return False
+    return any(pat.match(url) for pat in _VALID_PLATFORM_URL_RES)
 
 
 def _tokenize(text: str) -> List[str]:
@@ -17,8 +120,149 @@ def _tokenize(text: str) -> List[str]:
     return re.findall(r"\b[a-zA-Z0-9_\-]{2,}\b", text.lower())
 
 
+def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
+    """Tokenize query, apply typo corrections, stem common financial plurals,
+    and enrich query terms based on explicit domain intents."""
+    raw = _tokenize(query)
+    
+    # Stem common financial plurals and verbs so they match tokens in corpus
+    stemmed = []
+    for w in raw:
+        w_corr = TYPO_CORRECTIONS.get(w, w)
+        if w_corr in ("banks", "banking"):
+            stemmed.append("bank")
+        elif w_corr == "funds":
+            stemmed.append("fund")
+        elif w_corr == "sips":
+            stemmed.append("sip")
+        elif w_corr == "mandates":
+            stemmed.append("mandate")
+        elif w_corr == "penalties":
+            stemmed.append("penalty")
+        elif w_corr == "workarounds":
+            stemmed.append("workaround")
+        elif w_corr == "hacks":
+            stemmed.append("hack")
+        elif w_corr == "units":
+            stemmed.append("unit")
+        elif w_corr in ("debited", "debits"):
+            stemmed.append("debit")
+        elif w_corr in ("allocated", "allotment", "allotting"):
+            stemmed.append("allotment")
+        elif w_corr == "days":
+            stemmed.append("day")
+        elif w_corr == "months":
+            stemmed.append("month")
+        elif w_corr in ("strikes", "consecutively"):
+            stemmed.append("strike")
+        elif w_corr == "rejections":
+            stemmed.append("rejection")
+        elif w_corr == "reasons":
+            stemmed.append("reason")
+        elif w_corr == "beginners":
+            stemmed.append("beginner")
+        elif w_corr == "investors":
+            stemmed.append("investor")
+        elif w_corr == "differences":
+            stemmed.append("difference")
+        elif w_corr == "habits":
+            stemmed.append("habit")
+        else:
+            stemmed.append(w_corr)
+
+    q_str = " ".join(stemmed)
+
+    is_downturn_query = any(
+        p in q_str
+        for p in [
+            "market is down",
+            "market down",
+            "market crash",
+            "market dip",
+            "market fall",
+            "during crash",
+            "during dip",
+            "portfolio is red",
+            "red portfolio",
+            "negative return",
+            "drawdown",
+            "xirr",
+        ]
+    ) or ("market" in stemmed and any(w in stemmed for w in ["down", "dip", "crash", "fall", "drop", "loss", "negative", "red"]))
+
+    # Check for churn / discontinuation intent
+    is_churn_intent = any(
+        p in q_str
+        for p in [
+            "not continuing",
+            "not continue",
+            "stop",
+            "cancel",
+            "discontinue",
+            "quit",
+            "churn",
+            "drop out",
+            "why leave",
+            "why people stop",
+            "why stop",
+            "why cancel",
+        ]
+    )
+
+    informative = [w for w in stemmed if w not in STOPWORDS]
+
+    if is_downturn_query:
+        for extra in ["market", "down", "dip", "crash", "drawdown", "loss", "negative", "volatility", "xirr", "correction", "long", "term"]:
+            if extra not in informative:
+                informative.append(extra)
+    # If churn intent is present (without downturn focus), boost core churn & failure terms
+    elif is_churn_intent:
+        for extra in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused", "bounce", "drop", "drawdown", "penalty", "loss"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If bank failure inquiry, enrich with mandate & failure rails
+    is_bank_query = any(w in q_str for w in ["bank", "hdfc", "sbi", "icici", "axis", "kotak"]) and any(w in q_str for w in ["fail", "failing", "failed", "reject", "rejection", "drop", "often", "specific", "which", "most"])
+    if is_bank_query:
+        for extra in ["mandate", "autopay", "deduction", "failed", "rejection", "account"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If workaround inquiry, enrich with community recovery mechanisms
+    is_workaround_query = any(w in q_str for w in ["workaround", "hack", "fix", "reddit", "solution", "alternative"])
+    if is_workaround_query:
+        for extra in ["pause", "skip", "snooze", "mandate", "autopay", "workaround"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If platform comparison inquiry, enrich with platform & clearing rails
+    is_platform_query = any(w in q_str for w in ["zerodha", "coin", "platform", "compare", "difference"])
+    if is_platform_query:
+        for extra in ["zerodha", "coin", "autopay", "mandate", "demat", "bse", "star"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If unit allocation or NAV inquiry, enrich with settlement rails
+    is_settlement_query = any(w in q_str for w in ["allotment", "nav", "unit", "debited", "settlement", "t+2", "delay"])
+    if is_settlement_query:
+        for extra in ["allotment", "nav", "unit", "processing", "settlement", "amc"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    # If scheme clutter / portfolio overlap inquiry, enrich with overlap rails
+    is_clutter_query = any(w in q_str for w in ["overlap", "clutter", "multi", "diversification", "different", "beginner"])
+    if is_clutter_query:
+        for extra in ["overlap", "clutter", "scheme", "portfolio", "diversification"]:
+            if extra not in informative:
+                informative.append(extra)
+
+    return informative if informative else stemmed, stemmed
+
+
 class HybridEvidenceRetriever:
-    """Production-grade hybrid retriever combining BM25 lexical search and TF-IDF cosine similarity."""
+    """Production-grade hybrid retriever combining BM25 lexical search and TF-IDF cosine similarity
+    with noise filtering and multi-tier fallback resilience.
+    """
 
     def __init__(self, data_dir: Optional[Path] = None):
         self.project_root = Path(__file__).resolve().parent.parent.parent
@@ -37,15 +281,20 @@ class HybridEvidenceRetriever:
         self.tfidf_vectors: List[Dict[int, float]] = []
         self.tfidf_norms: List[float] = []
 
+        # Theme centroid cache
+        self.theme_centroids: Dict[str, List[int]] = {}
+
+        # Last retrieval metadata for debugging & fallback auditing
+        self.last_retrieval_meta: Dict[str, Any] = {}
+
         self._load_corpus()
         self._build_indexes()
 
     def _load_corpus(self) -> None:
-        """Load the 3,052 conversation corpus from CSV and thematic JSON."""
+        """Load the 3,052 conversation corpus from CSV with noise filtering and thematic JSON."""
         csv_path = self.data_dir / "processed" / "cleaned_3k_sip_conversations.csv"
         themes_path = self.data_dir / "processed" / "major_themes_3k_discovery.json"
 
-        # Theme keyword mappings for thematic alignment
         theme_map = {}
         if themes_path.exists():
             try:
@@ -53,45 +302,59 @@ class HybridEvidenceRetriever:
                     themes_info = json.load(f).get("themes", [])
                     for t in themes_info:
                         theme_map[t["theme_id"]] = t
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Could not load themes info: {e}")
 
         if csv_path.exists():
             try:
                 with open(csv_path, "r", encoding="utf-8", errors="replace") as f:
                     reader = csv.DictReader(f)
                     for row in reader:
-                        text = row.get("cleaned_investor_text", "").strip()
-                        if not text:
+                        raw_text = row.get("cleaned_investor_text", "").strip()
+                        raw_id = (row.get("raw_id") or "").strip()
+                        source_url = (row.get("source_url") or "").strip()
+                        if len(raw_text) < 35 or not is_verifiable_source_url(raw_id, source_url):
                             continue
-                        
+
+                        # Clean noise: strip trailing [removed] / [deleted]
+                        clean_text = raw_text.replace("\n[removed]", "").replace("[removed]", "").replace("\n[deleted]", "").replace("[deleted]", "").strip()
+                        if len(clean_text) < 35:
+                            continue
+
+                        # Filter out off-topic stock trading rants that have zero mutual fund / SIP relevance
+                        t_low = clean_text.lower()
+                        if any(k in t_low for k in ["doesn't even show positions", "buy and sell stocks", "intraday positions", "f&o option"]):
+                            if not MF_SIP_PATTERN.search(clean_text):
+                                continue
+
                         # Identify likely theme tag based on content
                         assigned_theme = "THEME-01"
-                        text_low = text.lower()
-                        if any(w in text_low for w in ["mandate", "autopay", "bank", "debit", "bounce", "reject"]):
+                        if any(w in t_low for w in ["mandate", "autopay", "bank debit", "fail", "reject"]):
                             assigned_theme = "THEME-01"
-                        elif any(w in text_low for w in ["overlap", "diversif", "too many", "funds", "portfolio"]):
+                        elif any(w in t_low for w in ["overlap", "diversif", "too many funds", "duplicate", "portfolio"]):
                             assigned_theme = "THEME-02"
-                        elif any(w in text_low for w in ["ecs", "penalty", "charge", "insufficient", "fine"]):
+                        elif any(w in t_low for w in ["ecs", "penalty", "charge", "insufficient", "fine", "pause", "snooze"]):
                             assigned_theme = "THEME-03"
-                        elif any(w in text_low for w in ["xirr", "cagr", "annualized", "return calculation"]):
+                        elif any(w in t_low for w in ["xirr", "cagr", "annualized", "early return", "180 days"]):
                             assigned_theme = "THEME-04"
-                        elif any(w in text_low for w in ["negative", "loss", "crash", "red", "dip", "panic"]):
+                        elif any(w in t_low for w in ["negative return", "loss", "crash", "red portfolio", "drawdown", "volatility", "dip", "fixed deposit", "fd"]):
                             assigned_theme = "THEME-05"
-                        elif any(w in text_low for w in ["nav", "allotment", "t+2", "delay", "timing"]):
+                        elif any(w in t_low for w in ["nav", "allotment", "t+2", "delay", "timing", "settlement"]):
                             assigned_theme = "THEME-06"
-                        elif any(w in text_low for w in ["continue", "discipline", "habit", "long term", "5 year", "10 year"]):
+                        elif any(w in t_low for w in ["continue", "discipline", "habit", "long term", "5 year", "10 year", "12 month"]):
                             assigned_theme = "THEME-07"
+                        elif any(w in t_low for w in ["stop", "cancel", "discontinue", "left groww", "deleted"]):
+                            assigned_theme = "THEME-03"
 
                         # Infer journey stage
                         stage = "newly_started"
-                        if any(w in text_low for w in ["stopped", "cancelled", "deleted", "left"]):
+                        if any(w in t_low for w in ["stopped", "cancelled", "deleted", "left groww", "discontinued"]):
                             stage = "stopped"
-                        elif any(w in text_low for w in ["pause", "hold", "skip"]):
+                        elif any(w in t_low for w in ["pause", "hold", "skip", "snooze"]):
                             stage = "paused"
-                        elif any(w in text_low for w in ["started", "beginner", "first time", "first sip"]):
+                        elif any(w in t_low for w in ["started", "beginner", "first time", "first sip"]):
                             stage = "newly_started"
-                        elif any(w in text_low for w in ["year", "months", "continuing", "regular"]):
+                        elif any(w in t_low for w in ["year", "months", "continuing", "regular", "discipline"]):
                             stage = "continuing"
 
                         self.records.append({
@@ -99,20 +362,24 @@ class HybridEvidenceRetriever:
                             "platform": row.get("platform", "unknown"),
                             "source_url": row.get("source_url", ""),
                             "published_at": row.get("published_at", "")[:10] if row.get("published_at") else "Recent",
-                            "text": text,
-                            "quote": text[:260] + ("..." if len(text) > 260 else ""),
-                            "full_text": text,
+                            "text": clean_text,
+                            "quote": clean_text[:240] + ("..." if len(clean_text) > 240 else ""),
+                            "full_text": clean_text,
                             "theme_id": assigned_theme,
                             "journey_stage": stage,
                             "author_hash": row.get("raw_id", "")[:12],
                         })
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error loading CSV corpus: {e}")
 
         # Fallback if CSV empty: Load representative quotes from themes JSON
         if not self.records and theme_map:
             for t_id, t in theme_map.items():
                 for q in t.get("representative_quotes", []):
+                    q_rid = q.get("raw_id", "")
+                    q_url = q.get("source_url", "")
+                    if not is_verifiable_source_url(q_rid, q_url):
+                        continue
                     self.records.append({
                         "doc_id": q.get("raw_id", f"quote_{len(self.records)+1}"),
                         "platform": q.get("platform", "forum"),
@@ -134,8 +401,8 @@ class HybridEvidenceRetriever:
         n_docs = len(self.records)
         df: Dict[str, int] = {}
 
-        # 1. Tokenize all documents
-        for doc in self.records:
+        # 1. Tokenize all documents and record theme indices
+        for doc_idx, doc in enumerate(self.records):
             searchable_content = f"{doc['text']} {doc['platform']} {doc['journey_stage']} {doc['theme_id']}"
             tokens = _tokenize(searchable_content)
             self.doc_tokens.append(tokens)
@@ -145,6 +412,12 @@ class HybridEvidenceRetriever:
             unique_tokens = set(tokens)
             for t in unique_tokens:
                 df[t] = df.get(t, 0) + 1
+
+            # Populate theme centroids
+            tid = doc.get("theme_id", "THEME-01")
+            if tid not in self.theme_centroids:
+                self.theme_centroids[tid] = []
+            self.theme_centroids[tid].append(doc_idx)
 
         self.avg_doc_len = sum(self.doc_lengths) / max(1, n_docs)
 
@@ -179,17 +452,29 @@ class HybridEvidenceRetriever:
             self.tfidf_norms.append(math.sqrt(norm_sq) if norm_sq > 0 else 1.0)
 
     def bm25_search(self, query_tokens: List[str], top_n: int = 50) -> List[Tuple[int, float]]:
-        """Score all matching documents using Okapi BM25."""
+        """Score all matching documents using Okapi BM25 with term relevance boosting."""
         scores: Dict[int, float] = {}
         for token in query_tokens:
             if token not in self.inverted_index:
                 continue
             idf_val = self.idf[token]
+
+            # Boost high-signal financial and churn terms
+            boost = 1.0
+            if token in ["sip", "sips", "mutual", "mandate", "autopay"]:
+                boost = 2.5
+            elif token in ["market", "crash", "dip", "correction", "volatility", "drawdown", "xirr"]:
+                boost = 2.5
+            elif token in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused"]:
+                boost = 1.0 if any(w in query_tokens for w in ["market", "crash", "dip", "drawdown", "negative", "xirr"]) else 3.0
+            elif token in ["bounce", "penalty", "loss", "negative"]:
+                boost = 2.0
+
             for doc_idx, tf in self.inverted_index[token]:
                 doc_len = self.doc_lengths[doc_idx]
                 numerator = tf * (self.k1 + 1.0)
                 denominator = tf + self.k1 * (1.0 - self.b + self.b * (doc_len / self.avg_doc_len))
-                term_score = idf_val * (numerator / max(0.001, denominator))
+                term_score = boost * idf_val * (numerator / max(0.001, denominator))
                 scores[doc_idx] = scores.get(doc_idx, 0.0) + term_score
 
         sorted_results = sorted(scores.items(), key=lambda x: x[1], reverse=True)
@@ -226,6 +511,30 @@ class HybridEvidenceRetriever:
         cos_scores.sort(key=lambda x: x[1], reverse=True)
         return cos_scores[:top_n]
 
+    def _expand_tokens(self, tokens: List[str]) -> Tuple[List[str], List[str]]:
+        """Expand tokens using the domain synonym vocabulary."""
+        expanded = list(tokens)
+        added_synonyms = []
+        for tok in tokens:
+            if tok in QUERY_SYNONYMS:
+                for syn in QUERY_SYNONYMS[tok]:
+                    for s_tok in _tokenize(syn):
+                        if s_tok not in expanded:
+                            expanded.append(s_tok)
+                            added_synonyms.append(s_tok)
+        return expanded, added_synonyms
+
+    def _detect_nearest_theme(self, tokens: List[str]) -> str:
+        """Identify the closest thematic cluster for token set."""
+        theme_scores: Dict[str, int] = {k: 0 for k in THEME_KEYWORDS}
+        for tok in tokens:
+            for theme_id, kw_list in THEME_KEYWORDS.items():
+                for kw in kw_list:
+                    if tok in kw or kw in tok:
+                        theme_scores[theme_id] += 1
+        best_theme = max(theme_scores.items(), key=lambda x: x[1])
+        return best_theme[0] if best_theme[1] > 0 else "THEME-01"
+
     def retrieve(
         self,
         query: str,
@@ -233,18 +542,92 @@ class HybridEvidenceRetriever:
         platform_filter: Optional[str] = None,
         journey_stage_filter: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Execute hybrid search using Reciprocal Rank Fusion (RRF)."""
-        tokens = _tokenize(query)
-        if not tokens or not self.records:
+        """Execute hybrid search using Reciprocal Rank Fusion (RRF) with noise filtering and multi-stage fallback."""
+        if not self.records:
             return []
 
-        # 1. Get Lexical BM25 Rankings
-        bm25_ranks = self.bm25_search(tokens, top_n=60)
-        
-        # 2. Get Semantic Vector Rankings
-        vector_ranks = self.vector_search(tokens, top_n=60)
+        informative_tokens, all_tokens = _preprocess_query(query)
+        search_tokens = informative_tokens if informative_tokens else all_tokens
 
-        # 3. Reciprocal Rank Fusion (RRF)
+        if not search_tokens:
+            self.last_retrieval_meta = {"fallback_tier": "None", "is_fallback": False, "matches_found": 0}
+            return []
+
+        # =====================================================================
+        # TIER 1: Direct Hybrid Search with Informative Tokens
+        # =====================================================================
+        bm25_ranks = self.bm25_search(search_tokens, top_n=60)
+        vector_ranks = self.vector_search(search_tokens, top_n=60)
+        results = self._rank_and_filter(
+            bm25_ranks=bm25_ranks,
+            vector_ranks=vector_ranks,
+            top_k=top_k,
+            platform_filter=platform_filter,
+            journey_stage_filter=journey_stage_filter,
+        )
+
+        tier_used = "Tier 1: Direct Hybrid RRF"
+        is_fallback = False
+        expanded_terms: List[str] = []
+
+        # =====================================================================
+        # TIER 2: Synonym Query Expansion Fallback (if results < top_k)
+        # =====================================================================
+        if len(results) < top_k:
+            expanded_tokens, added = self._expand_tokens(search_tokens)
+            if added:
+                exp_bm25 = self.bm25_search(expanded_tokens, top_n=60)
+                exp_vector = self.vector_search(expanded_tokens, top_n=60)
+                expanded_results = self._rank_and_filter(
+                    bm25_ranks=exp_bm25,
+                    vector_ranks=exp_vector,
+                    top_k=top_k,
+                    platform_filter=platform_filter,
+                    journey_stage_filter=journey_stage_filter,
+                )
+                if len(expanded_results) > len(results):
+                    results = expanded_results
+                    tier_used = "Tier 2: Synonym Query Expansion Fallback"
+                    is_fallback = True
+                    expanded_terms = added
+
+        # =====================================================================
+        # TIER 3: Thematic Cluster Centroid Fallback (if still 0 matches)
+        # =====================================================================
+        if len(results) == 0:
+            nearest_theme = self._detect_nearest_theme(search_tokens)
+            doc_indices = self.theme_centroids.get(nearest_theme, [])[:top_k]
+            results = []
+            for d_idx in doc_indices:
+                rec = dict(self.records[d_idx])
+                rec["similarity_score"] = 0.65
+                rec["bm25_hit"] = False
+                rec["thematic_fallback"] = True
+                results.append(rec)
+            tier_used = f"Tier 3: Thematic Centroid Fallback ({nearest_theme})"
+            is_fallback = True
+
+        # Store metadata for introspection
+        self.last_retrieval_meta = {
+            "query": query,
+            "tokens": search_tokens,
+            "fallback_tier": tier_used,
+            "is_fallback": is_fallback,
+            "expanded_terms": expanded_terms,
+            "matches_found": len(results),
+        }
+
+        return results
+
+    def _rank_and_filter(
+        self,
+        bm25_ranks: List[Tuple[int, float]],
+        vector_ranks: List[Tuple[int, float]],
+        top_k: int,
+        platform_filter: Optional[str] = None,
+        journey_stage_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Perform Reciprocal Rank Fusion (RRF) and apply metadata filters."""
         rrf_constant = 60
         fused_scores: Dict[int, float] = {}
 
@@ -254,13 +637,12 @@ class HybridEvidenceRetriever:
         for rank, (doc_idx, _) in enumerate(vector_ranks):
             fused_scores[doc_idx] = fused_scores.get(doc_idx, 0.0) + (1.0 / (rrf_constant + rank + 1))
 
-        # 4. Filter and Sort
         sorted_docs = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
         results = []
 
         for doc_idx, score in sorted_docs:
             rec = self.records[doc_idx]
-            
+
             # Apply platform filter
             if platform_filter and platform_filter.lower() != "all":
                 if rec["platform"].lower() != platform_filter.lower():
@@ -271,9 +653,9 @@ class HybridEvidenceRetriever:
                 if rec["journey_stage"].lower() != journey_stage_filter.lower():
                     continue
 
-            # Normalize RRF score to 0.0 - 1.0 confidence representation
+            # Normalize RRF score to 0.60 - 0.99 range
             norm_score = min(0.99, max(0.60, score * 50.0))
-            
+
             result_item = dict(rec)
             result_item["similarity_score"] = round(norm_score, 3)
             result_item["bm25_hit"] = doc_idx in [x[0] for x in bm25_ranks[:10]]
@@ -283,4 +665,3 @@ class HybridEvidenceRetriever:
                 break
 
         return results
-
