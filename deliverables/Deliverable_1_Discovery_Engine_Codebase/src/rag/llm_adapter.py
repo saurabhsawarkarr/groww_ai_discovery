@@ -1543,27 +1543,30 @@ class LLMAdapter:
         )
 
         if is_asking_about_xirr_math:
+            used_tags_xirr: List[str] = []
+            e_x1 = cls._pick_distinct_evid(retrieved_evidence, ["xirr", "cagr", "annual", "calculation", "return"], used_tags_xirr, e1)
+            e_x2 = cls._pick_distinct_evid(retrieved_evidence, ["xirr", "negative", "dip", "loss", "return", "month"], used_tags_xirr, e2)
             summary = (
-                f"During the first 30 to 90 days of an SIP, novice investors are severely misled by **annualized XIRR calculations** {e1}. "
+                f"During the first 30 to 90 days of an SIP, novice investors are severely misled by **annualized XIRR calculations** {e_x1}. "
                 "Because XIRR extrapolates short-term fluctuations to a full 365-day annual basis, a nominal paper dip of just ₹30 on an initial ₹1,000 instalment "
-                f"displays as an alarming '-18.5% XIRR' on the dashboard {e2}. First-time investors misinterpret this annualized mathematical figure as a permanent "
+                f"displays as an alarming '-18.5% XIRR' on the dashboard {e_x2}. First-time investors misinterpret this annualized mathematical figure as a permanent "
                 "18% loss of their total capital, triggering immediate panic cancellations."
             )
             friction_op = (
                 f"**Premature Display of Annualized Metrics:** Surfacing XIRR on tenures under 180 days where tiny time denominators artificially "
-                f"exaggerate short-term volatility {e1}."
+                f"exaggerate short-term volatility {e_x1}."
             )
             friction_cog = (
                 f"**Annualized Compounding vs Rupee Return Confusion:** Investors lack mathematical familiarity with annualized metrics, "
-                f"failing to recognize that ₹30 on ₹1,000 is merely a normal 3% market fluctuation, not an existential collapse of capital {e2}."
+                f"failing to recognize that ₹30 on ₹1,000 is merely a normal 3% market fluctuation, not an existential collapse of capital {e_x2}."
             )
             return cls._format_gr1_synthesis(
                 summary,
                 friction_op,
                 friction_cog,
                 snapshot_rows=[
-                    ("Math Distortion", "₹30 dip on ₹1,000 over short tenure displays as -18.5% XIRR", f"Denominator amplification {e1}"),
-                    ("Tenor Safeguard", "Suppress annualized XIRR below 180 days; show rupee gains", f"Prevents panic exits {e2}"),
+                    ("Math Distortion", "₹30 dip on ₹1,000 over short tenure displays as -18.5% XIRR", f"Denominator amplification {e_x1}"),
+                    ("Tenor Safeguard", "Suppress annualized XIRR below 180 days; show rupee gains", f"Prevents panic exits {e_x2}"),
                 ],
             )
 

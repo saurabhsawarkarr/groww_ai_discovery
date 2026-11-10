@@ -21,7 +21,7 @@ from src.ui.components.common_ui import format_source_link_html
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.3_clean_inquiry_split") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.4_xirr_retrieval_fix") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)

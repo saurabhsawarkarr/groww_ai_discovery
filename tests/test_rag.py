@@ -129,6 +129,11 @@ class TestHowItShouldProvideAnswers:
         assert "pausing or cancelling an SIP solely due to a market downturn" not in res_trends["answer"]
         assert "3,052" not in res_trends["answer"]
 
+        res_xirr = pipeline.query("Why does XIRR show -18% on a tiny 30 rupees dip?", top_k=5)
+        assert "annualized XIRR calculations" in res_xirr["answer"]
+        assert "pausing or cancelling an SIP solely due to a market downturn" not in res_xirr["answer"]
+        assert any("xirr" in ev.get("quote", "").lower() for ev in res_xirr["retrieved_evidence"][:2])
+
         res_start = pipeline.query("how to start sip", top_k=3)
         assert "silent partner bank mandate drops" not in res_start["answer"]
         assert "| Dimension | Observed Signal |" in res_start["answer"]

@@ -211,7 +211,11 @@ def _preprocess_query(query: str) -> Tuple[List[str], List[str]]:
 
     informative = [w for w in stemmed if w not in STOPWORDS]
 
-    if is_downturn_query:
+    if "xirr" in stemmed or "cagr" in stemmed or "annualized" in q_str or "annualised" in q_str:
+        for extra in ["xirr", "cagr", "return", "annualized", "negative", "dip"]:
+            if extra not in informative:
+                informative.append(extra)
+    elif is_downturn_query:
         for extra in ["market", "down", "dip", "crash", "drawdown", "loss", "negative", "volatility", "xirr", "correction", "long", "term"]:
             if extra not in informative:
                 informative.append(extra)
@@ -467,7 +471,9 @@ class HybridEvidenceRetriever:
             boost = 1.0
             if token in ["sip", "sips", "mutual", "mandate", "autopay"]:
                 boost = 2.5
-            elif token in ["market", "crash", "dip", "correction", "volatility", "drawdown", "xirr"]:
+            elif token in ["xirr", "cagr"]:
+                boost = 3.5
+            elif token in ["market", "crash", "dip", "correction", "volatility", "drawdown"]:
                 boost = 2.5
             elif token in ["stop", "stopped", "cancel", "cancelled", "discontinue", "churn", "pause", "paused"]:
                 boost = 1.0 if any(w in query_tokens for w in ["market", "crash", "dip", "drawdown", "negative", "xirr"]) else 3.0
