@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 
 from src.rag.rules import RAGRulesEngine, RAG_SYSTEM_RULES_PROMPT
+from src.rag.retriever import classify_evidence_theme, is_broad_churn_reason_query
 from src.rag.guardrails import (
     is_dark_pattern_request,
     is_out_of_scope_query,
@@ -147,7 +148,21 @@ class LLMAdapter:
     def get_contextual_followups(query: str, retrieved_evidence: List[Dict[str, Any]]) -> List[str]:
         """Select 4 context-locked follow-up prompts aligned with the query and dominant theme."""
         q_lower = (query or "").lower()
-        if any(p in q_lower for p in ["stop sip", "cancel sip", "i want to stop", "how to stop", "how to cancel", "band kare", "band karu", "cancel kaise", "stop kaise", "sip band"]):
+        if not is_broad_churn_reason_query(query) and any(
+            p in q_lower
+            for p in [
+                "stop sip",
+                "cancel sip",
+                "i want to stop",
+                "how to stop",
+                "how to cancel",
+                "band kare",
+                "band karu",
+                "cancel kaise",
+                "stop kaise",
+                "sip band",
+            ]
+        ):
             return [
                 "How can users pause an SIP instead of cancelling permanently?",
                 "Should I stop my SIP when the market is down?",
@@ -251,6 +266,74 @@ class LLMAdapter:
         if c_count >= 3:
             rows.append((f"{e3} ({p3})", f'"{q3}"', c3))
         return cls._format_gr1_synthesis(summary, friction_op, friction_cog, snapshot_rows=rows)
+
+    @classmethod
+    def _synthesize_churn_reasons_from_evidence(cls, retrieved_evidence: List[Dict[str, Any]]) -> str:
+        """Synthesize SIP discontinuation drivers directly from retrieved evidence grouped by theme."""
+        c_count = len(retrieved_evidence)
+        e1 = "[EVID-1]" if c_count >= 1 else ""
+        op_notes: List[str] = []
+        cog_notes: List[str] = []
+        theme_links: List[str] = []
+        snapshot_rows: List[Tuple[str, str, str]] = []
+        seen_themes: set = set()
+
+        _op_summaries = {
+            "THEME-01": "silent bank mandate drops, autopay failures, or biller setup blocks",
+            "THEME-03": "bank ECS bounce charge fears or missing/rigid pause-skip controls",
+            "THEME-06": "unit allotment settlement lags and cancellation cut-off uncertainty",
+        }
+        _cog_summaries = {
+            "THEME-04": "market dips compressing short-term XIRR and sparking exit doubts",
+            "THEME-05": "XIRR confusion or second-guessing SIP vs timing market dips",
+            "THEME-02": "portfolio clutter and overlapping fund fatigue",
+            "THEME-07": "platform policy or account continuity hurdles breaking SIP habits",
+        }
+
+        def _join_clauses(items: List[str]) -> str:
+            if len(items) <= 1:
+                return items[0] if items else ""
+            if len(items) == 2:
+                return f"{items[0]} and {items[1]}"
+            return ", ".join(items[:-1]) + f", and {items[-1]}"
+
+        for idx, ev in enumerate(retrieved_evidence, 1):
+            tag = f"[EVID-{idx}]"
+            plat = (ev.get("platform") or "SOURCE").upper()
+            tid, tlabel = classify_evidence_theme(ev)
+            raw_q = re.sub(r"\s+", " ", (ev.get("quote") or "").strip()).replace("|", "/")
+            short_q = (raw_q[:92].rsplit(" ", 1)[0] + "...") if len(raw_q) > 92 else raw_q
+
+            if tlabel not in seen_themes:
+                seen_themes.add(tlabel)
+                theme_links.append(f"**{tlabel}** {tag}")
+
+            if tid in _op_summaries:
+                op_notes.append(f"{_op_summaries[tid]} {tag}")
+            elif tid in _cog_summaries:
+                cog_notes.append(f"{_cog_summaries[tid]} {tag}")
+            else:
+                op_notes.append(f'workflow friction surfaced in {plat} feedback ("{short_q}") {tag}')
+
+            snapshot_rows.append((f"**{tlabel}**", f'"{short_q}"', f"{tag} ({plat})"))
+
+        themes_str = _join_clauses(theme_links) if theme_links else f"customer operational and behavioral friction {e1}"
+        summary = (
+            f"Customer feedback across the retrieved corpus sources traces SIP discontinuations directly to {themes_str}. "
+            f"Rather than lack of intent, investors stop or question SIPs when bank/mandate mechanics, bounce-charge fears, "
+            f"or early return swings clash with simple continuation workflows {e1}."
+        )
+        friction_op = (
+            f"Retrieved sources highlight {_join_clauses(op_notes)}."
+            if op_notes
+            else f"Retrieved receipts surface mandate and timing friction behind cancellations {e1}."
+        )
+        friction_cog = (
+            f"Customer receipts reflect {_join_clauses(cog_notes)}."
+            if cog_notes
+            else f"Uncertainty over bounce fees and cancellation cutoffs leads users to halt SIPs preemptively {e1}."
+        )
+        return cls._format_gr1_synthesis(summary, friction_op, friction_cog, snapshot_rows=snapshot_rows)
 
     @staticmethod
     def _format_gr1_synthesis(
@@ -952,7 +1035,77 @@ class LLMAdapter:
                 ],
             )
 
-        # 5b. Actionable user intent: How to Stop / Cancel SIP vs Why people stop
+        # 5b. Analytical Churn-Reason Queries MUST take precedence over Cancel Navigation Steps
+        _has_analytical_reason_kw = bool(
+            re.search(r"\b(?:why|reasons?|causes?|factors?|drivers?|behind|what\s+makes)\b", prompt_lower)
+        )
+        _has_narrow_topic_kw = any(
+            w in prompt_lower
+            for w in [
+                "450",
+                "500 penalty",
+                "ecs bounce",
+                "xirr",
+                "cagr",
+                "-18%",
+                "hdfc",
+                "sbi",
+                "nav",
+                "t+2",
+                "allotment",
+                "overlap",
+                "notification",
+                "alert",
+                "daily market",
+                "dark pattern",
+                "hide cancel",
+                "hide the cancel",
+                "trap user",
+                "market is down",
+                "market down",
+                "market crash",
+                "market falls",
+                "market dip",
+                "when market",
+            ]
+        )
+        is_asking_why_people_stop_sip = (
+            is_broad_churn_reason_query(inquiry_text)
+            or any(
+                phrase in prompt_lower
+                for phrase in [
+                    "not continuing",
+                    "not contuning",
+                    "why people stop",
+                    "why do people stop",
+                    "why investors stop",
+                    "why do investors stop",
+                    "why users stop",
+                    "why do users stop",
+                    "why sip stop",
+                    "why sips stop",
+                    "why stop sip",
+                    "why cancel sip",
+                    "why users cancel",
+                    "why drop out",
+                    "why discontinue",
+                    "reasons for stopping",
+                    "reasons for cancellation",
+                    "why investors quit",
+                    "why are people stopping",
+                    "churn reason",
+                    "retention failure",
+                    "not continue sip",
+                    "drop off reason",
+                    "why quit sip",
+                ]
+            )
+        ) and not _has_narrow_topic_kw
+
+        if is_asking_why_people_stop_sip:
+            return cls._synthesize_churn_reasons_from_evidence(retrieved_evidence)
+
+        # 5b-2. Actionable user intent: How to Stop / Cancel SIP
         is_asking_how_to_stop_or_cancel = (
             any(
                 phrase in prompt_lower
@@ -998,32 +1151,8 @@ class LLMAdapter:
                     "sip close",
                 ]
             )
-            and not any(
-                w in prompt_lower
-                for w in [
-                    "why people stop",
-                    "why do people stop",
-                    "why investors stop",
-                    "why do investors stop",
-                    "why users stop",
-                    "why do users stop",
-                    "why sip stop",
-                    "why sips stop",
-                    "why stop sip",
-                    "why cancel sip",
-                    "why users cancel",
-                    "reasons for stopping",
-                    "why investors quit",
-                    "reasons for cancellation",
-                    "why are people stopping",
-                    "market is down",
-                    "market down",
-                    "market crash",
-                    "market falls",
-                    "market dip",
-                    "when market",
-                ]
-            )
+            and not _has_analytical_reason_kw
+            and not _has_narrow_topic_kw
         )
 
         if is_asking_how_to_stop_or_cancel:
@@ -1051,61 +1180,6 @@ class LLMAdapter:
                     ("Cancel Path", "Mutual Funds ➔ SIPs ➔ Select Active SIP ➔ Cancel SIP", f"Halts future debits {e1}"),
                     ("Existing Money", "Accumulated units stay invested until explicit Redeem", f"No auto-withdrawal {e2}"),
                     ("Cut-Off & Alternative", "Cancel 2–3 working days early, or Pause for 1–3 months", f"Avoids mandate re-KYC {e3 if e3 else e1}"),
-                ],
-            )
-        # 5b. Macro Churn & Discontinuation Query
-        is_asking_why_people_stop_sip = any(
-            phrase in prompt_lower
-            for phrase in [
-                "not continuing",
-                "not contuning",
-                "why people stop",
-                "why do people stop",
-                "why investors stop",
-                "why do investors stop",
-                "why users stop",
-                "why do users stop",
-                "why sip stop",
-                "why sips stop",
-                "why stop sip",
-                "why cancel sip",
-                "why users cancel",
-                "why drop out",
-                "why discontinue",
-                "reasons for stopping",
-                "reasons for cancellation",
-                "why investors quit",
-                "why are people stopping",
-                "churn reason",
-                "retention failure",
-                "not continue sip",
-                "drop off reason",
-                "why quit sip",
-            ]
-        )
-
-        if is_asking_why_people_stop_sip:
-            summary = (
-                f"First-time mutual fund SIP continuation drops steeply within the first 12 months due to a combination of **involuntary operational failures** and **behavioral panic triggers** {e1}. "
-                f"Contrary to the assumption that investors simply lose interest, the majority of drop-offs are friction-driven: silent autopay mandate drops, "
-                f"dread of punitive ₹450+ bank ECS bounce penalties, and the absence of intuitive 'Pause/Skip' mechanisms force users into binary SIP cancellations {e2}."
-            )
-            friction_op = (
-                f"**Silent Autopay Drops & Inflexible Mandate Controls:** Partner bank e-mandates fail silently on debit day, and apps lack an immediate 48-hour UPI recovery link. "
-                f"Furthermore, when facing a temporary cash crunch, users cannot easily pause or snooze the SIP, forcing them to cancel the entire folio to avoid bank bounce penalties {e1}, {e3}."
-            )
-            friction_cog = (
-                f"**ECS Penalty Dread & Early Drawdown Shock:** Novice investors dread immediate bank penalties (₹450–₹590 per missed debit) far more than they value theoretical future compounding. "
-                f"When combined with Month 1–3 paper drawdowns (-2% to -5%) or distorted short-term XIRR metrics, investors experience panic and permanently discontinue their SIPs {e2}."
-            )
-            return cls._format_gr1_synthesis(
-                summary,
-                friction_op,
-                friction_cog,
-                snapshot_rows=[
-                    ("Involuntary Churn", "Silent partner bank mandate drops & 48h retry gaps", f"1-Click UPI fallback link {e1}"),
-                    ("Penalty Avoidance", "₹450–₹590 ECS bounce fine dread pushes full deletion", f"1-Tap Pause / Skip control {e2}"),
-                    ("Early Shock", "Month 1–3 drawdowns and distorted short-term XIRR", f"Units accumulated lens {e3 if e3 else e1}"),
                 ],
             )
 

@@ -507,3 +507,14 @@ class TestGoldenDatasetEvaluation:
         assert gate["cited_overlap_count"] == 0
         assert gate["layer3_entailment_pass"] is False
         assert gate["passed_all_layers"] is False
+
+        # 5. Broad "what is the reason people stop SIP" routes to source-backed multi-theme synthesis (NOT cancel steps)
+        res_reason = pipeline.query("what is the reason people stop SIP", top_k=5)
+        assert "navigate to **Mutual Funds" not in res_reason["answer"]
+        assert "Cross-Theme Churn Synthesis" in res_reason["retrieval_fallback_tier"]
+        distinct_themes = {ev.get("theme_id") for ev in res_reason["retrieved_evidence"] if ev.get("theme_id") != "GENERAL"}
+        assert len(distinct_themes) >= 4
+        assert all("deleted my review" not in ev.get("quote", "").lower() for ev in res_reason["retrieved_evidence"])
+        assert all(ev.get("theme_label") for ev in res_reason["retrieved_evidence"])
+        assert res_reason["citation_audit"]["unique_chunks_cited"] >= 4
+        assert res_reason["output_defense"]["passed_all_layers"] is True

@@ -11,6 +11,7 @@ Adheres to:
 from typing import Any, Dict, List
 from src.rag.rules import RAG_SYSTEM_RULES_PROMPT
 from src.rag.math_engine import DeterministicMathEngine
+from src.rag.retriever import classify_evidence_theme, is_broad_churn_reason_query
 
 SEBI_SYSTEM_INSTRUCTIONS = RAG_SYSTEM_RULES_PROMPT
 
@@ -42,10 +43,11 @@ class RAGPromptBuilder:
             quote = item.get("quote", "").strip()
             if len(quote) > 200:
                 quote = quote[:197] + "..."
-            theme = item.get("theme_id", "THEME-01")
+            theme = item.get("theme_id", "GENERAL")
+            _, theme_name = classify_evidence_theme(item)
 
             chunk = (
-                f"  <untrusted_evidence id=\"EVID-{idx}\" platform=\"{plat}\" date=\"{date}\" journey_stage=\"{stage}\" theme=\"{theme}\">\n"
+                f"  <untrusted_evidence id=\"EVID-{idx}\" platform=\"{plat}\" date=\"{date}\" journey_stage=\"{stage}\" theme=\"{theme}\" theme_name=\"{theme_name}\">\n"
                 f"    <customer_quote><![CDATA[{quote}]]></customer_quote>\n"
                 f"  </untrusted_evidence>"
             )
@@ -56,7 +58,9 @@ class RAGPromptBuilder:
 
     @staticmethod
     def build_product_mechanics_xml(query: str) -> str:
-        """Attach verified Groww SIP workflow mechanics when query touches cancellation, pause, or dips."""
+        """Attach verified Groww SIP workflow mechanics for action/dip asks (skipped for broad why/reason inquiries)."""
+        if is_broad_churn_reason_query(query):
+            return ""
         q_lower = query.lower()
         if any(w in q_lower for w in ["stop", "cancel", "pause", "snooze", "skip", "market", "dip", "crash", "redeem", "withdraw"]):
             return (
@@ -74,12 +78,19 @@ class RAGPromptBuilder:
         """Construct the complete user prompt incorporating query, XML-sandboxed evidence, and frozen anchors."""
         context_str = cls.build_evidence_context(retrieved_evidence)
         mechanics_xml = cls.build_product_mechanics_xml(query)
+        churn_reason_note = (
+            "\nNote: This is a qualitative WHY/REASON churn inquiry (not a how-to-cancel steps question). "
+            "Synthesize the distinct churn themes backed strictly by the <untrusted_evidence> receipts, "
+            "explicitly naming each theme_name alongside its [EVID-X] source."
+            if is_broad_churn_reason_query(query)
+            else ""
+        )
 
         prompt = f"""USER RESEARCH INQUIRY:
 "{query}"
 
 {mechanics_xml}RETRIEVED EMPIRICAL EVIDENCE SANDBOX (Top {len(retrieved_evidence)} Grounded Receipts):
-{context_str}
+{context_str}{churn_reason_note}
 
 REQUIRED SYNTHESIS STRUCTURE (MANDATORY):
 Synthesize a sharp, scannable qualitative analysis addressing the inquiry above based strictly on the retrieved customer evidence, verified product mechanics, and frozen domain anchors. Structure your response into exactly 2 focused markdown sections:

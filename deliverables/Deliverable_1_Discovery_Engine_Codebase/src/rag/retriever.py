@@ -113,6 +113,69 @@ _VALID_PLATFORM_URL_RES = (
 )
 
 
+THEME_DISPLAY_LABELS: Dict[str, str] = {
+    "THEME-01": "Cash-Flow & Autopay Drops",
+    "THEME-02": "Over-Diversification & Clutter",
+    "THEME-03": "ECS Bounce Penalty & Pause Trap",
+    "THEME-04": "Early Drawdown Panic (Months 1-3)",
+    "THEME-05": "XIRR Distortion & Return Anxiety",
+    "THEME-06": "NAV & Settlement Delay Uncertainty",
+    "THEME-07": "Goal & Platform Continuity Friction",
+}
+
+_CHURN_REASON_WHY_RE = re.compile(
+    r"\b(?:why|reasons?|causes?|factors?|drivers?|behind|what\s+makes|not\s+continu\w*|not\s+contun\w*)\b",
+    re.IGNORECASE,
+)
+_CHURN_ACTION_RE = re.compile(
+    r"\b(?:stop\w*|cancel\w*|discontinu\w*|quit\w*|drop\s*-?off|not\s+continu\w*|not\s+contun\w*|churn)\b",
+    re.IGNORECASE,
+)
+_NARROW_CHURN_SUBTOPIC_RE = re.compile(
+    r"\b(?:autopay|mandate|bank|hdfc|sbi|icici|axis|kotak|450|500|ecs\s+bounce|xirr|cagr|-?18%|30\s+rupees|"
+    r"negative\s+return|red\s+portfolio|market\s+(?:is\s+)?(?:down|dip|crash|fall|drops?)|"
+    r"nav|t\+2|allotment|overlap|diversif|notification|alert|daily\s+market|"
+    r"hide\s+(?:the\s+)?cancel|trap\s+user|countdown|dark\s+pattern|workaround)\b",
+    re.IGNORECASE,
+)
+
+
+def is_broad_churn_reason_query(query: str) -> bool:
+    """Return True when query asks broadly why/what causes investors to stop SIPs across themes."""
+    q_low = (query or "").strip().lower()
+    if not q_low:
+        return False
+    return bool(
+        _CHURN_REASON_WHY_RE.search(q_low)
+        and _CHURN_ACTION_RE.search(q_low)
+        and not _NARROW_CHURN_SUBTOPIC_RE.search(q_low)
+    )
+
+
+def classify_evidence_theme(item: Dict[str, Any]) -> Tuple[str, str]:
+    """Return content-accurate (theme_id, human_readable_theme_label) for an evidence receipt."""
+    t_low = f"{item.get('quote', '')} {item.get('text', '')}".lower()
+    tid = item.get("theme_id", "GENERAL")
+
+    if any(w in t_low for w in ["ecs", "bounce", "penalty", "charge", "insufficient", "fine", "pause", "skip", "snooze"]):
+        return "THEME-03", "ECS Bounce Penalty & Pause Trap"
+    if any(w in t_low for w in ["mandate", "autopay", "nach", "biller", "bank debit", "debit fail", "payment fail", "account got frozen"]):
+        return "THEME-01", "Cash-Flow & Autopay Drops"
+    if any(w in t_low for w in ["negative return", "loss", "crash", "red portfolio", "drawdown", "dip", "fixed deposit", "fd", "buying the dip"]):
+        return "THEME-04", "Early Drawdown & Return Anxiety"
+    if any(w in t_low for w in ["xirr", "cagr", "annualized", "early return", "180 days"]):
+        return "THEME-05", "XIRR Distortion & Return Anxiety"
+    if any(w in t_low for w in ["nav", "allotment", "t+2", "delay", "settlement"]):
+        return "THEME-06", "NAV & Allotment Settlement Delays"
+    if any(w in t_low for w in ["overlap", "diversif", "too many funds", "duplicate", "clutter"]):
+        return "THEME-02", "Over-Diversification & Clutter"
+    if any(w in t_low for w in ["discipline", "habit", "long term", "12 month", "goal", "nri", "demat"]):
+        return "THEME-07", "Goal & Platform Continuity Friction"
+    if tid in THEME_DISPLAY_LABELS:
+        return tid, THEME_DISPLAY_LABELS[tid]
+    return "GENERAL", "Verified Customer Corpus"
+
+
 def is_verifiable_source_url(raw_id: str, source_url: str) -> bool:
     """Return True only when a record carries a genuine, clickable source permalink."""
     url = (source_url or "").strip()
@@ -345,7 +408,7 @@ class HybridEvidenceRetriever:
 
                         # Identify likely theme tag based on content (neutral GENERAL default prevents THEME-01 skew)
                         assigned_theme = "GENERAL"
-                        if any(w in t_low for w in ["mandate", "autopay", "nach", "bank debit", "debit fail", "payment fail", "fail", "reject"]):
+                        if any(w in t_low for w in ["mandate", "autopay", "nach", "biller", "bank debit", "debit fail", "payment fail", "fail", "reject"]):
                             assigned_theme = "THEME-01"
                         elif any(w in t_low for w in ["overlap", "diversif", "too many funds", "duplicate", "portfolio"]):
                             assigned_theme = "THEME-02"
@@ -359,12 +422,12 @@ class HybridEvidenceRetriever:
                             assigned_theme = "THEME-06"
                         elif any(w in t_low for w in ["continue", "discipline", "habit", "long term", "5 year", "10 year", "12 month"]):
                             assigned_theme = "THEME-07"
-                        elif any(w in t_low for w in ["stop", "cancel", "discontinue", "left groww", "deleted"]):
+                        elif any(w in t_low for w in ["stop sip", "stop my sip", "cancel sip", "cancelled sip", "canceled sip", "discontinue", "left groww", "deleted mandate", "mandate deleted", "deleted app"]):
                             assigned_theme = "THEME-03"
 
                         # Infer journey stage
                         stage = "newly_started"
-                        if any(w in t_low for w in ["stopped", "cancelled", "deleted", "left groww", "discontinued"]):
+                        if any(w in t_low for w in ["stopped", "cancelled", "deleted mandate", "left groww", "discontinued"]):
                             stage = "stopped"
                         elif any(w in t_low for w in ["pause", "hold", "skip", "snooze"]):
                             stage = "paused"
@@ -373,7 +436,7 @@ class HybridEvidenceRetriever:
                         elif any(w in t_low for w in ["year", "months", "continuing", "regular", "discipline"]):
                             stage = "continuing"
 
-                        self.records.append({
+                        rec_item = {
                             "doc_id": row.get("raw_id") or f"doc_{len(self.records)+1}",
                             "platform": row.get("platform", "unknown"),
                             "source_url": row.get("source_url", ""),
@@ -384,7 +447,9 @@ class HybridEvidenceRetriever:
                             "theme_id": assigned_theme,
                             "journey_stage": stage,
                             "author_hash": row.get("raw_id", "")[:12],
-                        })
+                        }
+                        _, rec_item["theme_label"] = classify_evidence_theme(rec_item)
+                        self.records.append(rec_item)
             except Exception as e:
                 logger.warning(f"Error loading CSV corpus: {e}")
 
@@ -574,17 +639,33 @@ class HybridEvidenceRetriever:
         # =====================================================================
         # TIER 1: Direct Hybrid Search with Informative Tokens
         # =====================================================================
-        bm25_ranks = self.bm25_search(search_tokens, top_n=60)
-        vector_ranks = self.vector_search(search_tokens, top_n=60)
-        results = self._rank_and_filter(
-            bm25_ranks=bm25_ranks,
-            vector_ranks=vector_ranks,
-            top_k=top_k,
-            platform_filter=platform_filter,
-            journey_stage_filter=journey_stage_filter,
-        )
+        if is_broad_churn_reason_query(query):
+            churn_tokens = list(search_tokens)
+            for extra in ["autopay", "mandate", "biller", "bounce", "penalty", "skip", "pause", "dip", "loss", "xirr", "allotment", "delay", "overlap"]:
+                if extra not in churn_tokens:
+                    churn_tokens.append(extra)
+            bm25_ranks = self.bm25_search(churn_tokens, top_n=200)
+            vector_ranks = self.vector_search(churn_tokens, top_n=200)
+            results = self._select_diverse_churn_results(
+                bm25_ranks=bm25_ranks,
+                vector_ranks=vector_ranks,
+                top_k=top_k,
+                platform_filter=platform_filter,
+                journey_stage_filter=journey_stage_filter,
+            )
+            tier_used = "Tier 1: Cross-Theme Churn Synthesis RRF"
+        else:
+            bm25_ranks = self.bm25_search(search_tokens, top_n=60)
+            vector_ranks = self.vector_search(search_tokens, top_n=60)
+            results = self._rank_and_filter(
+                bm25_ranks=bm25_ranks,
+                vector_ranks=vector_ranks,
+                top_k=top_k,
+                platform_filter=platform_filter,
+                journey_stage_filter=journey_stage_filter,
+            )
+            tier_used = "Tier 1: Direct Hybrid RRF"
 
-        tier_used = "Tier 1: Direct Hybrid RRF"
         is_fallback = False
         expanded_terms: List[str] = []
 
@@ -683,3 +764,100 @@ class HybridEvidenceRetriever:
                 break
 
         return results
+
+    def _select_diverse_churn_results(
+        self,
+        bm25_ranks: List[Tuple[int, float]],
+        vector_ranks: List[Tuple[int, float]],
+        top_k: int,
+        platform_filter: Optional[str] = None,
+        journey_stage_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Select 1 top-scoring genuine SIP/MF receipt per distinct churn theme before backfilling."""
+        rrf_constant = 60
+        fused_scores: Dict[int, float] = {}
+        for rank, (doc_idx, _) in enumerate(bm25_ranks):
+            fused_scores[doc_idx] = fused_scores.get(doc_idx, 0.0) + (1.0 / (rrf_constant + rank + 1))
+        for rank, (doc_idx, _) in enumerate(vector_ranks):
+            fused_scores[doc_idx] = fused_scores.get(doc_idx, 0.0) + (1.0 / (rrf_constant + rank + 1))
+
+        sorted_docs = sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+        bm25_top10 = {x[0] for x in bm25_ranks[:10]}
+
+        def _eligible(rec: Dict[str, Any], strict_diversity: bool) -> bool:
+            if platform_filter and platform_filter.lower() != "all":
+                if rec["platform"].lower() != platform_filter.lower():
+                    return False
+            if journey_stage_filter and journey_stage_filter.lower() != "all":
+                if rec["journey_stage"].lower() != journey_stage_filter.lower():
+                    return False
+            t_low = rec["text"].lower()
+            if "deleted my review" in t_low or "removed my review" in t_low:
+                return False
+            if strict_diversity:
+                if not any(w in t_low for w in ["sip", "mandate", "autopay"]):
+                    return False
+                if not any(
+                    w in t_low
+                    for w in [
+                        "stop", "cancel", "pause", "skip", "bounce", "penalty", "charge",
+                        "fail", "reject", "dip", "loss", "negative", "delay", "allotment",
+                        "overlap", "biller", "deduct", "issue", "problem", "frozen", "why",
+                    ]
+                ):
+                    return False
+                if "stock portfolio" in t_low and "stop" not in t_low and "cancel" not in t_low:
+                    return False
+                if not platform_filter or platform_filter.lower() == "all":
+                    if "zerodha" in t_low or "unique to zerodha" in t_low:
+                        return False
+            return True
+
+        picked: List[Dict[str, Any]] = []
+        picked_ids: Set[int] = set()
+        seen_themes: Set[str] = set()
+        forum_count = 0
+
+        # Pass 1: One distinct theme per slot, capping TradingQnA forum threads to avoid dominance
+        for doc_idx, score in sorted_docs:
+            rec = self.records[doc_idx]
+            if not _eligible(rec, strict_diversity=True):
+                continue
+            tid, tlabel = classify_evidence_theme(rec)
+            if tid == "GENERAL" or tid in seen_themes:
+                continue
+            if rec["platform"] == "forum" and forum_count >= 1 and (not platform_filter or platform_filter.lower() == "all"):
+                continue
+
+            item = dict(rec)
+            item["theme_id"] = tid
+            item["theme_label"] = tlabel
+            item["similarity_score"] = round(min(0.99, max(0.60, score * 50.0)), 3)
+            item["bm25_hit"] = doc_idx in bm25_top10
+            picked.append(item)
+            picked_ids.add(doc_idx)
+            seen_themes.add(tid)
+            if rec["platform"] == "forum":
+                forum_count += 1
+            if len(picked) >= top_k:
+                return picked
+
+        # Pass 2: Backfill remaining slots cleanly if narrow filters restricted distinct themes
+        for doc_idx, score in sorted_docs:
+            if doc_idx in picked_ids:
+                continue
+            rec = self.records[doc_idx]
+            if not _eligible(rec, strict_diversity=False):
+                continue
+            tid, tlabel = classify_evidence_theme(rec)
+            item = dict(rec)
+            item["theme_id"] = tid
+            item["theme_label"] = tlabel
+            item["similarity_score"] = round(min(0.99, max(0.60, score * 50.0)), 3)
+            item["bm25_hit"] = doc_idx in bm25_top10
+            picked.append(item)
+            picked_ids.add(doc_idx)
+            if len(picked) >= top_k:
+                break
+
+        return picked

@@ -13,14 +13,14 @@ import re
 from typing import Any, Dict, List, Optional
 import streamlit as st
 
-from src.rag.retriever import HybridEvidenceRetriever
+from src.rag.retriever import HybridEvidenceRetriever, classify_evidence_theme
 from src.rag.pipeline import RAGPipeline
 from src.rag.llm_adapter import LLMAdapter
 from src.ui.components.common_ui import format_source_link_html
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.8_rag_architecture_hardening") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.9_churn_source_theme_grounding") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -326,10 +326,15 @@ def render_rag_assistant_view(db_path=None) -> None:
                             q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
                             src_url = ev.get("source_url", "")
                             src_link = format_source_link_html(src_url, label="[Source Link ↗]", color="#00D09C", font_size="11px")
+                            _, ev_theme_label = classify_evidence_theme(ev)
                             footer_left = (
                                 f"Stage: {ev.get('journey_stage', '').replace('_', ' ').title()}"
                                 if ev.get("stage_verified")
-                                else "Verified Source"
+                                else (
+                                    f"Theme: {ev_theme_label}"
+                                    if ev_theme_label and ev_theme_label != "Verified Customer Corpus"
+                                    else "Verified Source"
+                                )
                             )
 
                             # Distinct badge color per platform
