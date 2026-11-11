@@ -67,7 +67,6 @@ Across 3,052 qualified customer conversations, <strong style="color: #F1F5F9;">5
 <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px;">
 <span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #F1F5F9;"><strong style="color: #94A3B8;">North Star:</strong> 12-Month SIP Continuation Rate</span>
 <span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #00D09C;"><strong style="color: #94A3B8;">Primary Focus:</strong> Autopay Resilience &amp; Volatility Framing</span>
-<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #38BDF8;"><strong style="color: #94A3B8;">Critical Window:</strong> Month 1 to Month 4</span>
 </div>
 </div>"""
 

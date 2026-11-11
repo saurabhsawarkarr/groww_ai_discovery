@@ -17,7 +17,6 @@ from src.ui.components.common_ui import MISSION_BANNER_HTML, format_source_link_
 THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     "THEME-01": {
         "root_trigger": "Salary delay of 2–3 days leaves bank account empty on auto-debit day, causing silent mandate cancellation with zero fallback recovery link.",
-        "critical_window": "Month 3–6 • Early Mandate Phase",
         "ask_ai_prompt": "Why do bank autopay mandates fail silently and trigger cancellations?",
         "product_levers": [
             "1-Click Fallback UPI Retry",
@@ -27,7 +26,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-02": {
         "root_trigger": "Chasing trending YouTube fund picks leads to 6+ overlapping funds with >70% stock redundancy, causing decision fatigue and premature liquidation.",
-        "critical_window": "Month 4–8 • Portfolio Clutter Phase",
         "ask_ai_prompt": "Why do first-time users accumulate 6+ overlapping funds?",
         "product_levers": [
             "1-Click Portfolio Overlap Cleaner",
@@ -37,7 +35,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-03": {
         "root_trigger": "Retail bank ₹450–₹590 auto-debit bounce penalty scares first-time investors into permanently cancelling their mandate to avoid recurring bank charges.",
-        "critical_window": "Month 2–5 • Early Cash Crunch",
         "ask_ai_prompt": "How does fear of ₹450 bank bounce fines trigger cancellations?",
         "product_levers": [
             "Pre-Flight Bank Balance Verification",
@@ -47,7 +44,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-04": {
         "root_trigger": "Normal 2–5% short-term market corrections trigger loss aversion and red-portfolio shock, prompting panic cancellations at the bottom of the cycle.",
-        "critical_window": "Month 1–3 • First Correction Shock",
         "ask_ai_prompt": "Why do users panic when their early portfolio shows negative returns?",
         "product_levers": [
             "Accumulation Lens (Unit Growth View)",
@@ -57,7 +53,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-05": {
         "root_trigger": "Anchored to 15–20% bull-run marketing calculators, users interpret normal Year 1 flat/low XIRR as fund failure and prematurely stop disciplined investing.",
-        "critical_window": "Month 6–12 • Horizon Mismatch",
         "ask_ai_prompt": "Why does XIRR show -18% on a tiny 30 rupees dip?",
         "product_levers": [
             "Hide <1Y Annualized XIRR by Default",
@@ -67,7 +62,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-06": {
         "root_trigger": "2-to-3 business day lag between bank debit and mutual fund unit allotment causes anxiety that money is lost or debited at unfavorable NAV rates.",
-        "critical_window": "Month 1–4 • Settlement Anxiety",
         "ask_ai_prompt": "Why do users panic over the 48-hour NAV allotment delay?",
         "product_levers": [
             "Real-Time In-App Settlement Tracker",
@@ -77,7 +71,6 @@ THEME_METADATA_MAP: Dict[str, Dict[str, Any]] = {
     },
     "THEME-07": {
         "root_trigger": "Investing without a concrete life milestone makes SIP deductions feel like discretionary monthly costs rather than disciplined wealth building.",
-        "critical_window": "Month 6–12 • Habit Erosion",
         "ask_ai_prompt": "What habits differentiate 12-month continuers from early drop-offs?",
         "product_levers": [
             "Mandatory Goal-Anchored SIP Setup",
@@ -201,7 +194,6 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
 
         meta = THEME_METADATA_MAP.get(cid, {
             "root_trigger": t.get("core_problem", ""),
-            "critical_window": "First-Year Journey",
             "ask_ai_prompt": f"What drives drop-off in {title}?",
             "product_levers": [
                 "Product Intervention"
@@ -276,10 +268,6 @@ Empirical behavioral failure clusters discovered across <strong style="color: #F
             f'<div style="background: #1A2230; border: 1px solid #2B3548; border-left: 3.5px solid #00D09C; border-radius: 0 8px 8px 0; padding: 9px 12px; margin-bottom: 11px;">'
             f'<div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;">Root Friction Trigger</div>'
             f'<div style="font-family: \'Inter\', sans-serif; font-size: 13px; color: #F1F5F9; line-height: 1.45;">{meta["root_trigger"]}</div>'
-            f'</div>'
-            f'<div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #94A3B8; margin-bottom: 12px;">'
-            f'<span style="font-weight: 700; color: #F1F5F9;">Critical Window:</span>'
-            f'<span style="background: #1E2533; color: #CBD5E1; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; border: 1px solid #2B3548;">{meta["critical_window"]}</span>'
             f'</div>'
             f'<div style="margin-bottom: 8px;">'
             f'<div style="font-size: 11px; font-weight: 700; color: #00D09C; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">'
