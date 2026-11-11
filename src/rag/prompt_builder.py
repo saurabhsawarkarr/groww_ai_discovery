@@ -40,6 +40,8 @@ class RAGPromptBuilder:
             date = item.get("published_at", "Recent")
             stage = item.get("journey_stage", "unknown").replace("_", " ").title()
             quote = item.get("quote", "").strip()
+            if len(quote) > 200:
+                quote = quote[:197] + "..."
             theme = item.get("theme_id", "THEME-01")
 
             chunk = (
@@ -93,8 +95,9 @@ Include a compact 3-column Markdown table (`| Dimension | Observed Signal | Grou
 
 (CRITICAL RULES:
 1. Cite ONLY verified numbers from <frozen_domain_anchors>, <groww_product_mechanics>, or retrieved evidence. Never fabricate numbers.
-2. NEVER output raw XML tags like <anchor...>, <fact...>, or <frozen_domain_anchors> in your response—use [EVID-X] or plain labels.
-3. Do NOT output separate verbatim quote blocks or PM recommendations; customer quote receipts are rendered automatically by the UI).
+2. NEVER output raw XML tags like <anchor...>, <fact...>, or <frozen_domain_anchors>, NOR bracketed anchor IDs like [BANK_ECS_BOUNCE_PENALTY] or [MANDATE_TERMINATION_STRIKES]—use [EVID-X] or plain English.
+3. NEVER attribute competitor UI features (such as Zerodha Coin's Play/Pause toggle) to Groww unless directly quoted; rely strictly on <groww_product_mechanics>.
+4. Do NOT output separate verbatim quote blocks or PM recommendations; customer quote receipts are rendered automatically by the UI).
 """
         return prompt
 

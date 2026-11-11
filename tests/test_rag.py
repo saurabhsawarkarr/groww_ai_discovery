@@ -398,3 +398,112 @@ class TestGoldenDatasetEvaluation:
             res = evaluator.evaluate_case(tc, top_k=3)
             assert res["sebi_compliant"] is True
             assert res["case_passed"] is True
+
+    def test_rag_architecture_hardening_regressions(self):
+        """Verify Stage 1 ordering, scheme-comparison SEBI checks, OOS skipping, theme balance, anchor stripping, 429 retry, and Layer-3 citations."""
+        from collections import Counter
+        import io
+        import json
+        import urllib.error
+        from unittest.mock import patch
+
+        retriever = HybridEvidenceRetriever()
+        theme_counts = Counter(r.get("theme_id") for r in retriever.records)
+        assert "GENERAL" in theme_counts
+        assert theme_counts["THEME-01"] / len(retriever.records) < 0.30
+
+        pipeline = RAGPipeline(retriever=retriever)
+
+        # 1. Scheme comparisons & explicit fund buys caught at Stage 1 SEBI Refusal; platform comparison spared
+        res_cmp = pipeline.query("How can I compare Parag Parikh Flexi Cap with Quant Small Cap?", top_k=3)
+        assert "Regulatory Refusal" in res_cmp["retrieval_fallback_tier"]
+        assert "does not recommend" in res_cmp["answer"]
+        assert res_cmp["sebi_compliant"] is True
+
+        res_buy = pipeline.query("Should I buy HDFC Midcap Fund?", top_k=3)
+        assert "Regulatory Refusal" in res_buy["retrieval_fallback_tier"]
+        assert res_buy["sebi_compliant"] is True
+
+        res_plat = pipeline.query("Compare Groww vs Zerodha Coin for mutual fund SIP", top_k=3)
+        assert "Regulatory Refusal" not in res_plat["retrieval_fallback_tier"]
+
+        # 2. General out-of-scope & ambiguous Tier 2 skip Stage 3 retrieval cleanly
+        res_oos = pipeline.query("best laptop under 50k", top_k=3)
+        assert "Corpus Empirical Scope Notice" in res_oos["answer"]
+        assert res_oos["evidence_count"] == 0
+        assert res_oos["retrieval_meta"].get("skipped_retrieval") is True
+        assert res_oos["retrieval_time_ms"] == 0.0
+
+        res_ambig = pipeline.query("sip", top_k=3)
+        assert "Tier 2" in res_ambig["retrieval_fallback_tier"]
+        assert res_ambig["evidence_count"] == 0
+        assert len(res_ambig["clarification_chips"]) >= 3
+
+        # 3. Bracketed frozen-anchor stripping + single 429 retry on live LLM call
+        sample_ev = [{"quote": "My SBI bank SIP autopay mandate failed due to bounce penalty.", "platform": "play_store", "theme_id": "THEME-01", "journey_stage": "stopped"}]
+        mock_payload = {
+            "choices": [
+                {
+                    "message": {
+                        "content": (
+                            "### 1. Executive Summary & Behavioral Dynamic\n"
+                            "Bank autopay failure creates panic via [BANK_ECS_BOUNCE_PENALTY][MANDATE_TERMINATION_STRIKES] [EVID-1].\n\n"
+                            "### 2. Discovered Friction & Root Cause Breakdown\n"
+                            "- **Operational / Technical Friction:** Autopay failed [EVID-1].\n"
+                            "- **Cognitive / Mental Model Mismatch:** Penalty anxiety triggers churn [EVID-1]."
+                        )
+                    }
+                }
+            ]
+        }
+
+        class _FakeResp:
+            def __init__(self, body: bytes):
+                self._body = body
+
+            def read(self) -> bytes:
+                return self._body
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        calls = {"count": 0}
+
+        def _fake_urlopen(req, timeout=20):
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {}, io.BytesIO(b""))
+            return _FakeResp(json.dumps(mock_payload).encode("utf-8"))
+
+        with patch("src.rag.llm_adapter.time.sleep", return_value=None) as mock_sleep, patch(
+            "src.rag.llm_adapter.urllib.request.urlopen", side_effect=_fake_urlopen
+        ):
+            text, is_fb, _ = LLMAdapter.generate_with_fallback(
+                prompt="Why did bank autopay mandate fail?",
+                system_prompt="Rules",
+                retrieved_evidence=sample_ev,
+                provider="Groq (Llama 3.3 70B / Fast)",
+                api_key="gsk_test_dummy_key",
+            )
+            assert calls["count"] == 2
+            mock_sleep.assert_called_once()
+            assert is_fb is False
+            assert "[BANK_ECS_BOUNCE_PENALTY]" not in text
+            assert "[MANDATE_TERMINATION_STRIKES]" not in text
+            assert "[EVID-1]" in text
+
+        # 4. Layer-3 citation groundedness rejects zero-overlap cited claims
+        hallucinated = (
+            "### 1. Executive Summary & Behavioral Dynamic\n"
+            "Quarks spin inside distant nebulae forever [EVID-1].\n\n"
+            "### 2. Discovered Friction & Root Cause Breakdown\n"
+            "- **Operational / Technical Friction:** Photons scatter [EVID-1].\n"
+            "- **Cognitive / Mental Model Mismatch:** Gravity bends spacetime [EVID-1]."
+        )
+        gate = RAGRulesEngine.validate_output_defense_gate(hallucinated, sample_ev)
+        assert gate["cited_overlap_count"] == 0
+        assert gate["layer3_entailment_pass"] is False
+        assert gate["passed_all_layers"] is False

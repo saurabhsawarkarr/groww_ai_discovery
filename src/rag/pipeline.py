@@ -10,6 +10,7 @@ Incorporates best-in-class architectural patterns:
 7. Stage 7: Telemetry, Compliance Diagnostics, and Audit Logging.
 """
 
+import re
 import time
 from typing import Any, Dict, List, Optional
 
@@ -42,26 +43,49 @@ class RAGPipeline:
         """Execute end-to-end RAG inquiry and return synthesized analysis with 7-stage gated lifecycle."""
         start_time = time.perf_counter()
 
-        # STAGE 3: Hybrid Evidence Retrieval across 3,052 verified customer conversations
-        retrieved_evidence = self.retriever.retrieve(
-            query=query,
-            top_k=top_k,
-            platform_filter=platform_filter,
-            journey_stage_filter=journey_stage_filter,
-        )
-        retrieval_meta = dict(getattr(self.retriever, "last_retrieval_meta", {}))
-        retrieval_time_ms = round((time.perf_counter() - start_time) * 1000, 1)
-
-        # STAGE 1: Fast Pre-LLM Guardrail Check (< 5ms, 0 Tokens)
+        # STAGE 1: Fast Pre-LLM Guardrail Check (< 5ms, 0 Tokens) before retrieval or LLM
         pre_guardrail = PreLLMGuardrails.inspect(query)
         if pre_guardrail and pre_guardrail.get("intercepted"):
+            if pre_guardrail.get("skip_retrieval"):
+                retrieved_evidence = []
+                retrieval_meta = {
+                    "is_fallback": False,
+                    "fallback_tier": pre_guardrail.get("tier", "Tier 1: Pre-LLM Guardrail"),
+                    "matches_found": 0,
+                    "skipped_retrieval": True,
+                }
+                retrieval_time_ms = 0.0
+            else:
+                # Grounded refusals (SEBI / Anti-FOMO) retrieve supporting receipts for [EVID-X] auditability
+                ret_start = time.perf_counter()
+                retrieved_evidence = self.retriever.retrieve(
+                    query=query,
+                    top_k=min(top_k, 3),
+                    platform_filter=platform_filter,
+                    journey_stage_filter=journey_stage_filter,
+                )
+                retrieval_meta = dict(getattr(self.retriever, "last_retrieval_meta", {}))
+                retrieval_time_ms = round((time.perf_counter() - ret_start) * 1000, 1)
+
             synthesis = pre_guardrail["answer"]
+            if not retrieved_evidence:
+                synthesis = re.sub(r"\s*\[EVID-\d+\]", "", synthesis)
             is_llm_fallback = True
             fallback_reason = pre_guardrail["reason"]
             generation_time_ms = 0.4
             clarification_chips = pre_guardrail.get("clarification_chips", [])
             retrieval_fallback_tier = pre_guardrail.get("tier", "Tier 1: Pre-LLM Guardrail")
         else:
+            # STAGE 3: Hybrid Evidence Retrieval across verified customer conversations
+            ret_start = time.perf_counter()
+            retrieved_evidence = self.retriever.retrieve(
+                query=query,
+                top_k=top_k,
+                platform_filter=platform_filter,
+                journey_stage_filter=journey_stage_filter,
+            )
+            retrieval_meta = dict(getattr(self.retriever, "last_retrieval_meta", {}))
+            retrieval_time_ms = round((time.perf_counter() - ret_start) * 1000, 1)
             clarification_chips = []
             retrieval_fallback_tier = retrieval_meta.get("fallback_tier", "Tier 1: Direct Hybrid RRF")
 

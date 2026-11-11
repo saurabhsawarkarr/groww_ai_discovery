@@ -56,13 +56,39 @@ _WORKFLOW_EXCLUSION_RE = re.compile(
     re.IGNORECASE,
 )
 _EXPLICIT_FUND_PICK_RE = re.compile(
-    r"\b(?:which\s+fund|best\s+(?:mutual\s+)?fund|top\s+(?:mutual\s+)?fund|small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap|parag\s+parikh|quant|hdfc\s+fund|scheme|guaranteed|cagr)\b",
+    r"\b(?:which\s+fund|best\s+(?:mutual\s+)?fund|top\s+(?:mutual\s+)?fund|(?:small|mid|large|flexi|multi)\s*-?\s*cap|parag\s+parikh|ppfas|quant|hdfc\s+fund|scheme|guaranteed|cagr)\b",
+    re.IGNORECASE,
+)
+_FUND_SCHEME_OR_CATEGORY_RE = re.compile(
+    r"\b(?:(?:small|mid|large|flexi|multi)\s*-?\s*cap|elss|index\s+fund|"
+    r"parag\s+parikh|ppfas|quant|hdfc\s+(?:mid|small|flexi|top|index|mutual)|"
+    r"sbi\s+(?:small|contra|bluechip|nifty|mutual)|nippon|mirae|axis\s+(?:bluechip|small|mid|elss|mutual)|"
+    r"kotak\s+(?:emerging|small|flexi|mutual)|motilal|icici\s+pru(?:dential)?)\b",
+    re.IGNORECASE,
+)
+
+# Domain tokens keeping genuine Groww / MF / SIP / banking / UX inquiries in corpus scope
+_IN_SCOPE_DOMAIN_RE = re.compile(
+    r"\b(?:sip|sips|mutual\s*funds?|funds?|mf|amc|nav|xirr|cagr|irr|ltcg|stcg|tax|"
+    r"groww|zerodha|coin|kuvera|paytm|mandates?|autopay|nach|ecs|upi|netbanking|"
+    r"banks?|debit|credit|deduct(?:ed|ion)?|bounce[sd]?|penalt(?:y|ies)|fines?|charges?|"
+    r"allotment|t\+2|units?|folio|kyc|pan|aadhaar|demat|redeem|redemption|"
+    r"withdraw(?:al)?|pause|skip|snooze|cancel(?:lation|led)?|stop(?:ped)?|"
+    r"continu(?:e|ing|ation)|retention|churn|drop\s*-?offs?|cohorts?|"
+    r"invest(?:ing|ment|ed|ors?)?|beginners?|novice|portfolios?|returns?|loss(?:es)?|profit|dips?|crash|correction|"
+    r"markets?|bull|bear|nifty|sensex|index|equity|debt|elss|lump\s*sum|lumpsum|step\s*-?up|"
+    r"(?:flexi|small|mid|large|multi)\s*-?\s*cap|rupee\s*cost|compounding|fd|fixed\s*deposit|"
+    r"volatility|drawdown|horizon|risk|exit\s+load|expense\s+ratio|"
+    r"ui|ux|screen|button|badge|notifications?|nudge|trust|anxiety|panic|fear|fomo|"
+    r"themes?|evidence|feedback|reviews?|customers?|users?|onboarding|install?ments?|"
+    r"sav(?:e|ing|ings)|wealth|money|salary|cash\s*flow|rupees?|rs|inr|fail(?:ed|ure|ing)?|reject(?:ed|ion)?|"
+    r"kaise|band|karu|kare|chalu|rok|paisa)\b",
     re.IGNORECASE,
 )
 
 
 def is_sebi_advisory_solicitation(query: str) -> bool:
-    """Detect fund-picking / return-guarantee asks while sparing product-workflow questions (e.g., best SIP date)."""
+    """Detect fund-picking, scheme comparison, or return-guarantee asks while sparing workflow & platform asks."""
     q_lower = (query or "").strip().lower()
     if not q_lower:
         return False
@@ -71,51 +97,124 @@ def is_sebi_advisory_solicitation(query: str) -> bool:
     if _WORKFLOW_EXCLUSION_RE.search(q_lower) and not _EXPLICIT_FUND_PICK_RE.search(q_lower):
         return False
 
-    return (
-        any(
-            phrase in q_lower
-            for phrase in [
-                "which fund should i buy",
-                "which specific mutual fund",
-                "best fund to invest",
-                "recommend a mutual fund",
-                "recommend a fund",
-                "give me top funds",
-                "should i buy parag parikh",
-                "which mutual fund is best",
-                "buy parag parikh or quant",
-                "which fund should i pick",
-                "top mutual fund",
-                "best mutual fund",
-                "best small cap",
-                "best mid cap",
-                "best flexi cap",
-                "best large cap",
-                "top small cap",
-                "top mid cap",
-                "top flexi cap",
-                "guaranteed 25% return",
-                "guaranteed return",
-                "sell my hdfc fund",
-                "which fund to invest",
-                "which fund to buy",
-                "best fund to buy",
-                "best fund to pick",
-            ]
-        )
-        or bool(
-            re.search(
-                r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|mutual\s+fund|scheme|stocks?|amc|sip(?!\s+(?:date|day|timing|time|schedule|amount|pause|skip|cancel|stop|mode|autopay|mandate)))\b",
-                q_lower,
-            )
-        )
-        or bool(
-            re.search(
-                r"\b(best|top)\b.*\b(small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap)\b.*\b(fund|buy|invest)\b",
-                q_lower,
-            )
-        )
+    if any(
+        phrase in q_lower
+        for phrase in [
+            "which fund should i buy",
+            "which specific mutual fund",
+            "best fund to invest",
+            "recommend a mutual fund",
+            "recommend a fund",
+            "give me top funds",
+            "should i buy parag parikh",
+            "which mutual fund is best",
+            "buy parag parikh or quant",
+            "which fund should i pick",
+            "top mutual fund",
+            "best mutual fund",
+            "best small cap",
+            "best mid cap",
+            "best flexi cap",
+            "best large cap",
+            "top small cap",
+            "top mid cap",
+            "top flexi cap",
+            "guaranteed 25% return",
+            "guaranteed return",
+            "sell my hdfc fund",
+            "which fund to invest",
+            "which fund to buy",
+            "best fund to buy",
+            "best fund to pick",
+        ]
+    ):
+        return True
+
+    if re.search(
+        r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|mutual\s+fund|scheme|stocks?|amc|sip(?!\s+(?:date|day|timing|time|schedule|amount|pause|skip|cancel|stop|mode|autopay|mandate)))\b",
+        q_lower,
+    ):
+        return True
+
+    if re.search(
+        r"\b(best|top)\b.*\b(small|mid|large|flexi|multi)\s*-?\s*cap\b.*\b(fund|buy|invest)\b",
+        q_lower,
+    ):
+        return True
+
+    # Direct buy/sell/hold solicitation for a named scheme, AMC, or market-cap category
+    if re.search(
+        r"\b(?:should\s+i|can\s+i|is\s+it\s+good\s+to|worth)\s+(?:to\s+)?(?:buy|sell|hold|invest\s+in|pick|choose|enter|exit|switch\s+to)\b",
+        q_lower,
+    ) and (_FUND_SCHEME_OR_CATEGORY_RE.search(q_lower) or re.search(r"\b(?:a\s+)?(?:mutual\s+fund|fund|scheme)\b", q_lower)):
+        return True
+
+    # Scheme-vs-scheme comparison (e.g. "compare Parag Parikh Flexi Cap with Quant Small Cap"),
+    # while sparing platform comparisons ("Groww vs Zerodha Coin")
+    if re.search(r"\b(?:compare|vs\.?|versus|better\s+than|difference\s+between)\b", q_lower) and _FUND_SCHEME_OR_CATEGORY_RE.search(q_lower):
+        return True
+
+    return False
+
+
+def is_dark_pattern_request(query: str) -> bool:
+    """Detect manipulative retention, hidden-cancel, or FOMO coercion requests."""
+    q_lower = (query or "").strip().lower()
+    return any(
+        phrase in q_lower
+        for phrase in [
+            "trap user",
+            "trick user",
+            "hide cancel",
+            "hide the cancel",
+            "make cancel hard",
+            "dark pattern",
+            "scare user",
+            "countdown timer",
+            "force to stay",
+            "block cancellation",
+            "block sip cancellation",
+            "prevent user from cancel",
+            "penalize user for stopping",
+        ]
     )
+
+
+def is_out_of_scope_query(query: str) -> bool:
+    """Detect speculative trading, general trivia, or non-finance/non-MF-SIP queries."""
+    q_clean = (query or "").strip()
+    q_lower = q_clean.lower()
+    if not q_lower:
+        return False
+
+    explicit_oos = any(
+        phrase in q_lower
+        for phrase in [
+            "bitcoin",
+            "crypto",
+            "ethereum",
+            "forex",
+            "100x leverage",
+            "intraday futures",
+            "option trading tip",
+            "f&o strategy",
+            "capital of france",
+            "who is the president",
+            "weather in",
+            "cricket score",
+        ]
+    )
+    if explicit_oos:
+        return True
+
+    # Catch general off-topic multi-word queries (e.g. "best laptop under 50k")
+    # that lack any MF/SIP/investing/banking/UX domain token and are not advisory/FOMO probes.
+    words = re.findall(r"[a-zA-Z0-9]+", q_lower)
+    if len(words) >= 4 and not _IN_SCOPE_DOMAIN_RE.search(q_lower):
+        if not is_sebi_advisory_solicitation(q_lower) and not is_dark_pattern_request(q_lower):
+            return True
+
+    return False
 
 
 class PreLLMGuardrails:
@@ -148,6 +247,7 @@ class PreLLMGuardrails:
             )
             return {
                 "intercepted": True,
+                "skip_retrieval": True,
                 "tier": "Tier 2: Interactive Clarification",
                 "reason": "Query is underspecified or ambiguous. Providing structured clarification pathways.",
                 "answer": answer,
@@ -177,6 +277,7 @@ class PreLLMGuardrails:
             )
             return {
                 "intercepted": True,
+                "skip_retrieval": False,
                 "tier": "Tier 1: Regulatory Refusal (SEBI)",
                 "reason": "SEBI non-advice guardrail engaged. Intercepted before external token consumption.",
                 "answer": answer,
@@ -188,23 +289,7 @@ class PreLLMGuardrails:
         # ---------------------------------------------------------------------
         # 3. FOMO & Dark Pattern Probe (Tier 1 Ethical Growth Refusal)
         # ---------------------------------------------------------------------
-        is_dark_pattern = any(
-            phrase in q_lower
-            for phrase in [
-                "trap user",
-                "hide cancel",
-                "hide the cancel",
-                "make cancel hard",
-                "dark pattern",
-                "scare user",
-                "countdown timer",
-                "force to stay",
-                "block cancellation",
-                "penalize user for stopping",
-            ]
-        )
-
-        if is_dark_pattern:
+        if is_dark_pattern_request(q_lower):
             answer = (
                 "### 1. Executive Summary & Behavioral Dynamic\n"
                 "**Ethical Growth & Anti-FOMO Principle:** Groww Discovery Engine strictly rejects deceptive dark patterns, hidden cancel buttons, "
@@ -219,6 +304,7 @@ class PreLLMGuardrails:
             )
             return {
                 "intercepted": True,
+                "skip_retrieval": False,
                 "tier": "Tier 1: Ethical Refusal (Anti-FOMO)",
                 "reason": "Dark pattern request intercepted. Guardrail enforced at 0 tokens.",
                 "answer": answer,
@@ -230,21 +316,7 @@ class PreLLMGuardrails:
         # ---------------------------------------------------------------------
         # 4. Out-of-Scope Corpus Boundary Probe (Tier 1 Scope Notice)
         # ---------------------------------------------------------------------
-        is_out_of_scope = any(
-            phrase in q_lower
-            for phrase in [
-                "bitcoin",
-                "crypto",
-                "forex",
-                "100x leverage",
-                "intraday futures",
-                "option trading tip",
-                "capital of france",
-                "who is the president",
-            ]
-        )
-
-        if is_out_of_scope:
+        if is_out_of_scope_query(q_lower):
             answer = (
                 "### 1. Executive Summary & Behavioral Dynamic\n"
                 "**Corpus Empirical Scope Notice:** This Qualitative Discovery Engine is indexed strictly on **3,052 verified customer conversations** "
@@ -257,6 +329,7 @@ class PreLLMGuardrails:
             )
             return {
                 "intercepted": True,
+                "skip_retrieval": True,
                 "tier": "Tier 1: Out-of-Scope Corpus Boundary",
                 "reason": "Out of scope domain intercepted. Guardrail enforced at 0 tokens.",
                 "answer": answer,

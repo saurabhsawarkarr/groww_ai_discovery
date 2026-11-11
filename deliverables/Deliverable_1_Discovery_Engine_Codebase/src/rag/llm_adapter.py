@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import re
+import time
 import urllib.request
 import urllib.error
 from typing import Any, Dict, List, Optional, Tuple
@@ -23,7 +24,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 
 from src.rag.rules import RAGRulesEngine, RAG_SYSTEM_RULES_PROMPT
-from src.rag.guardrails import is_sebi_advisory_solicitation
+from src.rag.guardrails import (
+    is_dark_pattern_request,
+    is_out_of_scope_query,
+    is_sebi_advisory_solicitation,
+)
 
 logger = logging.getLogger("groww_discovery.rag.llm_adapter")
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -419,100 +424,26 @@ class LLMAdapter:
 
         raw_text: Optional[str] = None
 
-        # Attempt External LLM Call
+        # Attempt External LLM Call (single fast backoff retry ONLY on HTTP 429 rate limits)
         try:
-            if "Groq" in provider:
-                model_id = model or "openai/gpt-oss-20b"
-                url = "https://api.groq.com/openai/v1/chat/completions"
-                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
-                payload = {
-                    "model": model_id,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": temperature,
-                    "max_tokens": 1500,
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["choices"][0]["message"]["content"]
-
-            elif "Google Gemini" in provider:
-                model_id = model or "gemini-3-flash-preview"
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
-                headers = dict(_DEFAULT_HEADERS)
-                payload = {
-                    "system_instruction": {"parts": [{"text": system_prompt}]},
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"temperature": temperature, "maxOutputTokens": 1500},
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["candidates"][0]["content"]["parts"][0]["text"]
-
-            elif "OpenAI" in provider:
-                model_id = model or "gpt-4o-mini"
-                url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
-                headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
-                payload = {
-                    "model": model_id,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": temperature,
-                    "max_tokens": 1500,
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["choices"][0]["message"]["content"]
-
-            elif "Anthropic" in provider:
-                model_id = model or "claude-3-5-sonnet-20241022"
-                url = "https://api.anthropic.com/v1/messages"
-                headers = {
-                    "x-api-key": api_key,
-                    "anthropic-version": "2023-06-01",
-                    "Content-Type": "application/json",
-                }
-                payload = {
-                    "model": model_id,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 1500,
-                    "temperature": temperature,
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["content"][0]["text"]
-
-            elif "Ollama" in provider:
-                model_id = model or "llama3"
-                url = (base_url or "http://localhost:11434").rstrip("/") + "/api/chat"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "model": model_id,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "stream": False,
-                    "options": {"temperature": temperature},
-                }
-                data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    raw_text = res["message"]["content"]
+            for attempt in range(2):
+                try:
+                    raw_text = cls._invoke_provider_http(
+                        provider=provider,
+                        api_key=api_key,
+                        model=model,
+                        base_url=base_url,
+                        temperature=temperature,
+                        prompt=prompt,
+                        system_prompt=system_prompt,
+                    )
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code == 429 and attempt == 0:
+                        logger.info("External LLM HTTP 429 rate limit; retrying once after 0.8s.")
+                        time.sleep(0.8)
+                        continue
+                    raise
 
         except urllib.error.HTTPError as e:
             fallback_reason = f"External Provider HTTP {e.code} ({e.reason}). Activated Deterministic Grounded Synthesis Fallback."
@@ -523,13 +454,15 @@ class LLMAdapter:
             logger.warning(f"External LLM generation failed: {e}. Falling back to deterministic engine.")
             return cls._deterministic_synthesis(prompt, retrieved_evidence), True, fallback_reason
 
-        # Post-Generation Negative Guardrail Interceptor
+        # Post-Generation Cleanup & Negative Guardrail Interceptor
         if raw_text:
             raw_text = re.sub(
                 r"</?(?:anchor|fact|frozen_domain_anchors|groww_product_mechanics|untrusted_evidence|customer_quote|defense_instructions)[^>]*>",
                 "",
                 raw_text,
-            ).strip()
+            )
+            # Strip leaked bracketed uppercase frozen-anchor / schema IDs (e.g. [BANK_ECS_BOUNCE_PENALTY])
+            raw_text = re.sub(r"[ \t]*\[(?:[A-Z0-9]+_){1,}[A-Z0-9]+\]", "", raw_text).strip()
             sanitized_text, was_intercepted, intercept_reason = RAGRulesEngine.sanitize_or_reject(
                 text=raw_text,
                 retrieved_evidence=retrieved_evidence,
@@ -542,6 +475,113 @@ class LLMAdapter:
 
         # Default fallback if provider was unhandled
         return cls._deterministic_synthesis(prompt, retrieved_evidence), True, "Provider route unhandled; failover engaged."
+
+    @classmethod
+    def _invoke_provider_http(
+        cls,
+        provider: str,
+        api_key: Optional[str],
+        model: Optional[str],
+        base_url: Optional[str],
+        temperature: float,
+        prompt: str,
+        system_prompt: str,
+    ) -> Optional[str]:
+        """Dispatch a single synchronous HTTP completion request to the configured external LLM provider."""
+        if "Groq" in provider:
+            model_id = model or "openai/gpt-oss-20b"
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": temperature,
+                "max_tokens": 1500,
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                return res["choices"][0]["message"]["content"]
+
+        if "Google Gemini" in provider:
+            model_id = model or "gemini-3-flash-preview"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+            headers = dict(_DEFAULT_HEADERS)
+            payload = {
+                "system_instruction": {"parts": [{"text": system_prompt}]},
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": temperature, "maxOutputTokens": 1500},
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                return res["candidates"][0]["content"]["parts"][0]["text"]
+
+        if "OpenAI" in provider:
+            model_id = model or "gpt-4o-mini"
+            url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
+            headers = {**_DEFAULT_HEADERS, "Authorization": f"Bearer {api_key}"}
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": temperature,
+                "max_tokens": 1500,
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                return res["choices"][0]["message"]["content"]
+
+        if "Anthropic" in provider:
+            model_id = model or "claude-3-5-sonnet-20241022"
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": model_id,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 1500,
+                "temperature": temperature,
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                return res["content"][0]["text"]
+
+        if "Ollama" in provider:
+            model_id = model or "llama3"
+            url = (base_url or "http://localhost:11434").rstrip("/") + "/api/chat"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "stream": False,
+                "options": {"temperature": temperature},
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                return res["message"]["content"]
+
+        return None
 
     @classmethod
     def generate(
@@ -627,23 +667,7 @@ class LLMAdapter:
         # ---------------------------------------------------------------------
         # 2. FOMO & DARK PATTERN PROBE (Refuse Deceptive Friction)
         # ---------------------------------------------------------------------
-        is_asking_for_dark_pattern = any(
-            phrase in prompt_lower
-            for phrase in [
-                "trap user",
-                "hide cancel",
-                "hide the cancel",
-                "make cancel hard",
-                "dark pattern",
-                "scare user",
-                "countdown timer",
-                "force to stay",
-                "block cancellation",
-                "penalize user for stopping",
-            ]
-        )
-
-        if is_asking_for_dark_pattern:
+        if is_dark_pattern_request(inquiry_text):
             evid_tag = "[EVID-1]" if ev_count >= 1 else ""
             q_text = (
                 retrieved_evidence[0].get("quote", "").replace("\n", " ")[:200] + "..."
@@ -668,21 +692,7 @@ class LLMAdapter:
         # ---------------------------------------------------------------------
         # 3. OUT-OF-SCOPE CORPUS BOUNDARY PROBE
         # ---------------------------------------------------------------------
-        is_out_of_scope = any(
-            phrase in prompt_lower
-            for phrase in [
-                "bitcoin",
-                "crypto",
-                "forex",
-                "100x leverage",
-                "intraday futures",
-                "option trading tip",
-                "capital of france",
-                "who is the president",
-            ]
-        )
-
-        if is_out_of_scope:
+        if is_out_of_scope_query(inquiry_text):
             return (
                 "### 1. Executive Summary & Behavioral Dynamic\n"
                 "**Corpus Empirical Scope Notice:** This Qualitative Discovery Engine is indexed strictly on **3,052 verified customer conversations** "
@@ -1575,10 +1585,10 @@ class LLMAdapter:
         # ---------------------------------------------------------------------
         theme_counts: Dict[str, int] = {}
         for ev in retrieved_evidence:
-            tid = ev.get("theme_id", "THEME-01")
+            tid = ev.get("theme_id", "GENERAL")
             theme_counts[tid] = theme_counts.get(tid, 0) + 1
 
-        dominant_theme = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "THEME-01"
+        dominant_theme = max(theme_counts.items(), key=lambda x: x[1])[0] if theme_counts else "GENERAL"
 
         # Query keywords refine theme with specific intent priority
         if any(w in prompt_lower for w in ["ecs", "bounce", "penalty", "fine", "insufficient balance", "insufficient", "500 penalty"]):
@@ -1596,13 +1606,12 @@ class LLMAdapter:
         elif any(w in prompt_lower for w in ["mandate", "autopay", "bank debit", "npci", "rejection", "silently"]):
             dominant_theme = "THEME-01"
 
-        # Prevent unrelated open-ended queries from falling into canned THEME-01 autopay text
-        # simply because unclustered CSV records default to THEME-01.
+        # Prevent unrelated open-ended or uncategorized queries from falling into canned THEME-01 autopay text
         evidence_blob = " ".join((ev.get("quote") or "").lower() for ev in retrieved_evidence[:3])
         autopay_signals = ["mandate", "autopay", "nach", "ecs", "npci", "debit", "deduct", "bounce", "bank fail", "reject", "silently"]
-        if dominant_theme == "THEME-01" and not (
-            any(sig in prompt_lower for sig in autopay_signals)
-            or any(sig in evidence_blob for sig in autopay_signals)
+        if dominant_theme == "GENERAL" or (
+            dominant_theme == "THEME-01"
+            and not (any(sig in prompt_lower for sig in autopay_signals) or any(sig in evidence_blob for sig in autopay_signals))
         ):
             return cls._synthesize_from_retrieved_evidence(inquiry_text, retrieved_evidence)
 

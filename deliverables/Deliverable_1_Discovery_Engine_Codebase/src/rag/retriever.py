@@ -343,9 +343,9 @@ class HybridEvidenceRetriever:
                             if not MF_SIP_PATTERN.search(clean_text):
                                 continue
 
-                        # Identify likely theme tag based on content
-                        assigned_theme = "THEME-01"
-                        if any(w in t_low for w in ["mandate", "autopay", "bank debit", "fail", "reject"]):
+                        # Identify likely theme tag based on content (neutral GENERAL default prevents THEME-01 skew)
+                        assigned_theme = "GENERAL"
+                        if any(w in t_low for w in ["mandate", "autopay", "nach", "bank debit", "debit fail", "payment fail", "fail", "reject"]):
                             assigned_theme = "THEME-01"
                         elif any(w in t_low for w in ["overlap", "diversif", "too many funds", "duplicate", "portfolio"]):
                             assigned_theme = "THEME-02"

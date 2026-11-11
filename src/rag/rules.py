@@ -219,7 +219,7 @@ Write 2-3 sharp, direct sentences unpacking the core behavioral dynamic and user
 
 Include a compact 3-column Markdown summary table right below the two bullets (`| Dimension | Observed Signal | Grounding |`) so PMs can scan the root cause at a glance.
 
-(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. NEVER output raw XML tags like <anchor...> or <frozen_domain_anchors> in your answer—use [EVID-X] or plain labels. If the user asks a direct SIP action/decision question such as stopping, pausing, or market-dip timing, answer the exact workflow or Rupee-Cost Averaging logic directly in Section 1 using the verified product mechanics and [EVID-X]).
+(IMPORTANT: Do NOT output separate verbatim quote blocks or PM recommendations in the text; customer quote receipts are already rendered automatically by the UI. NEVER output raw XML tags like <anchor...> or bracketed uppercase anchor IDs like [BANK_ECS_BOUNCE_PENALTY] or [MANDATE_TERMINATION_STRIKES]—use [EVID-X] or plain labels. Do NOT attribute competitor features (such as Zerodha Coin's Play/Pause toggle) to Groww. If the user asks a direct SIP action/decision question such as stopping, pausing, or market-dip timing, answer the exact workflow or Rupee-Cost Averaging logic directly in Section 1 using verified product mechanics and [EVID-X]).
 
 RULE 5: EMPIRICAL TRANSPARENCY & FALLBACK PROTOCOL
 - If the retrieved evidence is sparse or does not fully cover the query, explicitly state the empirical boundary rather than inventing generic AI commentary.
@@ -498,19 +498,47 @@ class RAGRulesEngine:
         cit_audit = cls.audit_citations(text, len(retrieved_evidence))
         has_citations = cit_audit["has_citations"] and not cit_audit["has_phantom_citations"]
 
+        _stop = {
+            "the", "and", "for", "are", "was", "not", "but", "you", "your", "can", "how",
+            "why", "all", "out", "too", "has", "had", "per", "via", "off", "our", "now",
+            "get", "got", "its", "this", "that", "with", "from", "they", "them", "their",
+            "there", "these", "those", "when", "where", "which", "what", "while", "will",
+            "would", "could", "should", "about", "into", "only", "also", "because", "more",
+            "than", "been", "being", "have", "does", "make", "very", "such", "some", "many",
+            "most", "even", "summary", "executive", "discovered", "friction", "breakdown",
+            "dimension", "observed", "signal", "grounding", "behavioral", "dynamic",
+        }
+
         # Calculate word overlap ratio with retrieved evidence quotes
         evidence_words = set()
         for item in retrieved_evidence:
             for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", (item.get("quote", "") + " " + item.get("text", "")).lower()):
-                evidence_words.add(w)
+                if w not in _stop:
+                    evidence_words.add(w)
 
-        answer_words = set(re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", text.lower()))
+        answer_words = {
+            w for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", text.lower()) if w not in _stop
+        }
         common_words = answer_words.intersection(evidence_words)
         lexical_entailment = len(common_words) / max(1, len(answer_words)) if answer_words else 1.0
 
-        # Groundedness combines citation integrity (50%), number precision (30%), and lexical overlap (20%)
+        # Require meaningful content overlap against the specific cited [EVID-X] chunks
+        cited_indices = [
+            idx for idx in cit_audit.get("cited_indices", []) if 1 <= idx <= len(retrieved_evidence)
+        ]
+        cited_evidence_words = set()
+        for idx in cited_indices:
+            ev_item = retrieved_evidence[idx - 1]
+            ev_blob = f"{ev_item.get('quote', '')} {ev_item.get('text', '')}".lower()
+            for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", ev_blob):
+                if w not in _stop:
+                    cited_evidence_words.add(w)
+        cited_overlap_count = len(answer_words.intersection(cited_evidence_words))
+
+        # Groundedness combines verified cited overlap (50%), number precision (30%), and lexical overlap (20%)
+        citation_credit = 0.50 if (has_citations and cited_overlap_count >= 1) else (0.15 if has_citations else 0.0)
         groundedness_score = round(
-            (0.50 * (1.0 if has_citations else 0.0))
+            citation_credit
             + (0.30 * num_precision)
             + (0.20 * min(1.0, lexical_entailment * 2.0)),
             2,
@@ -529,4 +557,5 @@ class RAGRulesEngine:
             "layer3_entailment_pass": layer3_pass,
             "groundedness_score": groundedness_score,
             "lexical_entailment": round(lexical_entailment, 2),
+            "cited_overlap_count": cited_overlap_count,
         }
