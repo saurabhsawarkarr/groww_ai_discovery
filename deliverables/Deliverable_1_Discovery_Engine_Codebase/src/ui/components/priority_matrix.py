@@ -310,8 +310,8 @@ Lifecycle Window: <strong style="color: #F1F5F9;">Month 4–12 (Clutter & Habit 
             opp_mech = result.get("continuation_mechanism_12m", "")
             opp_impact = result.get("projected_metric_impact", "")
             opp_exp = result.get("validation_experiment", "")
-            opp_guard = result.get("constraint_guardrail_check", "")
-            opp_source = result.get("source", "Live Groq LLM (openai/gpt-oss-20b)")
+            raw_source = str(result.get("source", ""))
+            opp_source = "AI Synthesized" if any(k in raw_source.lower() for k in ["groq", "llm", "gemini", "openai", "gpt", "claude"]) else "Grounded Discovery"
 
             feature_bullets = "".join([f"<li style='margin-bottom: 4px;'>{f}</li>" for f in opp_features])
 
@@ -345,9 +345,6 @@ Lifecycle Window: <strong style="color: #F1F5F9;">Month 4–12 (Clutter & Habit 
                 f'<strong style="color: #38BDF8; font-size: 13px;">30-Day Validation Test:</strong>'
                 f'<p style="font-size: 13px; color: #7DD3FC; margin: 3px 0 0 0; line-height: 1.4;">{opp_exp}</p>'
                 f'</div>'
-                f'</div>'
-                f'<div style="background: #1A2230; border: 1px solid #2B3548; border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 12.5px; color: #94A3B8;">'
-                f'<strong style="color: #F1F5F9;">Regulatory Guardrail Check:</strong> {opp_guard}'
                 f'</div>'
                 f'</div>'
             )

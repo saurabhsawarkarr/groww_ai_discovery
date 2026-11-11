@@ -115,3 +115,19 @@ class TestUIDashboard:
         assert format_source_link_html("https://www.reddit.com/r/mutualfunds/comments/142_pause_feature_missing_in_amc") == ""
         assert format_source_link_html("javascript:alert(1)") == ""
         assert format_source_link_html("") == ""
+
+    def test_frontend_hides_engineering_plumbing(self):
+        root = Path(__file__).resolve().parent.parent / "src" / "ui" / "components"
+        rag_src = (root / "rag_assistant_view.py").read_text(encoding="utf-8")
+        audit_src = (root / "audit_center.py").read_text(encoding="utf-8")
+        prio_src = (root / "priority_matrix.py").read_text(encoding="utf-8")
+        ov_src = (root / "overview_view.py").read_text(encoding="utf-8")
+
+        for hidden in ["Synthesis Mode", "Reset Engine", "RAG AI Answering Guardrails", "Token-Optimized", "rag_golden_dataset.json"]:
+            assert hidden not in rag_src
+        for hidden in ["MinHash", "LLM JSON Schema", "rag_golden_dataset.json", "golden_set_human_labels.json"]:
+            assert hidden not in audit_src
+        assert "openai/gpt-oss-20b" not in prio_src
+        assert "Regulatory Guardrail Check" not in prio_src
+        assert "shingle deduplication" not in ov_src
+        assert "Evidence Chunks" not in ov_src

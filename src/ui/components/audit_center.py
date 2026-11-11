@@ -74,21 +74,21 @@ Data Processing Pipeline
 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"></path></svg>
 </div>
 <span class="engine-timeline-name">2. Cleaning</span>
-<span class="engine-timeline-desc">MinHash Deduplication</span>
+<span class="engine-timeline-desc">Duplicate Removal</span>
 </div>
 <div class="engine-timeline-step">
 <div class="engine-timeline-icon-wrap" style="border-color:#A78BFA; color:#A78BFA;">
 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"></path></svg>
 </div>
 <span class="engine-timeline-name">3. Relevance</span>
-<span class="engine-timeline-desc">2-Pass Filtering</span>
+<span class="engine-timeline-desc">SIP Qualification</span>
 </div>
 <div class="engine-timeline-step">
 <div class="engine-timeline-icon-wrap" style="border-color:#00D09C; color:#00D09C;">
 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
 </div>
 <span class="engine-timeline-name">4. Extraction</span>
-<span class="engine-timeline-desc">LLM JSON Schema</span>
+<span class="engine-timeline-desc">Structured Journeys</span>
 </div>
 <div class="engine-timeline-step">
 <div class="engine-timeline-icon-wrap" style="border-color:#FBBF24; color:#FBBF24;">
@@ -136,7 +136,7 @@ Core Qualitative Capabilities
 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344"></path><path d="m9 11 3 3L22 4"></path></svg>
 </div>
 <h3 class="engine-cap-title">Fuzzy Deduplication</h3>
-<p class="engine-cap-desc">MinHash algorithm used to find and link identical failure reports.</p>
+<p class="engine-cap-desc">Automatically groups and consolidates duplicate customer complaints across channels.</p>
 </div>
 </div>
 </div>
@@ -224,4 +224,43 @@ def render_audit_center(db_path=None) -> None:
 
     # 4. Capabilities and Sources Row
     st.markdown(ENGINE_TWO_COL_HTML, unsafe_allow_html=True)
+
+    # 5. PM-Friendly Research Guardrails & Golden Validation Coverage (relocated from Ask AI)
+    st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
+    with st.expander("Research Safeguards & 25-Scenario Validation Benchmark", expanded=False):
+        st.markdown(
+            """
+            ### Quality & Regulatory Safeguards
+            - **SEBI Non-Advice Standard:** Never recommends specific schemes/AMCs, ranks funds, or projects guaranteed CAGR returns.
+            - **Ethical Retention (Anti-FOMO):** Rejects dark patterns such as hidden cancellation controls, countdown traps, or fear framing.
+            - **Verified Evidence Attribution:** Anchors every claim in retrieved customer quotes with clickable source permalinks.
+
+            ### Golden Validation Coverage (25 Core Scenarios)
+            | Scenario Group | Cases | What Is Verified |
+            |:---|:---:|:---|
+            | **7 Retention Failure Themes** | 18 | Root-cause synthesis across autopay drops, NPCI cap confusion, ECS bounce fear, short-term XIRR shock, market dips, allotment delays, overlap clutter, and 10% step-up habits |
+            | **SEBI Non-Advice Boundary** | 3 | Strict refusal when prompted to pick funds, compare schemes, or promise guaranteed returns |
+            | **Anti-FOMO / Dark Pattern** | 1 | Rejects requests to hide cancel options or add exit countdown timers |
+            | **Out-of-Scope Filtering** | 1 | Blocks speculative crypto / high-leverage queries outside mutual fund SIP research |
+            | **Underspecified Queries** | 2 | Prompts for clarification on brief fragments (`"SIP stopped"`, `"why negative return"`) |
+
+            *Calibrated alongside 20 human-annotated baseline reviews across 5 feedback channels.*
+            """
+        )
+
+        if st.button("Run Validation Benchmark (25 Scenarios)", key="btn_engine_run_golden_benchmark"):
+            from src.rag.evaluator import RAGEvaluator
+
+            with st.spinner("Evaluating 25 validation scenarios..."):
+                bench_summary = RAGEvaluator().evaluate_all(top_k=5)
+
+            st.success(
+                f"Validation Complete: {bench_summary['passed_cases']}/{bench_summary['total_cases']} scenarios passed "
+                f"({bench_summary['overall_pass_rate']}%)."
+            )
+            b_m1, b_m2, b_m3, b_m4 = st.columns(4)
+            b_m1.metric("Overall Pass Rate", f"{bench_summary['overall_pass_rate']}%")
+            b_m2.metric("SEBI Compliance", f"{bench_summary['sebi_compliance_rate']}%")
+            b_m3.metric("Anti-FOMO Safety", f"{bench_summary['fomo_compliance_rate']}%")
+            b_m4.metric("Grounded Attribution", f"{bench_summary['zero_hallucination_rate']}%")
 

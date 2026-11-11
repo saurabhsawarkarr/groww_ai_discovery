@@ -79,7 +79,7 @@ HOW_IT_WORKS_HTML = """<div class="overview-section-card" style="height: 100%;">
 <div class="pipeline-step-arrow">↓</div>
 <div class="pipeline-step-box">
 <div style="font-weight: 700; color: #F1F5F9; font-size: 15.5px;">2. Qualification &amp; Deduplication (3,052 records)</div>
-<div style="font-size: 14px; color: #94A3B8; margin-top: 4px; line-height: 1.5;">Strict MF/SIP qualification, spam filtering, and inverted prefix shingle deduplication.</div>
+<div style="font-size: 14px; color: #94A3B8; margin-top: 4px; line-height: 1.5;">Strict MF/SIP qualification, spam filtering, and duplicate review removal.</div>
 </div>
 <div class="pipeline-step-arrow">↓</div>
 <div class="pipeline-step-box">
@@ -275,8 +275,6 @@ def render_overview_view(db_path=None) -> None:
             q = item["query"]
             ans = item["answer"]
             evid_list = item.get("retrieved_evidence", [])
-            lat = item.get("total_latency_ms", 22.0)
-            m_count = item.get("evidence_count", len(evid_list))
 
             # Question Card
             st.markdown(
@@ -292,13 +290,8 @@ def render_overview_view(db_path=None) -> None:
                 f"""<div style="background: #151A24; border: 1px solid #222938; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #1E2533; padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                 <span style="font-size: 13px; font-weight: 700; color: #00D09C; text-transform: uppercase;">
-                Qualitative Synthesis &bull; {m_count} Evidence Chunks
+                Research Synthesis
                 </span>
-                <div style="display: flex; gap: 6px;">
-                <span class="badge-tag badge-tier-1">Verified Evidence</span>
-                <span class="badge-tag badge-category">{lat}ms</span>
-                <span class="badge-tag badge-category">SEBI Compliant</span>
-                </div>
                 </div>""",
                 unsafe_allow_html=True,
             )

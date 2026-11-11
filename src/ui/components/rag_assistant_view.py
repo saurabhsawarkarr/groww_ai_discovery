@@ -20,7 +20,7 @@ from src.ui.components.common_ui import format_source_link_html
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.4_xirr_retrieval_fix") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.5_hide_engineering_plumbing") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -90,7 +90,7 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "content": clean_query,
     })
 
-    # Resolve runtime LLM automatically, falling back silently to the grounded engine
+    # Silently resolve runtime LLM with automatic grounded failover on the backend
     llm_cfg = LLMAdapter.resolve_runtime_llm(getattr(st, "secrets", None))
 
     # Execute RAG query through pipeline with GR-1-style Thinking state
@@ -157,8 +157,8 @@ def render_rag_assistant_view(db_path=None) -> None:
 
     has_messages = bool(st.session_state["chat_messages"])
 
-    # 1. Clean User-Facing Header Bar (Free of internal fallback / benchmark clutter)
-    h_col1, h_col2 = st.columns([3.5, 1.5])
+    # 1. Page Header Bar
+    h_col1, h_col2 = st.columns([3.4, 1.6])
     with h_col1:
         st.markdown(
             """<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
@@ -170,35 +170,26 @@ def render_rag_assistant_view(db_path=None) -> None:
             <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: #F1F5F9;">Ask AI Engine</h1>
             <span class="badge-tag badge-tier-1">Direct Discovery</span>
             <span class="badge-tag badge-category">SEBI Non-Advice</span>
+            <span class="badge-tag badge-category">Anti-FOMO Guardrail</span>
             </div>
             <p class="page-subtitle" style="margin: 2px 0 0 0; font-size: 13px; color: #94A3B8;">
-            Insights grounded in 3,052 verified customer conversations &bull; Behavioral discovery &amp; real user evidence
+            Direct answers grounded across 3,052 verified customer reviews &bull; Structured Behavioral Synthesis &bull; Hybrid Guarded Fallback
             </p>
             </div>
             </div>""",
             unsafe_allow_html=True,
         )
     with h_col2:
-        st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
-        if has_messages:
-            btn_c1, btn_c2 = st.columns([1, 1])
-            with btn_c1:
-                if st.button("New Chat", key="ai_eng_new_chat", use_container_width=True):
-                    st.session_state["chat_messages"] = []
-                    st.rerun()
-            with btn_c2:
-                st.markdown(
-                    """<div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
-                    3,052 Reviews
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-        else:
+        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+        btn_c1, btn_c2 = st.columns([1, 1])
+        with btn_c1:
+            if has_messages and st.button("New Chat", key="ai_eng_new_chat", use_container_width=True):
+                st.session_state["chat_messages"] = []
+                st.rerun()
+        with btn_c2:
             st.markdown(
-                """<div style="display: flex; justify-content: flex-end;">
-                <div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
-                3,052 Verified Reviews
-                </div>
+                """<div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
+                3,052 Reviews
                 </div>""",
                 unsafe_allow_html=True,
             )
