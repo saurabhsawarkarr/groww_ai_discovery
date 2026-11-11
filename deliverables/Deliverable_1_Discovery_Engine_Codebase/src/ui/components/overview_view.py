@@ -54,19 +54,20 @@ KPI_4_HTML = get_kpi_card_html("FAILURE THEMES GENERATED", "7", "Prevalence 3.2%
 PROBLEM_CONTEXT_HTML = """<div style="background: #151A24; border: 1px solid #222938; border-left: 4.5px solid #00D09C; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);">
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
 <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16.5px; font-weight: 700; color: #F1F5F9;">
-The Core Problem: 54% of First-Time Mutual Fund SIP Investors Drop Off Before Month 12
+Why First-Time SIP Investors Drop Off Before Month 12 (54.6% Corpus Theme Coverage)
 </div>
 <span class="badge-tag badge-platform">Behavioral Discovery</span>
 </div>
 <p style="font-size: 14.5px; color: #94A3B8; line-height: 1.6; margin: 0 0 10px 0;">
-Analysis across 3,052 verified customer conversations reveals that SIP discontinuation is driven by two distinct failure vectors:
-<strong style="color: #F1F5F9;">Involuntary Churn (24.6%)</strong> caused by silent bank mandate drops and ₹450 ECS bounce penalty dread, and 
-<strong style="color: #F1F5F9;">Cognitive / Expectation Shock (49.4%)</strong> caused by short-tenure annualized XIRR distortions, red portfolio panic, and scheme overlap fatigue.
+Across 3,052 qualified customer conversations, <strong style="color: #F1F5F9;">54.6% (1,667 records)</strong> map directly to 7 retention themes:
+<strong style="color: #F1F5F9;">24.5% (748 records)</strong> stem from cash-flow timing mismatches and ₹450 ECS bounce penalty fear,
+<strong style="color: #F1F5F9;">26.9% (821 records)</strong> stem from drawdown panic, XIRR distortion, NAV delays, and fund clutter, and
+<strong style="color: #F1F5F9;">3.2% (98 records)</strong> reflect goal-anchored continuation habits.
 </p>
 <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px;">
-<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #F1F5F9;"><strong style="color: #94A3B8;">Target Metric:</strong> 12-Month SIP Continuation Rate</span>
-<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #00D09C;"><strong style="color: #94A3B8;">Projected Potential Lift:</strong> +18% to +25%</span>
-<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #38BDF8;"><strong style="color: #94A3B8;">Critical Drop Window:</strong> Month 1 to Month 4</span>
+<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #F1F5F9;"><strong style="color: #94A3B8;">North Star:</strong> 12-Month SIP Continuation Rate</span>
+<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #00D09C;"><strong style="color: #94A3B8;">Primary Focus:</strong> Autopay Resilience &amp; Volatility Framing</span>
+<span style="background: #1A2230; border: 1px solid #2B3548; padding: 4px 10px; border-radius: 6px; color: #38BDF8;"><strong style="color: #94A3B8;">Critical Window:</strong> Month 1 to Month 4</span>
 </div>
 </div>"""
 
@@ -98,15 +99,17 @@ FRUSTRATION_PROFILE_HTML = """<div class="overview-section-card" style="height: 
 <h3 style="font-size: 18.5px; font-weight: 700; color: #F1F5F9; margin: 0;">Discovered Problem Spaces &amp; Severity</h3>
 <span class="badge-tag badge-tier-1">4 Findings Mapped</span>
 </div>
-<div style="display: flex; height: 28px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; font-size: 13.5px; font-weight: 700; color: #FFFFFF; text-align: center; line-height: 28px;">
-<div style="width: 74%; background: #EF4444;" title="High Frustration: 74%">74%</div>
-<div style="width: 18%; background: #F59E0B;" title="Medium Frustration: 18%">18%</div>
-<div style="width: 8%; background: #10B981;" title="Low / Positive: 8%">8%</div>
+<div style="display: flex; height: 28px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; font-size: 12.5px; font-weight: 700; color: #FFFFFF; text-align: center; line-height: 28px;">
+<div style="width: 24.5%; background: #EF4444;" title="Cash-Flow & Autopay Friction: 24.5% (748 records)">24.5%</div>
+<div style="width: 26.9%; background: #F59E0B;" title="Volatility, XIRR & Overlap Friction: 26.9% (821 records)">26.9%</div>
+<div style="width: 3.2%; background: #10B981;" title="Goal-Anchored Habits: 3.2% (98 records)"></div>
+<div style="width: 45.4%; background: #334155;" title="General Setup & UI Discourse: 45.4% (1,385 records)">45.4%</div>
 </div>
-<div style="display: flex; gap: 18px; font-size: 14px; color: #94A3B8; margin-bottom: 14px;">
-<div><span style="color: #EF4444; font-size: 14px;">●</span> <strong>High Frustration</strong> (74%)</div>
-<div><span style="color: #F59E0B; font-size: 14px;">●</span> <strong>Medium Friction</strong> (18%)</div>
-<div><span style="color: #10B981; font-size: 14px;">●</span> <strong>Habit Anchors</strong> (8%)</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #94A3B8; margin-bottom: 14px;">
+<div><span style="color: #EF4444;">●</span> <strong>Cash-Flow &amp; Autopay</strong> (24.5%)</div>
+<div><span style="color: #F59E0B;">●</span> <strong>Volatility &amp; Clutter</strong> (26.9%)</div>
+<div><span style="color: #10B981;">●</span> <strong>Habit Anchors</strong> (3.2%)</div>
+<div><span style="color: #64748B;">●</span> <strong>General UI/Setup</strong> (45.4%)</div>
 </div>
 <div style="border-top: 1px solid var(--groww-border-subtle); padding-top: 12px;">
 <div style="font-size: 14.5px; margin-bottom: 10px;">
@@ -124,7 +127,7 @@ FRUSTRATION_PROFILE_HTML = """<div class="overview-section-card" style="height: 
     &bull; Milestone Disconnect (Theme 07 — 3.2%)
   </div>
   <div style="background: #1A2230; border: 1px solid #2B3548; border-left: 4px solid #F87171; padding: 8px 12px; border-radius: 6px;">
-    <strong style="color: #F87171;">3. Emergency Buffer Lack (24.6%)</strong><br/>
+    <strong style="color: #F87171;">3. Emergency Buffer Lack (24.5%)</strong><br/>
     &bull; Mandate Drops &amp; Timing (Theme 01 — 18.0%)<br/>
     &bull; ECS Bounce Penalty Trap (Theme 03 — 6.6%)
   </div>
@@ -148,19 +151,19 @@ The 3 Strategic Product Bets (12-Month Retention Roadmap)
 <div style="font-size: 12px; font-weight: 700; color: #00D09C; text-transform: uppercase;">Bet 1: Mandate Resilience (Month 1–3)</div>
 <div style="font-size: 15px; font-weight: 700; color: #F1F5F9; margin: 3px 0 5px 0;">Fail-Safe Autopay &amp; Cash Buffer</div>
 <div style="font-size: 13.5px; color: #94A3B8; line-height: 1.5;">1-click manual UPI retry links on debit bounce + proactive 24h pre-debit WhatsApp ping to curb involuntary cancellations.</div>
-<div style="font-size: 12.5px; color: #00D09C; font-weight: 700; margin-top: 6px;">Projected Lift: +14% to +18%</div>
+<div style="font-size: 12.5px; color: #00D09C; font-weight: 700; margin-top: 6px;">Target KPI: Mandate Recovery Rate (24.5% corpus)</div>
 </div>
 <div style="background: #1A2230; border: 1px solid #2B3548; border-left: 4px solid #38BDF8; border-radius: 8px; padding: 12px 14px;">
 <div style="font-size: 12px; font-weight: 700; color: #38BDF8; text-transform: uppercase;">Bet 2: Volatility Framing (Month 1–4)</div>
 <div style="font-size: 15px; font-weight: 700; color: #F1F5F9; margin: 3px 0 5px 0;">Volatility Pacing Shield</div>
 <div style="font-size: 13.5px; color: #94A3B8; line-height: 1.5;">Tenor-sensitive metric masking suppressing distorted &lt;1Y XIRR, highlighting units accumulated during normal corrections.</div>
-<div style="font-size: 12.5px; color: #38BDF8; font-weight: 700; margin-top: 6px;">Projected Lift: +8% to +12%</div>
+<div style="font-size: 12.5px; color: #38BDF8; font-weight: 700; margin-top: 6px;">Target KPI: Post-Dip Continuation (17.6% corpus)</div>
 </div>
 <div style="background: #1A2230; border: 1px solid #2B3548; border-left: 4px solid #FBBF24; border-radius: 8px; padding: 12px 14px;">
 <div style="font-size: 12px; font-weight: 700; color: #FBBF24; text-transform: uppercase;">Bet 3: Portfolio Hygiene (Month 4–12)</div>
 <div style="font-size: 15px; font-weight: 700; color: #F1F5F9; margin: 3px 0 5px 0;">Goal-Anchoring &amp; Declutter</div>
 <div style="font-size: 13.5px; color: #94A3B8; line-height: 1.5;">In-app portfolio overlap X-ray showing duplicate stock concentration across held schemes + unified payday debit date grouping.</div>
-<div style="font-size: 12.5px; color: #FBBF24; font-weight: 700; margin-top: 6px;">Projected Lift: +6% to +9%</div>
+<div style="font-size: 12.5px; color: #FBBF24; font-weight: 700; margin-top: 6px;">Target KPI: Multi-Fund Retention (9.3% corpus)</div>
 </div>
 </div>
 </div>"""

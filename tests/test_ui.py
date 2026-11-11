@@ -131,3 +131,29 @@ class TestUIDashboard:
         assert "Regulatory Guardrail Check" not in prio_src
         assert "shingle deduplication" not in ov_src
         assert "Evidence Chunks" not in ov_src
+
+    def test_frontend_reconciled_metrics_and_no_heuristic_stage(self):
+        root = Path(__file__).resolve().parent.parent / "src" / "ui" / "components"
+        rag_src = (root / "rag_assistant_view.py").read_text(encoding="utf-8")
+        audit_src = (root / "audit_center.py").read_text(encoding="utf-8")
+        prio_src = (root / "priority_matrix.py").read_text(encoding="utf-8")
+        ov_src = (root / "overview_view.py").read_text(encoding="utf-8")
+
+        # Heuristic Stage label hidden unless verified
+        assert "stage_verified" in rag_src
+        assert "Stage: {stage}" not in rag_src
+
+        # Reconciled DB/theme numbers in Engine Info and Overview
+        for stale in ["~9,850", "27,112", "3,745", ">111<", "83.3%"]:
+            assert stale not in audit_src
+        for expected in ["32,547", "3,052", "139", "1,227", "1,098", "357", "302", "68"]:
+            assert expected in audit_src
+
+        for stale in ["54% of First-Time", "Expectation Shock (49.4%)", "Projected Potential Lift", "+14% to +18%"]:
+            assert stale not in ov_src
+        assert "24.5%" in ov_src
+        assert "26.9%" in ov_src
+
+        # No unexplained synthetic decimal scores or speculative lifts on Opportunity cards
+        for stale in ["4.85 / 5.0", "4.65 / 5.0", "4.40 / 5.0", "+18–25%", "+14% to +18% Lift"]:
+            assert stale not in prio_src

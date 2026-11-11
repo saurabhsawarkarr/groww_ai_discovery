@@ -20,7 +20,7 @@ from src.ui.components.common_ui import format_source_link_html
 
 
 @st.cache_resource(show_spinner="Initializing Evidence Index...")
-def get_shared_pipeline(version: str = "v4.5_hide_engineering_plumbing") -> RAGPipeline:
+def get_shared_pipeline(version: str = "v4.6_credible_metrics_fix") -> RAGPipeline:
     """Initialize and cache the hybrid BM25 + Vector retriever pipeline."""
     retriever = HybridEvidenceRetriever()
     return RAGPipeline(retriever=retriever)
@@ -322,11 +322,15 @@ def render_rag_assistant_view(db_path=None) -> None:
                         for e_idx, ev in enumerate(evidence_list, 1):
                             target_ev_col = ev_col1 if (e_idx % 2 != 0) else ev_col2
                             plat = ev.get("platform", "source").upper()
-                            stage = ev.get("journey_stage", "unknown").replace("_", " ").title()
                             pub_date = ev.get("published_at", "Recent")
                             q_text = ev.get("quote", "").replace("<", "&lt;").replace(">", "&gt;")
                             src_url = ev.get("source_url", "")
                             src_link = format_source_link_html(src_url, label="[Source Link ↗]", color="#00D09C", font_size="11px")
+                            footer_left = (
+                                f"Stage: {ev.get('journey_stage', '').replace('_', ' ').title()}"
+                                if ev.get("stage_verified")
+                                else "Verified Source"
+                            )
 
                             # Distinct badge color per platform
                             plat_bg = "rgba(0, 208, 156, 0.12)"
@@ -352,7 +356,7 @@ def render_rag_assistant_view(db_path=None) -> None:
                                     <div style="font-size: 13px; font-style: italic; color: #E2E8F0; line-height: 1.45; margin: 4px 0;">"{q_text}"</div>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 4px;">
-                                    <span style="color: #94A3B8;">Stage: {stage}</span>
+                                    <span style="color: #94A3B8;">{footer_left}</span>
                                     {src_link}
                                 </div>
                                 </div>""",

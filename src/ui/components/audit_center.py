@@ -34,21 +34,21 @@ ENGINE_STATS_HTML = """<div class="engine-stats-grid" style="margin-bottom: 1.5r
 <div class="engine-stat-card">
 <div class="engine-stat-label">Total Records Ingested</div>
 <div class="engine-stat-value">32,547</div>
-<div class="engine-stat-subtext engine-subtext-green">Raw discourse from 5 sources</div>
-</div>
-<div class="engine-stat-card">
-<div class="engine-stat-label">Cleaned &amp; Normalized</div>
-<div class="engine-stat-value">~9,850</div>
-<div class="engine-stat-subtext engine-subtext-green">Records after fuzzy deduplication</div>
+<div class="engine-stat-subtext engine-subtext-green">Raw discourse across 5 channels</div>
 </div>
 <div class="engine-stat-card">
 <div class="engine-stat-label">Relevance Filtered</div>
 <div class="engine-stat-value">3,052</div>
-<div class="engine-stat-subtext engine-subtext-green">100% relevant MF/SIP conversations</div>
+<div class="engine-stat-subtext engine-subtext-green">Qualified MF &amp; SIP conversations</div>
+</div>
+<div class="engine-stat-card">
+<div class="engine-stat-label">Discovered Failure Themes</div>
+<div class="engine-stat-value">7</div>
+<div class="engine-stat-subtext engine-subtext-green">1,667 records (54.6% mapped)</div>
 </div>
 <div class="engine-stat-card">
 <div class="engine-stat-label">Structured Journeys</div>
-<div class="engine-stat-value">111</div>
+<div class="engine-stat-value">139</div>
 <div class="engine-stat-subtext engine-subtext-blue">Fully extracted failure journeys</div>
 </div>
 </div>"""
@@ -141,12 +141,12 @@ Core Qualitative Capabilities
 </div>
 </div>
 
-<!-- Right: 5 Ingestion Sources -->
+<!-- Right: 5 Qualified SIP Sources -->
 <div class="engine-section-card" style="margin-bottom: 0;">
 <div class="engine-section-header">
 <h2 class="engine-section-title">
 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F29900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>
-5 Ingestion Sources
+Qualified Corpus by Source (3,052 SIPs)
 </h2>
 </div>
 <div class="engine-sources-list">
@@ -154,55 +154,55 @@ Core Qualitative Capabilities
 <div class="engine-source-icon" style="background:#1A73E8;">P</div>
 <div class="engine-source-info">
 <h4 class="engine-source-title">Google Play Store</h4>
-<p class="engine-source-desc">Android app reviews</p>
+<p class="engine-source-desc">Android reviews (from 27,147 raw)</p>
 </div>
 <div class="engine-source-stats">
-<span class="engine-source-count">27,112</span>
-<span class="engine-source-pct">83.3%</span>
-</div>
-</div>
-<div class="engine-source-row">
-<div class="engine-source-icon" style="background:#5F6368;">A</div>
-<div class="engine-source-info">
-<h4 class="engine-source-title">Apple App Store</h4>
-<p class="engine-source-desc">iOS app reviews</p>
-</div>
-<div class="engine-source-stats">
-<span class="engine-source-count">528</span>
-<span class="engine-source-pct">1.6%</span>
-</div>
-</div>
-<div class="engine-source-row">
-<div class="engine-source-icon" style="background:#FF4500;">R</div>
-<div class="engine-source-info">
-<h4 class="engine-source-title">Reddit API</h4>
-<p class="engine-source-desc">r/IndiaInvestments, r/MutualFunds</p>
-</div>
-<div class="engine-source-stats">
-<span class="engine-source-count">574</span>
-<span class="engine-source-pct">1.8%</span>
+<span class="engine-source-count">1,227</span>
+<span class="engine-source-pct">40.2%</span>
 </div>
 </div>
 <div class="engine-source-row">
 <div class="engine-source-icon" style="background:#D93025;">Y</div>
 <div class="engine-source-info">
-<h4 class="engine-source-title">YouTube Data API</h4>
-<p class="engine-source-desc">MF educational comments</p>
+<h4 class="engine-source-title">YouTube Comments</h4>
+<p class="engine-source-desc">MF educational threads (from 3,716 raw)</p>
 </div>
 <div class="engine-source-stats">
-<span class="engine-source-count">3,745</span>
-<span class="engine-source-pct">11.5%</span>
+<span class="engine-source-count">1,098</span>
+<span class="engine-source-pct">36.0%</span>
+</div>
+</div>
+<div class="engine-source-row">
+<div class="engine-source-icon" style="background:#FF4500;">R</div>
+<div class="engine-source-info">
+<h4 class="engine-source-title">Reddit Community</h4>
+<p class="engine-source-desc">r/IndiaInvestments, r/MutualFunds (from 574 raw)</p>
+</div>
+<div class="engine-source-stats">
+<span class="engine-source-count">357</span>
+<span class="engine-source-pct">11.7%</span>
 </div>
 </div>
 <div class="engine-source-row">
 <div class="engine-source-icon" style="background:#188038;">F</div>
 <div class="engine-source-info">
 <h4 class="engine-source-title">Investor Forums</h4>
-<p class="engine-source-desc">ValuePickr &amp; TradingQ&amp;A</p>
+<p class="engine-source-desc">TradingQ&amp;A &amp; ValuePickr (from 588 raw)</p>
 </div>
 <div class="engine-source-stats">
-<span class="engine-source-count">588</span>
-<span class="engine-source-pct">1.8%</span>
+<span class="engine-source-count">302</span>
+<span class="engine-source-pct">9.9%</span>
+</div>
+</div>
+<div class="engine-source-row">
+<div class="engine-source-icon" style="background:#5F6368;">A</div>
+<div class="engine-source-info">
+<h4 class="engine-source-title">Apple App Store</h4>
+<p class="engine-source-desc">iOS app reviews (from 522 raw)</p>
+</div>
+<div class="engine-source-stats">
+<span class="engine-source-count">68</span>
+<span class="engine-source-pct">2.2%</span>
 </div>
 </div>
 </div>
