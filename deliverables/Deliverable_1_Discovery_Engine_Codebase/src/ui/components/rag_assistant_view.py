@@ -9,15 +9,12 @@ Modeled after Groww's Executive Discovery Suite & Customer Voice Grounding:
 6. Real-time Positive Answering & Negative Guardrails compliance auditing.
 """
 
-import json
-from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional
 import streamlit as st
 
 from src.rag.retriever import HybridEvidenceRetriever
 from src.rag.pipeline import RAGPipeline
-from src.rag.evaluator import RAGEvaluator
 from src.rag.llm_adapter import LLMAdapter
 from src.ui.components.common_ui import format_source_link_html
 
@@ -93,16 +90,8 @@ def execute_inquiry(pipeline: RAGPipeline, query_text: str) -> None:
         "content": clean_query,
     })
 
-    # Resolve runtime hybrid LLM vs instant deterministic grounded mode
-    use_hybrid = st.session_state.get("rag_engine_mode", "Auto Hybrid (Live LLM + Fallback)") == "Auto Hybrid (Live LLM + Fallback)"
-    if use_hybrid:
-        llm_cfg = LLMAdapter.resolve_runtime_llm(getattr(st, "secrets", None))
-    else:
-        llm_cfg = {
-            "provider": "Deterministic Grounded Engine (No Key Required)",
-            "api_key": None,
-            "model": None,
-        }
+    # Resolve runtime LLM automatically, falling back silently to the grounded engine
+    llm_cfg = LLMAdapter.resolve_runtime_llm(getattr(st, "secrets", None))
 
     # Execute RAG query through pipeline with GR-1-style Thinking state
     with st.spinner("Thinking across 3,052 verified customer reviews..."):
@@ -161,9 +150,6 @@ def render_rag_assistant_view(db_path=None) -> None:
                     content = content.split("### 4. Strategic PM")[0].strip()
                 msg["content"] = content
 
-    if "rag_engine_mode" not in st.session_state:
-        st.session_state["rag_engine_mode"] = "Auto Hybrid (Live LLM + Fallback)"
-
     # Auto-execute contextual inquiry launched from Themes / Opportunity cards
     pending_query = st.session_state.pop("pending_ai_query", None)
     if pending_query and pending_query.strip():
@@ -171,8 +157,8 @@ def render_rag_assistant_view(db_path=None) -> None:
 
     has_messages = bool(st.session_state["chat_messages"])
 
-    # 1. Page Header Bar
-    h_col1, h_col2 = st.columns([3.4, 1.6])
+    # 1. Clean User-Facing Header Bar (Free of internal fallback / benchmark clutter)
+    h_col1, h_col2 = st.columns([3.5, 1.5])
     with h_col1:
         st.markdown(
             """<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
@@ -184,10 +170,9 @@ def render_rag_assistant_view(db_path=None) -> None:
             <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: #F1F5F9;">Ask AI Engine</h1>
             <span class="badge-tag badge-tier-1">Direct Discovery</span>
             <span class="badge-tag badge-category">SEBI Non-Advice</span>
-            <span class="badge-tag badge-category">Anti-FOMO Guardrail</span>
             </div>
             <p class="page-subtitle" style="margin: 2px 0 0 0; font-size: 13px; color: #94A3B8;">
-            Direct answers grounded across 3,052 verified customer reviews &bull; Structured Behavioral Synthesis &bull; Hybrid Guarded Fallback
+            Insights grounded in 3,052 verified customer conversations &bull; Behavioral discovery &amp; real user evidence
             </p>
             </div>
             </div>""",
@@ -195,165 +180,30 @@ def render_rag_assistant_view(db_path=None) -> None:
         )
     with h_col2:
         st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
-        btn_c1, btn_c2 = st.columns([1, 1])
-        with btn_c1:
-            if has_messages:
+        if has_messages:
+            btn_c1, btn_c2 = st.columns([1, 1])
+            with btn_c1:
                 if st.button("New Chat", key="ai_eng_new_chat", use_container_width=True):
                     st.session_state["chat_messages"] = []
-                    st.cache_resource.clear()
                     st.rerun()
-            else:
-                if st.button("Reset Engine", key="ai_eng_reset_cache", use_container_width=True, help="Flush in-memory engine cache"):
-                    st.cache_resource.clear()
-                    st.rerun()
-        with btn_c2:
+            with btn_c2:
+                st.markdown(
+                    """<div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
+                    3,052 Reviews
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+        else:
             st.markdown(
-                """<div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
-                3,052 Reviews
+                """<div style="display: flex; justify-content: flex-end;">
+                <div style="background: rgba(0, 208, 156, 0.12); color: #00D09C; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(0, 208, 156, 0.3); text-align: center;">
+                3,052 Verified Reviews
+                </div>
                 </div>""",
                 unsafe_allow_html=True,
             )
-        st.selectbox(
-            "Synthesis Mode",
-            ["Auto Hybrid (Live LLM + Fallback)", "Instant Grounded Engine"],
-            key="rag_engine_mode",
-            label_visibility="collapsed",
-        )
 
-    # 2. Expandable Architectural Guide: How AI Answers vs How It Must NOT Answer
-    with st.expander("🛡️ RAG AI Answering Guardrails & Fallback Architecture (How It Answers vs How It Must NOT Answer)", expanded=False):
-        g_tab1, g_tab2, g_tab3, g_tab4 = st.tabs([
-            "✅ How It Answers",
-            "🚫 How It Must NOT Answer",
-            "🔄 Multi-Tier Fallback",
-            "🧪 Golden Dataset & Benchmark (25 Cases)",
-        ])
-
-        with g_tab1:
-            st.markdown(
-                """
-                ### Streamlined 2-Section Qualitative Synthesis Hierarchy (Token-Optimized)
-                Every generated response adheres to the following positive answering specification:
-                
-                - **1. Executive Summary & Behavioral Dynamic:** Unpacks investor mental models (e.g. loss aversion, linear FD return proxy, present bias, decision paralysis) explaining why first-time investors experience drop-off during Months 1–12. Must cite evidence with `[EVID-X]`.
-                - **2. Discovered Friction & Root Cause Breakdown:**
-                  - *Operational / Technical Friction:* Banking drops, NPCI limits, settlement lag (T+2), or UI ambiguities.
-                  - *Cognitive / Mental Model Mismatch:* Clash between expectations (FD linear returns, instant UPI confirmation) and market reality.
-                  - Explicitly cites evidence with `[EVID-1]`, `[EVID-2]`, etc.
-                - **Token-Efficient Grounding Design:** Customer quote receipts are rendered directly in the visual evidence cards below to eliminate quote duplication and minimize token consumption.
-                - **Empirical Grounding Invariant:** Zero hallucination. Every assertion must be anchored in verified evidence.
-                """
-            )
-
-        with g_tab2:
-            st.markdown(
-                """
-                ### Strict Negative Guardrails (Zero Tolerance Anti-Patterns)
-                The AI is actively monitored and strictly forbidden from outputting the following:
-                
-                1. **🚫 SEBI Financial Advisory Violations:**
-                   - NEVER recommend, pick, or rank specific mutual fund schemes, AMCs, or equities (e.g., *NEVER* say "You should buy Parag Parikh Flexi Cap" or "Switch to Quant Small Cap").
-                   - NEVER promise or project guaranteed returns, yields, or CAGR.
-                   - Redirection: Clearly explains that the engine provides UX/product discovery, not financial advice, and redirects to asset allocation frameworks.
-                2. **🚫 Dark Patterns & Manipulative FOMO Retention:**
-                   - NEVER propose deceptive friction (e.g. hiding the cancel button, artificial countdown timers, forcing phone calls to cancel, or guilt-tripping churn locks).
-                   - Retention must be earned ethically through liquidity flexibility (1-tap smart pause, salary synchronization, pre-debit notifications).
-                3. **🚫 Phantom Citations & Ungrounded Hallucinations:**
-                   - NEVER cite phantom tags (e.g. citing `[EVID-7]` when only 3 chunks exist).
-                   - NEVER fabricate user quotes, imaginary percentages, or phantom surveys.
-                4. **🚫 Generic Chatbot Fluff & Evasive Boilerplate:**
-                   - NEVER provide generic textbook definitions ("A mutual fund is an investment vehicle...") or empty non-answers.
-                5. **🚫 Victim Blaming & User Shaming:**
-                   - NEVER blame novice investors as "financially illiterate" or "foolish". Anxiety is treated as a natural signal of mental model clashes and system friction.
-                """
-            )
-
-        with g_tab3:
-            st.markdown(
-                """
-                ### Multi-Tier Resilient Fallback Architecture (100% Availability)
-                The system provides seamless failover across 4 layers of infrastructure:
-                
-                - **Tier 1: Direct Hybrid BM25 + Vector RRF:** Combines lexical BM25 token matching with semantic TF-IDF cosine similarity across 3,052 conversations.
-                - **Tier 2: Synonym & Lemmatized Query Expansion Fallback:** If initial hits are sparse, queries are automatically expanded using financial domain synonym mappings (e.g. *mandate* ↔ *autopay* ↔ *nach*, *bounce* ↔ *penalty* ↔ *ecs*).
-                - **Tier 3: Thematic Cluster Centroid Fallback:** If zero keyword matches exist, the inquiry is dynamically routed to the nearest of the 7 discovered failure themes, pulling top representative quotes.
-                - **Tier 4: Universal Deterministic Failover (Zero API Dependency):** If external LLMs timeout, quota-out (HTTP 429), or fail, the Deterministic Grounded Engine takes over with 0ms downtime.
-                - **Tier 5: Post-Generation Guardrail Interceptor:** If external LLM output violates SEBI non-advice or anti-FOMO rules, the interceptor catches and replaces it with safe behavioral synthesis.
-                """
-            )
-
-        with g_tab4:
-            st.markdown(
-                """
-                ### Golden Dataset Coverage (25 RAG Cases + 20 Extraction Ground-Truth Labels)
-                Evaluated automatically via `RAGEvaluator` against `data/golden_set/rag_golden_dataset.json`:
-
-                | Test Group | Cases | IDs | What Was Built & Verified |
-                |:---|:---:|:---|:---|
-                | **7 Retention Themes** | 18 | `GOLD-RAG-001`–`007`, `010`–`014`, `017`–`020`, `023`–`024` | Grounded synthesis + `[EVID-X]` citations for autopay drops, NPCI limit myth, ECS penalty, XIRR distortion, FD proxy, T+2 NAV lag, overlap clutter, 10% step-up & quiet mode |
-                | **SEBI Non-Advice Probes** | 3 | `GOLD-RAG-008`, `009`, `025` | Strict refusal on fund-picking, scheme comparison (*Parag Parikh vs Quant*), and "guaranteed 25% CAGR" claims |
-                | **Anti-FOMO / Dark Pattern** | 1 | `GOLD-RAG-016` | Blocks requests to hide cancel buttons or add 5-minute countdown locks |
-                | **Out-of-Scope Boundary** | 1 | `GOLD-RAG-015` | Rejects speculative crypto/100x leverage queries outside the SIP corpus |
-                | **Short / Ambiguous Edges** | 2 | `GOLD-RAG-021`, `022` | Disambiguates underspecified queries (`"SIP stopped"`, `"why negative return"`) via Tier 2 clarification |
-
-                *Paired with `golden_set_human_labels.json` (20 human-labeled reviews benchmarking extraction accuracy).*
-                """
-            )
-
-            if st.checkbox("Browse All 25 Golden Test Cases", key="chk_browse_golden_cases"):
-                golden_path = (
-                    Path(__file__).resolve().parent.parent.parent.parent
-                    / "data"
-                    / "golden_set"
-                    / "rag_golden_dataset.json"
-                )
-                if golden_path.exists():
-                    _cases = json.loads(golden_path.read_text(encoding="utf-8")).get("test_cases", [])
-                    rows_md = [
-                        "| ID | Category | Theme | Query | Guardrail / Target |",
-                        "|:---|:---|:---:|:---|:---|",
-                    ]
-                    for _c in _cases:
-                        _probe = (
-                            "SEBI Probe" if _c.get("sebi_advisory_probe")
-                            else "Anti-FOMO Probe" if _c.get("fomo_probe")
-                            else "Out-of-Scope" if _c.get("out_of_scope_probe")
-                            else f"Min {_c.get('minimum_citations', 1)} [EVID]"
-                        )
-                        _q_clean = (_c.get("query") or "").replace("|", "/")
-                        _cat_clean = (_c.get("category") or "").replace("|", "/")
-                        rows_md.append(
-                            f"| `{_c.get('query_id')}` | {_cat_clean} | `{_c.get('target_theme_id', '-')}` | {_q_clean} | {_probe} |"
-                        )
-                    st.markdown("\n".join(rows_md))
-
-            if st.button("Run Full Golden Benchmark Evaluation 🚀", key="btn_run_golden_benchmark", use_container_width=True):
-                with st.spinner("Evaluating 25 golden test cases across all criteria..."):
-                    evaluator = RAGEvaluator()
-                    bench_summary = evaluator.evaluate_all(top_k=5)
-
-                st.success(f"Benchmark Complete! {bench_summary['passed_cases']}/{bench_summary['total_cases']} cases passed ({bench_summary['overall_pass_rate']}%).")
-
-                b_m1, b_m2, b_m3, b_m4, b_m5 = st.columns(5)
-                b_m1.metric("Overall Pass Rate", f"{bench_summary['overall_pass_rate']}%")
-                b_m2.metric("SEBI Compliance", f"{bench_summary['sebi_compliance_rate']}%")
-                b_m3.metric("Anti-FOMO Guardrail", f"{bench_summary['fomo_compliance_rate']}%")
-                b_m4.metric("Zero Hallucination", f"{bench_summary['zero_hallucination_rate']}%")
-                b_m5.metric("Avg Latency", f"{bench_summary['avg_latency_ms']} ms")
-
-                with st.container(border=True):
-                    st.markdown("**Case-by-Case Diagnostic Results**")
-                    for c_res in bench_summary["cases_evaluated"]:
-                        status_emoji = "✅" if c_res["case_passed"] else "❌"
-                        st.markdown(
-                            f"**{status_emoji} [{c_res['query_id']}]** `{c_res['category']}`: *\"{c_res['query']}\"*  \n"
-                            f"• Citations: {c_res['unique_citations']} | SEBI: {'PASS' if c_res['sebi_compliant'] else 'FAIL'} | "
-                            f"Anti-FOMO: {'PASS' if c_res['fomo_compliant'] else 'FAIL'} | "
-                            f"Structure: {c_res['structure_score']*100:.0f}% | "
-                            f"Retrieval: {c_res['retrieval_fallback_tier']} | Latency: {c_res['latency_ms']}ms"
-                        )
-
-    st.markdown("<div style='border-bottom: 1px solid #1E2533; margin-bottom: 18px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='border-bottom: 1px solid #1E2533; margin-top: 8px; margin-bottom: 18px;'></div>", unsafe_allow_html=True)
 
     active_prompt_to_run = None
 
