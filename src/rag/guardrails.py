@@ -51,6 +51,72 @@ DEFAULT_CLARIFICATION_CHIPS = [
     },
 ]
 
+_WORKFLOW_EXCLUSION_RE = re.compile(
+    r"\b(?:sip\s+(?:date|day|timing|time|schedule|pause|skip|cancel|stop|mode)|debit\s+(?:date|day|timing|schedule)|autopay|mandate|netbanking)\b",
+    re.IGNORECASE,
+)
+_EXPLICIT_FUND_PICK_RE = re.compile(
+    r"\b(?:which\s+fund|best\s+(?:mutual\s+)?fund|top\s+(?:mutual\s+)?fund|small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap|parag\s+parikh|quant|hdfc\s+fund|scheme|guaranteed|cagr)\b",
+    re.IGNORECASE,
+)
+
+
+def is_sebi_advisory_solicitation(query: str) -> bool:
+    """Detect fund-picking / return-guarantee asks while sparing product-workflow questions (e.g., best SIP date)."""
+    q_lower = (query or "").strip().lower()
+    if not q_lower:
+        return False
+
+    # Do not block operational workflow questions (e.g., "which is best sip date", "best autopay mode")
+    if _WORKFLOW_EXCLUSION_RE.search(q_lower) and not _EXPLICIT_FUND_PICK_RE.search(q_lower):
+        return False
+
+    return (
+        any(
+            phrase in q_lower
+            for phrase in [
+                "which fund should i buy",
+                "which specific mutual fund",
+                "best fund to invest",
+                "recommend a mutual fund",
+                "recommend a fund",
+                "give me top funds",
+                "should i buy parag parikh",
+                "which mutual fund is best",
+                "buy parag parikh or quant",
+                "which fund should i pick",
+                "top mutual fund",
+                "best mutual fund",
+                "best small cap",
+                "best mid cap",
+                "best flexi cap",
+                "best large cap",
+                "top small cap",
+                "top mid cap",
+                "top flexi cap",
+                "guaranteed 25% return",
+                "guaranteed return",
+                "sell my hdfc fund",
+                "which fund to invest",
+                "which fund to buy",
+                "best fund to buy",
+                "best fund to pick",
+            ]
+        )
+        or bool(
+            re.search(
+                r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|mutual\s+fund|scheme|stocks?|amc|sip(?!\s+(?:date|day|timing|time|schedule|amount|pause|skip|cancel|stop|mode|autopay|mandate)))\b",
+                q_lower,
+            )
+        )
+        or bool(
+            re.search(
+                r"\b(best|top)\b.*\b(small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap)\b.*\b(fund|buy|invest)\b",
+                q_lower,
+            )
+        )
+    )
+
 
 class PreLLMGuardrails:
     """Pre-retrieval, pre-generation guardrail inspector executing in < 5ms at 0 token cost."""
@@ -93,41 +159,7 @@ class PreLLMGuardrails:
         # ---------------------------------------------------------------------
         # 2. SEBI Advisory Solicitation Probe (Tier 1 Regulatory Refusal)
         # ---------------------------------------------------------------------
-        is_advisory_solicitation = (
-            any(
-                phrase in q_lower
-                for phrase in [
-                    "which fund should i buy",
-                    "which specific mutual fund",
-                    "best fund to invest",
-                    "recommend a mutual fund",
-                    "recommend a fund",
-                    "give me top funds",
-                    "should i buy parag parikh",
-                    "which mutual fund is best",
-                    "buy parag parikh or quant",
-                    "which fund should i pick",
-                    "top mutual fund",
-                    "best mutual fund",
-                    "best small cap",
-                    "best mid cap",
-                    "best flexi cap",
-                    "best large cap",
-                    "top small cap",
-                    "top mid cap",
-                    "top flexi cap",
-                    "guaranteed 25% return",
-                    "guaranteed return",
-                    "sell my hdfc fund",
-                    "which fund to invest",
-                    "which fund to buy",
-                    "best fund to buy",
-                    "best fund to pick",
-                ]
-            )
-            or bool(re.search(r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|sip|scheme|stocks?|amc)\b", q_lower))
-            or bool(re.search(r"\b(best|top)\b.*\b(small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap)\b.*\b(fund|buy|invest)\b", q_lower))
-        )
+        is_advisory_solicitation = is_sebi_advisory_solicitation(q_lower)
 
         if is_advisory_solicitation:
             answer = (

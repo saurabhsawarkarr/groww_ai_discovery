@@ -176,6 +176,23 @@ class TestHowItShouldProvideAnswers:
             for ev in res_dip["retrieved_evidence"][:2]
         )
 
+    def test_workflow_not_sebi_blocked_hinglish_and_no_stage_leak(self):
+        pipeline = RAGPipeline()
+
+        res_date = pipeline.query("which is best sip date", top_k=3)
+        assert "Regulatory Refusal" not in res_date["retrieval_fallback_tier"]
+        assert "5th and 7th" in res_date["answer"]
+
+        res_hinglish = pipeline.query("sip kaise band kare", top_k=3)
+        assert "Mutual Funds" in res_hinglish["answer"]
+        assert "Pause SIP" in res_hinglish["answer"]
+        assert any("pause" in s.lower() for s in res_hinglish["follow_up_suggestions"])
+
+        res_safe = pipeline.query("is it safe to invest in mutual funds", top_k=3)
+        assert "(Newly Started)" not in res_safe["answer"]
+        assert "Stage: Newly Started" not in res_safe["answer"]
+        assert res_safe["output_defense"]["passed_all_layers"] is True
+
 
 # =============================================================================
 # 2. TESTS: HOW IT SHOULD NOT ANSWER (NEGATIVE GUARDRAILS)

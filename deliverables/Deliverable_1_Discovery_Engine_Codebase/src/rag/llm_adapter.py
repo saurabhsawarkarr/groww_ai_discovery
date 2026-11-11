@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 
 from src.rag.rules import RAGRulesEngine, RAG_SYSTEM_RULES_PROMPT
+from src.rag.guardrails import is_sebi_advisory_solicitation
 
 logger = logging.getLogger("groww_discovery.rag.llm_adapter")
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -141,7 +142,7 @@ class LLMAdapter:
     def get_contextual_followups(query: str, retrieved_evidence: List[Dict[str, Any]]) -> List[str]:
         """Select 4 context-locked follow-up prompts aligned with the query and dominant theme."""
         q_lower = (query or "").lower()
-        if any(p in q_lower for p in ["stop sip", "cancel sip", "i want to stop", "how to stop", "how to cancel"]):
+        if any(p in q_lower for p in ["stop sip", "cancel sip", "i want to stop", "how to stop", "how to cancel", "band kare", "band karu", "cancel kaise", "stop kaise", "sip band"]):
             return [
                 "How can users pause an SIP instead of cancelling permanently?",
                 "Should I stop my SIP when the market is down?",
@@ -155,7 +156,7 @@ class LLMAdapter:
                 "What is the best SIP debit date to avoid bank bounce charges?",
                 "What habits differentiate 12-month continuers from early drop-offs?",
             ]
-        if any(p in q_lower for p in ["start sip", "start a sip", "miss sip", "missed sip", "miss an sip"]):
+        if any(p in q_lower for p in ["start sip", "start a sip", "kaise shuru", "shuru kare", "start kaise", "miss sip", "missed sip", "miss an sip", "miss hua"]):
             return [
                 "What is the best SIP debit date to avoid bank bounce charges?",
                 "How can users pause an SIP instead of cancelling permanently?",
@@ -208,22 +209,26 @@ class LLMAdapter:
 
         def _snippet(idx: int) -> Tuple[str, str, str]:
             if idx >= c_count:
-                return "CORPUS", "Unknown", "No additional quote retrieved"
+                return "CORPUS", "Verified Receipt", "No additional quote retrieved"
             ev = retrieved_evidence[idx]
             plat = (ev.get("platform") or "SOURCE").upper()
-            stage = (ev.get("journey_stage") or "unknown").replace("_", " ").title()
+            context_label = (
+                f"Stage: {ev.get('journey_stage', '').replace('_', ' ').title()}"
+                if ev.get("stage_verified")
+                else "Verified Receipt"
+            )
             raw_q = re.sub(r"\s+", " ", (ev.get("quote") or "").strip()).replace("|", "/")
             short_q = (raw_q[:110] + "...") if len(raw_q) > 110 else raw_q
-            return plat, stage, short_q
+            return plat, context_label, short_q
 
-        p1, s1, q1 = _snippet(0)
-        p2, s2, q2 = _snippet(1)
-        p3, s3, q3 = _snippet(2)
+        p1, c1, q1 = _snippet(0)
+        p2, c2, q2 = _snippet(1)
+        p3, c3, q3 = _snippet(2)
 
         summary = (
             f"For **\"{inquiry_text.strip()}\"** (within our product discovery scope and non-advisory SEBI boundaries), "
             f"top matching customer discussions highlight practical questions around investor readiness, horizon expectations, and platform workflows {e1}. "
-            f"Specifically, {p1} feedback ({s1}) notes *\"{q1}\"* {e1}, while {p2} discourse ({s2}) surfaces *\"{q2}\"* {e2}."
+            f"Specifically, {p1} feedback notes *\"{q1}\"* {e1}, while {p2} discourse surfaces *\"{q2}\"* {e2}."
         )
         friction_op = (
             f"**Workflow & Interface Discovery Gaps:** Customer requests in the retrieved receipts point to needing clearer in-app guidance, "
@@ -234,12 +239,12 @@ class LLMAdapter:
             f"and multi-year holding horizons rather than reacting to short-term market noise {e2}, {e3}."
         )
         rows: List[Tuple[str, str, str]] = [
-            (f"{e1} ({p1})", f'"{q1}"', f"Stage: {s1}"),
+            (f"{e1} ({p1})", f'"{q1}"', c1),
         ]
         if c_count >= 2:
-            rows.append((f"{e2} ({p2})", f'"{q2}"', f"Stage: {s2}"))
+            rows.append((f"{e2} ({p2})", f'"{q2}"', c2))
         if c_count >= 3:
-            rows.append((f"{e3} ({p3})", f'"{q3}"', f"Stage: {s3}"))
+            rows.append((f"{e3} ({p3})", f'"{q3}"', c3))
         return cls._format_gr1_synthesis(summary, friction_op, friction_cog, snapshot_rows=rows)
 
     @staticmethod
@@ -587,41 +592,7 @@ class LLMAdapter:
         # ---------------------------------------------------------------------
         # 1. SEBI ADVISORY SOLICITATION PROBE (How It SHOULD & SHOULD NOT Answer)
         # ---------------------------------------------------------------------
-        is_asking_for_fund_recommendation = (
-            any(
-                phrase in prompt_lower
-                for phrase in [
-                    "which fund should i buy",
-                    "which specific mutual fund",
-                    "best fund to invest",
-                    "recommend a mutual fund",
-                    "recommend a fund",
-                    "give me top funds",
-                    "should i buy parag parikh",
-                    "which mutual fund is best",
-                    "buy parag parikh or quant",
-                    "which fund should i pick",
-                    "top mutual fund",
-                    "best mutual fund",
-                    "best small cap",
-                    "best mid cap",
-                    "best flexi cap",
-                    "best large cap",
-                    "top small cap",
-                    "top mid cap",
-                    "top flexi cap",
-                    "guaranteed 25% return",
-                    "guaranteed return",
-                    "sell my hdfc fund",
-                    "which fund to invest",
-                    "which fund to buy",
-                    "best fund to buy",
-                    "best fund to pick",
-                ]
-            )
-            or bool(re.search(r"\b(which|what|recommend|suggest|give me|tell me|pick|buy)\b.*\b(best|top|good)\b.*\b(fund|sip|scheme|stocks?|amc)\b", prompt_lower))
-            or bool(re.search(r"\b(best|top)\b.*\b(small\s*cap|mid\s*cap|large\s*cap|flexi\s*cap)\b.*\b(fund|buy|invest)\b", prompt_lower))
-        )
+        is_asking_for_fund_recommendation = is_sebi_advisory_solicitation(prompt_lower)
 
         if is_asking_for_fund_recommendation:
             evid_1_tag = "[EVID-1]" if ev_count >= 1 else ""
@@ -894,6 +865,11 @@ class LLMAdapter:
                 "begin sip",
                 "first sip",
                 "minimum sip",
+                "kaise shuru",
+                "shuru kare",
+                "start kaise",
+                "suru kare",
+                "chalu kaise",
             ]
         )
 
@@ -934,6 +910,13 @@ class LLMAdapter:
                 "not pay sip",
                 "unable to pay sip",
                 "if i miss",
+                "miss hua",
+                "miss ho jaye",
+                "miss ho gaya",
+                "paisa na ho",
+                "balance na ho",
+                "penalty lagega",
+                "penalty lagegi",
             ]
         )
 
@@ -993,6 +976,16 @@ class LLMAdapter:
                     "want to discontinue",
                     "stop investment",
                     "cancel investment",
+                    "band kare",
+                    "band karu",
+                    "band karna",
+                    "close kaise",
+                    "cancel kaise",
+                    "stop kaise",
+                    "sip band",
+                    "sip roke",
+                    "rokna hai",
+                    "sip close",
                 ]
             )
             and not any(
@@ -1216,8 +1209,12 @@ class LLMAdapter:
                 "pause instead of cancel",
                 "how to pause",
                 "can i pause",
+                "sip pause",
                 "pause sip",
                 "snooze sip",
+                "pause kaise",
+                "hold kaise",
+                "skip kaise",
             ]
         )
 
@@ -1365,6 +1362,9 @@ class LLMAdapter:
             phrase in prompt_lower
             for phrase in [
                 "best debit date",
+                "best sip date",
+                "sip date",
+                "best date for sip",
                 "debit date",
                 "which date",
                 "what date",

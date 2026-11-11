@@ -41,6 +41,14 @@ TYPO_CORRECTIONS: Dict[str, str] = {
     "retuns": "returns",
     "mandat": "mandate",
     "autopaye": "autopay",
+    "band": "stop",
+    "rokna": "stop",
+    "roke": "stop",
+    "shuru": "start",
+    "suru": "start",
+    "chalu": "start",
+    "trens": "trends",
+    "chcek": "check",
 }
 
 # Domain synonym expansion map for financial & customer discourse
